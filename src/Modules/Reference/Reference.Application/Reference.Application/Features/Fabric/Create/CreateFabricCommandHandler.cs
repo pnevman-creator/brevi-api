@@ -1,8 +1,11 @@
-﻿using Reference.Application.Contracts.Persistence;
+using Reference.Application.Contracts.Persistence;
 using Reference.Application.Features.Fabric.Create.Specifications;
-using Reference.Domain.ValueObjects;
-using SupplierEntity = Reference.Domain.Entities.Supplier;
-using FabricEntity = Reference.Domain.Entities.Fabric;
+using Reference.Domain.AdditionalReferences.ValueObjects;
+using Reference.Domain.GarmentAccessories.ValueObjects;
+using Reference.Domain.GarmentPartOperations.ValueObjects;
+using Reference.Domain.Suppliers.ValueObjects;
+using SupplierEntity = Reference.Domain.Suppliers.Entities.Supplier;
+using FabricEntity = Reference.Domain.GarmentAccessories.Entities.Fabric;
 
 namespace Reference.Application.Features.Fabric.Create;
 
@@ -22,12 +25,35 @@ public sealed class CreateFabricCommandHandler(
         var supplier = await supplierRepository.FirstOrDefaultAsync(new SupplierByNameSpec(providerName), cancellationToken);
 
         if (supplier is null)
-            return Result.NotFound("Fabric provider was not found.");
+        {
+            return Result.Invalid([new ValidationError(
+                "Request.ProviderName",
+                "пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ.")]);
+        }
 
-        var exists = await repository.AnyAsync(new FabricByIdOrNameSpec(request.Id, name), cancellationToken);
+        var idExists = await repository.AnyAsync(new FabricByIdSpec(request.Id), cancellationToken);
+        var nameExists = await repository.AnyAsync(new FabricByNameSpec(name), cancellationToken);
 
-        if (exists)
-            return Result.Conflict("Fabric with the same id or name already exists.");
+        if (idExists || nameExists)
+        {
+            var validationErrors = new List<ValidationError>();
+
+            if (idExists)
+            {
+                validationErrors.Add(new ValidationError(
+                    "Request.Id",
+                    "пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅ."));
+            }
+
+            if (nameExists)
+            {
+                validationErrors.Add(new ValidationError(
+                    "Request.Name",
+                    "пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅ."));
+            }
+
+            return Result.Invalid(validationErrors);
+        }
 
         var entity = FabricEntity.Create(
             FabricId.From(request.Id),
@@ -40,5 +66,3 @@ public sealed class CreateFabricCommandHandler(
         return Result.Success(entity.Id.Value);
     }
 }
-
-

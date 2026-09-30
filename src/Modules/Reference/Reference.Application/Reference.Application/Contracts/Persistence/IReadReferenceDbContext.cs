@@ -1,4 +1,7 @@
-﻿using Reference.Domain.Entities;
+using Reference.Domain.AdditionalReferences.Entities;
+using Reference.Domain.GarmentAccessories.Entities;
+using Reference.Domain.GarmentPartOperations.Entities;
+using Reference.Domain.Suppliers.Entities;
 
 namespace Reference.Application.Contracts.Persistence;
 
@@ -9,6 +12,5 @@ public interface IReadReferenceDbContext
     DbSet<GarmentAccessory> GarmentAccessories { get; }
     DbSet<GarmentPart> GarmentParts { get; }
     DbSet<GarmentPartOperation> GarmentPartOperations { get; }
-    DbSet<ProductCategory> ProductCategories { get; }
     DbSet<Supplier> Suppliers { get; }
 }

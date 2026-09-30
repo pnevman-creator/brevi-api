@@ -1,6 +1,8 @@
-﻿using Domain.Reference.ValueObjects;
+using Reference.Domain.GarmentPartOperations.ValueObjects;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using Reference.Domain.ValueObjects;
+using Reference.Domain.AdditionalReferences.ValueObjects;
+using Reference.Domain.GarmentAccessories.ValueObjects;
+using Reference.Domain.Suppliers.ValueObjects;
 
 namespace Reference.Infrastructure.Converters;
 
@@ -21,12 +23,6 @@ public static class ReferenceConverters
         new(
             id => id.Value,
             v => GarmentPartId.From(v)
-        );
-
-    public static readonly ValueConverter<ProductCategoryId, int> ProductCategoryIdConvert =
-        new(
-            id => id.Value,
-            v => ProductCategoryId.From(v)
         );
 
     public static readonly ValueConverter<GarmentAccessoryId, int> GarmentAccessoryIdConvert =
@@ -60,4 +56,3 @@ public static class ReferenceConverters
             v => MoneyAmount.From(v)
         );
 }
-

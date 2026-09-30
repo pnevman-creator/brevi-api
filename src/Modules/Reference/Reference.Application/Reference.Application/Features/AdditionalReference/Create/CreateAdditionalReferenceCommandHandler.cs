@@ -1,7 +1,10 @@
 using Reference.Application.Contracts.Persistence;
 using Reference.Application.Features.AdditionalReference.Create.Specifications;
-using Reference.Domain.ValueObjects;
-using AdditionalReferenceEntity = Reference.Domain.Entities.AdditionalReference;
+using Reference.Domain.AdditionalReferences.ValueObjects;
+using Reference.Domain.GarmentAccessories.ValueObjects;
+using Reference.Domain.GarmentPartOperations.ValueObjects;
+using Reference.Domain.Suppliers.ValueObjects;
+using AdditionalReferenceEntity = Reference.Domain.AdditionalReferences.Entities.AdditionalReference;
 
 namespace Reference.Application.Features.AdditionalReference.Create;
 
@@ -15,17 +18,45 @@ public sealed class CreateAdditionalReferenceCommandHandler(
     {
         var request = command.Request;
         var id = AdditionalReferenceId.From(request.Id);
+        var name = request.Name.Trim();
+        var key = request.Key.Trim();
 
-        var exists = await repository.AnyAsync(
-            new AdditionalReferenceByIdKeyOrNameSpec(request.Id, request.Key, request.Name), cancellationToken);
+        var idExists = await repository.AnyAsync(new AdditionalReferenceByIdSpec(request.Id), cancellationToken);
+        var nameExists = await repository.AnyAsync(new AdditionalReferenceByNameSpec(name), cancellationToken);
+        var keyExists = await repository.AnyAsync(new AdditionalReferenceByKeySpec(key), cancellationToken);
 
-        if (exists)
-            return Result.Conflict("Additional reference with the same id, key, or name already exists.");
+        if (idExists || nameExists || keyExists)
+        {
+            var validationErrors = new List<ValidationError>();
+
+            if (idExists)
+            {
+                validationErrors.Add(new ValidationError(
+                    "Request.Id",
+                    "Р”РѕРґР°С‚РєРѕРІРёР№ РґРѕРІС–РґРЅРёРє Р· С‚Р°РєРёРј С–РґРµРЅС‚РёС„С–РєР°С‚РѕСЂРѕРј СѓР¶Рµ С–СЃРЅСѓС”."));
+            }
+
+            if (nameExists)
+            {
+                validationErrors.Add(new ValidationError(
+                    "Request.Name",
+                    "Р”РѕРґР°С‚РєРѕРІРёР№ РґРѕРІС–РґРЅРёРє Р· С‚Р°РєРѕСЋ РЅР°Р·РІРѕСЋ СѓР¶Рµ С–СЃРЅСѓС”."));
+            }
+
+            if (keyExists)
+            {
+                validationErrors.Add(new ValidationError(
+                    "Request.Key",
+                    "Р”РѕРґР°С‚РєРѕРІРёР№ РґРѕРІС–РґРЅРёРє Р· С‚Р°РєРёРј РєР»СЋС‡РµРј СѓР¶Рµ С–СЃРЅСѓС”."));
+            }
+
+            return Result.Invalid(validationErrors);
+        }
 
         var entity = AdditionalReferenceEntity.Create(
             id,
-            request.Name,
-            request.Key,
+            name,
+            key,
             request.Value,
             request.Unit,
             request.Description);

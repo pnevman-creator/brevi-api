@@ -1,8 +1,11 @@
-﻿using Reference.Application.Contracts.Persistence;
+using Reference.Application.Contracts.Persistence;
 using Reference.Application.Features.GarmentPartOperation.Create.Specifications;
-using Reference.Domain.ValueObjects;
-using GarmentPartEntity = Reference.Domain.Entities.GarmentPart;
-using GarmentPartOperationEntity = Reference.Domain.Entities.GarmentPartOperation;
+using Reference.Domain.AdditionalReferences.ValueObjects;
+using Reference.Domain.GarmentAccessories.ValueObjects;
+using Reference.Domain.GarmentPartOperations.ValueObjects;
+using Reference.Domain.Suppliers.ValueObjects;
+using GarmentPartEntity = Reference.Domain.GarmentPartOperations.Entities.GarmentPart;
+using GarmentPartOperationEntity = Reference.Domain.GarmentPartOperations.Entities.GarmentPartOperation;
 
 namespace Reference.Application.Features.GarmentPartOperation.Create;
 
@@ -23,13 +26,37 @@ public sealed class CreateGarmentPartOperationCommandHandler(
             new GarmentPartByNameSpec(garmentPartName), cancellationToken);
 
         if (garmentPart is null)
-            return Result.NotFound("Garment part was not found.");
+        {
+            return Result.Invalid([new ValidationError(
+                "Request.GarmentPartName",
+                "пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ.")]);
+        }
 
-        var exists = await repository.AnyAsync(
-            new GarmentPartOperationByIdOrPartAndNameSpec(request.Id, garmentPart.Id.Value, name), cancellationToken);
+        var idExists = await repository.AnyAsync(
+            new GarmentPartOperationByIdSpec(request.Id), cancellationToken);
+        var nameExists = await repository.AnyAsync(
+            new GarmentPartOperationByPartAndNameSpec(garmentPart.Id.Value, name), cancellationToken);
 
-        if (exists)
-            return Result.Conflict("Garment part operation with the same id or name for this garment part already exists.");
+        if (idExists || nameExists)
+        {
+            var validationErrors = new List<ValidationError>();
+
+            if (idExists)
+            {
+                validationErrors.Add(new ValidationError(
+                    "Request.Id",
+                    "пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅ."));
+            }
+
+            if (nameExists)
+            {
+                validationErrors.Add(new ValidationError(
+                    "Request.Name",
+                    "пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ."));
+            }
+
+            return Result.Invalid(validationErrors);
+        }
 
         var entity = GarmentPartOperationEntity.Create(
             GarmentPartOperationId.From(request.Id),

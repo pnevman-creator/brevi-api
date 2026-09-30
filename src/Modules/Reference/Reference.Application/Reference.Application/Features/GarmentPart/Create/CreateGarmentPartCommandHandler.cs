@@ -1,7 +1,10 @@
 using Reference.Application.Contracts.Persistence;
 using Reference.Application.Features.GarmentPart.Create.Specifications;
-using Reference.Domain.ValueObjects;
-using GarmentPartEntity = Reference.Domain.Entities.GarmentPart;
+using Reference.Domain.AdditionalReferences.ValueObjects;
+using Reference.Domain.GarmentAccessories.ValueObjects;
+using Reference.Domain.GarmentPartOperations.ValueObjects;
+using Reference.Domain.Suppliers.ValueObjects;
+using GarmentPartEntity = Reference.Domain.GarmentPartOperations.Entities.GarmentPart;
 
 namespace Reference.Application.Features.GarmentPart.Create;
 
@@ -16,11 +19,29 @@ public sealed class CreateGarmentPartCommandHandler(IReferenceRepository<Garment
         var id = GarmentPartId.From(request.Id);
         var name = request.Name.Trim();
 
-        var exists = await repository.AnyAsync(
-            new GarmentPartByIdOrNameSpec(request.Id, name), cancellationToken);
+        var idExists = await repository.AnyAsync(new GarmentPartByIdSpec(request.Id), cancellationToken);
+        var nameExists = await repository.AnyAsync(new GarmentPartByNameSpec(name), cancellationToken);
 
-        if (exists)
-            return Result.Conflict("Garment part with the same id or name already exists.");
+        if (idExists || nameExists)
+        {
+            var validationErrors = new List<ValidationError>();
+
+            if (idExists)
+            {
+                validationErrors.Add(new ValidationError(
+                    "Request.Id",
+                    "Р§Р°СЃС‚РёРЅР° РІРёСЂРѕР±Сѓ Р· С‚Р°РєРёРј С–РґРµРЅС‚РёС„С–РєР°С‚РѕСЂРѕРј СѓР¶Рµ С–СЃРЅСѓС”."));
+            }
+
+            if (nameExists)
+            {
+                validationErrors.Add(new ValidationError(
+                    "Request.Name",
+                    "Р§Р°СЃС‚РёРЅР° РІРёСЂРѕР±Сѓ Р· С‚Р°РєРѕСЋ РЅР°Р·РІРѕСЋ СѓР¶Рµ С–СЃРЅСѓС”."));
+            }
+
+            return Result.Invalid(validationErrors);
+        }
 
         var entity = GarmentPartEntity.Create(id, name);
 

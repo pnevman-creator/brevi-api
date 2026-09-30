@@ -1,5 +1,8 @@
-using FabricEntity = Reference.Domain.Entities.Fabric;
-using Reference.Domain.ValueObjects;
+using FabricEntity = Reference.Domain.GarmentAccessories.Entities.Fabric;
+using Reference.Domain.AdditionalReferences.ValueObjects;
+using Reference.Domain.GarmentAccessories.ValueObjects;
+using Reference.Domain.GarmentPartOperations.ValueObjects;
+using Reference.Domain.Suppliers.ValueObjects;
 
 namespace Reference.Application.Features.Fabric.Delete.Specifications;
 

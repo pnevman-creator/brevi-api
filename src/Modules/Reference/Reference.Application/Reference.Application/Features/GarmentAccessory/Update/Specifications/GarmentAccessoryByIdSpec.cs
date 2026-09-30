@@ -1,5 +1,8 @@
-using GarmentAccessoryEntity = Reference.Domain.Entities.GarmentAccessory;
-using Reference.Domain.ValueObjects;
+using GarmentAccessoryEntity = Reference.Domain.GarmentAccessories.Entities.GarmentAccessory;
+using Reference.Domain.AdditionalReferences.ValueObjects;
+using Reference.Domain.GarmentAccessories.ValueObjects;
+using Reference.Domain.GarmentPartOperations.ValueObjects;
+using Reference.Domain.Suppliers.ValueObjects;
 
 namespace Reference.Application.Features.GarmentAccessory.Update.Specifications;
 

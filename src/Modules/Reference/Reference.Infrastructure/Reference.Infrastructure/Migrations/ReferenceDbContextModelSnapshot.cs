@@ -16,12 +16,13 @@ namespace Reference.Infrastructure.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
+                .HasDefaultSchema("reference")
                 .HasAnnotation("ProductVersion", "10.0.2")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("Reference.Domain.Entities.AdditionalReference", b =>
+            modelBuilder.Entity("Reference.Domain.AdditionalReferences.Entities.AdditionalReference", b =>
                 {
                     b.Property<int>("Id")
                         .HasColumnType("integer");
@@ -57,10 +58,10 @@ namespace Reference.Infrastructure.Migrations
                     b.HasIndex("Name")
                         .IsUnique();
 
-                    b.ToTable("AdditionalReferences", (string)null);
+                    b.ToTable("AdditionalReferences", "reference");
                 });
 
-            modelBuilder.Entity("Reference.Domain.Entities.Fabric", b =>
+            modelBuilder.Entity("Reference.Domain.GarmentAccessories.Entities.Fabric", b =>
                 {
                     b.Property<int>("Id")
                         .HasColumnType("integer");
@@ -84,10 +85,10 @@ namespace Reference.Infrastructure.Migrations
 
                     b.HasIndex("ProviderId");
 
-                    b.ToTable("FabricsReference", (string)null);
+                    b.ToTable("FabricsReference", "reference");
                 });
 
-            modelBuilder.Entity("Reference.Domain.Entities.GarmentAccessory", b =>
+            modelBuilder.Entity("Reference.Domain.GarmentAccessories.Entities.GarmentAccessory", b =>
                 {
                     b.Property<int>("Id")
                         .HasColumnType("integer");
@@ -113,10 +114,10 @@ namespace Reference.Infrastructure.Migrations
 
                     b.HasIndex("SupplierId");
 
-                    b.ToTable("GarmentAccessoriesReference", (string)null);
+                    b.ToTable("GarmentAccessoriesReference", "reference");
                 });
 
-            modelBuilder.Entity("Reference.Domain.Entities.GarmentPart", b =>
+            modelBuilder.Entity("Reference.Domain.GarmentPartOperations.Entities.GarmentPart", b =>
                 {
                     b.Property<int>("Id")
                         .HasColumnType("integer");
@@ -131,10 +132,10 @@ namespace Reference.Infrastructure.Migrations
                     b.HasIndex("Name")
                         .IsUnique();
 
-                    b.ToTable("GarmentParts", (string)null);
+                    b.ToTable("GarmentParts", "reference");
                 });
 
-            modelBuilder.Entity("Reference.Domain.Entities.GarmentPartOperation", b =>
+            modelBuilder.Entity("Reference.Domain.GarmentPartOperations.Entities.GarmentPartOperation", b =>
                 {
                     b.Property<int>("Id")
                         .HasColumnType("integer");
@@ -156,67 +157,10 @@ namespace Reference.Infrastructure.Migrations
                     b.HasIndex("GarmentPartId", "Name")
                         .IsUnique();
 
-                    b.ToTable("GarmentPartOperations", (string)null);
+                    b.ToTable("GarmentPartOperations", "reference");
                 });
 
-            modelBuilder.Entity("Reference.Domain.Entities.ProductCategory", b =>
-                {
-                    b.Property<int>("Id")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("Description")
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)");
-
-                    b.Property<bool>("IsActive")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
-                        .HasDefaultValue(true);
-
-                    b.Property<int>("Level")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
-
-                    b.Property<int?>("ParentId")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("Path")
-                        .IsRequired()
-                        .HasMaxLength(900)
-                        .HasColumnType("character varying(900)");
-
-                    b.Property<string>("RuName")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
-
-                    b.Property<string>("Slug")
-                        .IsRequired()
-                        .HasMaxLength(160)
-                        .HasColumnType("character varying(160)");
-
-                    b.Property<int>("SortOrder")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ParentId");
-
-                    b.HasIndex("Path");
-
-                    b.HasIndex("IsActive", "SortOrder");
-
-                    b.HasIndex("ParentId", "Slug")
-                        .IsUnique();
-
-                    b.ToTable("ProductCategories", (string)null);
-                });
-
-            modelBuilder.Entity("Reference.Domain.Entities.Supplier", b =>
+            modelBuilder.Entity("Reference.Domain.Suppliers.Entities.Supplier", b =>
                 {
                     b.Property<int>("Id")
                         .HasColumnType("integer");
@@ -247,33 +191,25 @@ namespace Reference.Infrastructure.Migrations
                     b.HasIndex("Name")
                         .IsUnique();
 
-                    b.ToTable("Suppliers", (string)null);
+                    b.ToTable("Suppliers", "reference");
                 });
 
-            modelBuilder.Entity("Reference.Domain.Entities.Fabric", b =>
+            modelBuilder.Entity("Reference.Domain.GarmentAccessories.Entities.Fabric", b =>
                 {
-                    b.HasOne("Reference.Domain.Entities.Supplier", null)
+                    b.HasOne("Reference.Domain.Suppliers.Entities.Supplier", null)
                         .WithMany()
                         .HasForeignKey("ProviderId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Reference.Domain.Entities.GarmentAccessory", b =>
+            modelBuilder.Entity("Reference.Domain.GarmentAccessories.Entities.GarmentAccessory", b =>
                 {
-                    b.HasOne("Reference.Domain.Entities.Supplier", null)
+                    b.HasOne("Reference.Domain.Suppliers.Entities.Supplier", null)
                         .WithMany()
                         .HasForeignKey("SupplierId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-                });
-
-            modelBuilder.Entity("Reference.Domain.Entities.ProductCategory", b =>
-                {
-                    b.HasOne("Reference.Domain.Entities.ProductCategory", null)
-                        .WithMany()
-                        .HasForeignKey("ParentId")
-                        .OnDelete(DeleteBehavior.Restrict);
                 });
 #pragma warning restore 612, 618
         }

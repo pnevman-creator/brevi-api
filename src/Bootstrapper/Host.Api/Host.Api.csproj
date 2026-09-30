@@ -13,6 +13,7 @@
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.2" />
+        <PackageReference Include="Microsoft.OpenApi" Version="2.7.5" />
         <PackageReference Include="Swashbuckle.AspNetCore" Version="10.0.0" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.2">
           <PrivateAssets>all</PrivateAssets>
@@ -31,6 +32,9 @@
       <ProjectReference Include="..\..\Modules\Accounting\Accounting.Api\Accounting.Api\Accounting.Api.csproj" />
       <ProjectReference Include="..\..\Modules\Accounting\Accounting.Application\Accounting.Application\Accounting.Application.csproj" />
       <ProjectReference Include="..\..\Modules\Accounting\Accounting.Infrastructure\Accounting.Infrastructure\Accounting.Infrastructure.csproj" />
+      <ProjectReference Include="..\..\Modules\Catalog\Catalog.Api\Catalog.Api\Catalog.Api.csproj" />
+      <ProjectReference Include="..\..\Modules\Catalog\Catalog.Application\Catalog.Application\Catalog.Application.csproj" />
+      <ProjectReference Include="..\..\Modules\Catalog\Catalog.Infrastructure\Catalog.Infrastructure\Catalog.Infrastructure.csproj" />
       <ProjectReference Include="..\..\Modules\Crm\Crm.Api\Crm.Api\Crm.Api.csproj" />
       <ProjectReference Include="..\..\Modules\Crm\Crm.Application\Crm.Application\Crm.Application.csproj" />
       <ProjectReference Include="..\..\Modules\Crm\Crm.Infrastructure\Crm.Infrastructure\Crm.Infrastructure.csproj" />

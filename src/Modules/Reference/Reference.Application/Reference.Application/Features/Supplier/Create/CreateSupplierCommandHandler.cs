@@ -1,7 +1,8 @@
+using Ardalis.Result;
 using BuildingBlocks.Application.Helpers;
 using Reference.Application.Contracts.Persistence;
 using Reference.Application.Features.Supplier.Create.Specifications;
-using SupplierEntity = Reference.Domain.Entities.Supplier;
+using SupplierEntity = Reference.Domain.Suppliers.Entities.Supplier;
 
 namespace Reference.Application.Features.Supplier.Create;
 
@@ -25,13 +26,32 @@ public sealed class CreateSupplierCommandHandler(IReferenceRepository<SupplierEn
             phoneNumber = normalizedPhone;
         }
 
-        var exists = await repository.AnyAsync(new SupplierByIdOrNameSpec(request.Id, name), cancellationToken);
+        var idExists = await repository.AnyAsync(new SupplierByIdSpec(request.Id), cancellationToken);
+        var nameExists = await repository.AnyAsync(new SupplierByNameSpec(name), cancellationToken);
 
-        if (exists)
-            return Result.Conflict("Supplier with the same id or name already exists.");
+        if (idExists || nameExists)
+        {
+            var validationErrors = new List<ValidationError>();
+
+            if (idExists)
+            {
+                validationErrors.Add(new ValidationError(
+                    "Request.Id",
+                    "Постачальник з таким ідентифікатором уже існує."));
+            }
+
+            if (nameExists)
+            {
+                validationErrors.Add(new ValidationError(
+                    "Request.Name",
+                    "Постачальник з такою назвою уже існує."));
+            }
+
+            return Result.Invalid(validationErrors);
+        }
 
         var entity = SupplierEntity.Create(
-            Reference.Domain.ValueObjects.SupplierId.From(request.Id),
+            Reference.Domain.Suppliers.ValueObjects.SupplierId.From(request.Id),
             name,
             link,
             contactPerson,
