@@ -1,14 +1,14 @@
-# Зміна API: медіафайли каталогу
+# API change: Catalog media files
 
-**Модуль:** catalog  
-**Статус:** перевірено кодом  
-**Статус контракту:** реалізовано
+**Module:** catalog\
+**Status:** verified in code\
+**Contract status:** implemented
 
-## Мета
+## Goal
 
-Надати API для завантаження, списку та видалення зображень, які згодом використовуються Product.
+Provide an API to upload, list, and delete images that will later be used by Product.
 
-## Маршрути і методи
+## Routes and methods
 
 ```http
 GET    /api/catalog/media
@@ -16,18 +16,18 @@ POST   /api/catalog/media       Content-Type: multipart/form-data
 DELETE /api/catalog/media/{id}
 ```
 
-## Запит і відповідь
+## Request and response
 
-| Операція | Запит | Успішна відповідь | Помилки |
+| Operation | Request | Successful response | Errors |
 | --- | --- | --- | --- |
-| List | без параметрів | `200` список ID, original file name, public URL, content type, storage key, status | — |
-| Upload | поле form-data `file` | `200` з `mediaFileId`, `storageKey`, `publicUrl`, `contentType`, `originalFileName` | `400` validation/невідповідна сигнатура |
+| List | no parameters | `200` list of IDs, original file name, public URL, content type, storage key, and status | — |
+| Upload | form-data field `file` | `200` with `mediaFileId`, `storageKey`, `publicUrl`, `contentType`, `originalFileName` | `400` validation/signature mismatch |
 | Delete | route `id:int` | `204` | `400`, `404` |
 
-Файл: JPEG/PNG/WebP, позитивний розмір, не більший за `CatalogMediaUpload:MaxFileSizeBytes`; signature має збігатися із заявленим content type.
+File requirements: JPEG/PNG/WebP, positive size, no larger than `CatalogMediaUpload:MaxFileSizeBytes`; the signature must match the declared content type.
 
-## Безпека та побічні ефекти
+## Security and side effects
 
-- Поточний доступ: `AllowAnonymous`.
-- Upload не ідемпотентний: кожен успішний повтор створює новий storage key.
-- Delete має side effect у зовнішньому сховищі та БД.
+- Current access: `AllowAnonymous`.
+- Upload is not idempotent: each successful retry creates a new storage key.
+- Delete has side effects in external storage and the database.

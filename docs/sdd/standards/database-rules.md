@@ -1,26 +1,21 @@
 # Database rules
 
-## Ідентифікатори
+## Identifiers
 
-Правила вибору scalar type, typed Domain ID, `PublicId` та людського номера документа визначено у [стратегії ідентифікаторів](identifier-strategy.md). Зафіксуйте вибір і обґрунтування в `data-model.md` feature-специфікації до створення коду або migration.
+The [identifier strategy](identifier-strategy.md) defines how to choose a scalar type, typed domain ID, `PublicId`, and human-readable document number. Record the choice and rationale in the feature specification's `data-model.md` before creating code or a migration.
 
-## Читання та продуктивність
+## Reads and performance
 
-Для read use-cases використовуйте projections і `AsNoTracking`, де це доречно. Уникайте N+1 queries, unbounded list endpoints і непотрібної materialization. Pagination/filtering для великих списків має бути частиною контракту.
+Use projections and `AsNoTracking` for read scenarios where appropriate. Avoid N+1 queries, unbounded list endpoints, and unnecessary materialization. Pagination and filtering of large lists must be part of the contract.
 
-Для списку або detail read-model, що не потребує Domain behavior, базовий підхід —
-`Ardalis.Specification.Specification<TEntity, TResult>` із SQL `Select` у response
-DTO. Handler має отримати `TResult` з read repository, а не materialize `TEntity` і
-потім мапити його в пам'яті. Додавайте лише потрібні `Include`/joins; projection з
-navigations має повертати тільки використані поля. Перевіряйте integration-тестом,
-що filters, sorting, pagination і projection транслюються у SQL.
+For a list or detail read model that does not need domain behavior, the default approach is `Ardalis.Specification.Specification<TEntity, TResult>` with SQL `Select` into a response DTO. A handler should receive `TResult` from the read repository rather than materializing `TEntity` and mapping it in memory. Add only necessary `Include` statements and joins; a projection from navigation properties should return only fields that are used. Verify with an integration test that filters, sorting, pagination, and projection translate to SQL.
 
-## Узгодженість і транзакції
+## Consistency and transactions
 
-Поважайте наявні transaction і concurrency boundaries. Не додавайте automatic retries до writes із побічними ефектами без задокументованої ідемпотентності. Не послаблюйте consistency guarantees непомітно.
+Respect existing transaction and concurrency boundaries. Do not add automatic retries to writes with side effects without documented idempotency. Do not silently weaken consistency guarantees.
 
-## EF Core, міграції та дані
+## EF Core, migrations, and data
 
-EF Core mapping належить Infrastructure. Domain entities не містять persistence concerns. Створюйте міграцію лише коли вона потрібна в scope feature; не редагуйте застосовані міграції. Перевіряйте нову міграцію на порожній test database та документуйте rollback/rollout ризики.
+EF Core mapping belongs in Infrastructure. Domain entities have no persistence-mechanism dependencies. Create a migration only when the feature scope requires it; do not edit applied migrations. Verify a new migration against an empty test database and document rollback and deployment risks.
 
-Зберігайте query semantics і database contracts. Довідникові/seed-дані змінюйте через наявний механізм seeding, а не прихованими runtime writes.
+Preserve query semantics and database contracts. Change reference and seed data through the existing mechanism, not hidden runtime writes.

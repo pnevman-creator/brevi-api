@@ -1,21 +1,21 @@
-# Persistence та інтеграції
+# Persistence and Integrations
 
 ## Persistence
 
-Catalog, Reference, Identity та Accounting використовують окремі EF Core contexts на PostgreSQL. Конфігурація context-ів, migrations і entity configurations залишаються в Infrastructure-проєкті власника.
+Catalog, Reference, Identity, and Accounting use separate EF Core contexts on PostgreSQL. Context configuration, migrations, and entity configurations stay in the owning module's Infrastructure project.
 
-- Використовуйте `AsNoTracking` для read-only queries.
-- Використовуйте projections і server-side paging; уникайте N+1 queries та повної materialization для pageable endpoints.
-- Repositories і Ardalis.Specification застосовуються там, де модуль уже використовує цей стиль.
-- `IUnitOfWork` залишається абстракцією transaction boundary для скоординованих writes.
-- Не додавайте міграцію, не змінюйте schema та concurrency semantics без явної вимоги функціональності.
+- Use `AsNoTracking` for read-only queries.
+- Use server-side projections and pagination; avoid N+1 queries and full materialization for paged endpoints.
+- Repositories and Ardalis.Specification are used where the module already follows that style.
+- There is no shared `IUnitOfWork` in the current code. If a use case needs coordinated writes across multiple aggregates or contexts, define the transaction boundary and partial-execution risk in the specification before implementation.
+- Do not add migrations or change schema or concurrency semantics without an explicit feature requirement.
 
-## Зовнішні адаптери
+## External adapters
 
-Медіасховище Catalog та інші зовнішні adapters розміщуються в Infrastructure. Application володіє лише абстракцією та use-case orchestration.
+Catalog media storage and other external adapters live in Infrastructure. Application owns only the abstraction and use-case orchestration.
 
-Фонова робота має використовувати наявну `IBackgroundJobService` abstraction або зареєстрований job pattern. Не зв’язуйте Application code напряму зі scheduler-ом.
+There is no shared `IBackgroundJobService` abstraction or implemented scheduler in the current code. For new background work, first define its contract and boundaries in the specification. Do not couple Application code directly to a scheduler.
 
 ## Read models
 
-Для read endpoints використовуйте projection-focused DTO та no-tracking strategy, коли це підтримано модулем. Read model не є aggregate-ом, який володіє бізнес-правилами.
+For read endpoints, use projection-oriented DTOs and no-tracking strategies where supported by the module. A read model is not an aggregate that owns business rules.

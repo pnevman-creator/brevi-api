@@ -1,30 +1,30 @@
-# Діагностика: health, логи та Swagger
+# Diagnostics: health, logs, and Swagger
 
-## Health
+## Health check
 
-`GET /health` мапиться `Host.Api` і явно дозволяє анонімний доступ. Використовуйте його першим, щоб встановити, що хост запущено та він досяжний.
+`GET /health` is mapped by `Host.Api` and explicitly allows anonymous access. Use it first to determine whether the host is running and reachable.
 
-## Swagger та OpenAPI
+## Swagger and OpenAPI
 
-Swagger UI увімкнено лише коли `ASPNETCORE_ENVIRONMENT=Development`. Із HTTPS launch profile відкрийте:
+Swagger UI is enabled only when `ASPNETCORE_ENVIRONMENT=Development`. With the HTTPS launch profile, open:
 
 ```text
 https://localhost:7142/swagger
 ```
 
-Swagger bearer scheme очікує access token, повернений `POST /api/auth/session/login`. Вставляйте access token в авторизацію Swagger; не вставляйте й не розкривайте refresh token.
+The Swagger Bearer authorization scheme expects the access token returned by `POST /api/auth/session/login`. Put the access token in Swagger authorization; do not paste or disclose the refresh token.
 
-Для відтворюваного тесту функціональності додайте конкретну задачу до [фази verification шаблону](../../specs/_templates/feature/tasks/05-verification.md). Вона має зафіксувати маршрут, передумови, вхідні дані, очікуваний статус і випадки помилок.
+For a reproducible feature test, add a specific task to the verification phase of the [feature specification](../../specs/README.md). It should record the route, prerequisites, input, expected status, and failure cases.
 
-## Логи та збої запуску
+## Logs and startup failures
 
-Serilog конфігурується з конфігурації хоста та пише до console; також підтримується Seq за наявної конфігурації. У HTTP pipeline увімкнено request logging. У разі збою запуску спочатку дослідіть console output щодо валідації конфігурації, міграції БД або seeder-ів.
+Serilog is configured by the host and writes to the console; Seq is also supported when configured. HTTP request logging is enabled in the pipeline. If `Host.Api` fails to start, first check its console output, including configuration and database connection errors. A separate `Host.Seed` runs migrations and seeding; investigate their failures in that host's output.
 
-Не логуйте та не поширюйте токени, паролі, повні connection strings, значення cookie чи необроблені чутливі payload-и. Для проблеми захищеного маршруту розрізняйте ці випадки до зміни коду:
+Do not log or share tokens, passwords, full connection strings, cookie values, or raw confidential request data. For a protected route problem, distinguish these cases before changing code:
 
-| Спостереження | Перша перевірка |
+| Observation | First check |
 | --- | --- |
-| `401 Unauthorized` | Access token існує, актуальний і передано як bearer token. |
-| `403 Forbidden` | Автентифікований користувач має роль/політику, потрібну endpoint-у. |
-| Browser-запит заблоковано | Дозволений CORS origin, HTTPS/cookie attributes та CSRF header для refresh. |
-| API падає до обслуговування запитів | Підключення до БД, міграції, seeders і обов’язкові settings. |
+| `401 Unauthorized` | An access token exists, is valid, and is passed as a Bearer token. |
+| `403 Forbidden` | The authenticated user has the role/policy required by the endpoint. |
+| Browser request blocked | Allowed CORS origin, HTTPS/cookie attributes, and CSRF header for refresh. |
+| `Host.Api` crashes before serving requests | Database connection and required settings; if `Host.Seed` ran separately beforehand, check its result. |

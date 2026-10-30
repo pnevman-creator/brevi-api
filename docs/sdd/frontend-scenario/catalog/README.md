@@ -1,3 +1,3 @@
-# Frontend-сценарії Catalog
+# Catalog Frontend Scenarios
 
-- [001 — Product page: адміністративний сценарій товару](001-product-page/admin-product-scenario.md)
+- [001 — Product Page: Admin Scenario](001-product-page/admin-product-scenario.md)

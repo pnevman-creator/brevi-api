@@ -1,5 +1,5 @@
-# Модуль автентифікації
+# Authentication Module
 
-Використовуйте цей модуль для login, bearer access tokens, refresh cookies, CSRF protection, logout і поточної сесії.
+Use this module for login, bearer access tokens, refresh cookies, CSRF protection, logout, and the current session.
 
-- [Потік сесії та життєвий цикл токена](session-flow.md)
+- [Session flow and token lifecycle](session-flow.md)

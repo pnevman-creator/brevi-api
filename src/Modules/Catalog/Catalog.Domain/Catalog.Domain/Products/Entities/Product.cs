@@ -10,13 +10,16 @@ using Catalog.Domain.Products.ValueObjects;
 
 namespace Catalog.Domain.Products.Entities;
 
-public class Product : BaseAuditableEntity<ProductId>, IAggregateRoot
+public partial class Product : BaseAuditableEntity<ProductId>, IAggregateRoot
 {
     private const int NameMaxLength = 200;
     private readonly List<ProductPhoto> _photos = [];
     private readonly List<ProductCategoryReference> _categories = [];
     private readonly List<ProductInformationBlock> _informationBlocks = [];
     private readonly List<ProductCharacteristicTable> _characteristicTables = [];
+    private readonly List<SewingArticle> _articles = [];
+    private readonly List<SewingMaterialLine> _materialLines = [];
+    private readonly List<SewingOperationLine> _operationLines = [];
 
     public string Name { get; private set; } = null!;
     public string RuName { get; private set; } = null!;
@@ -25,6 +28,11 @@ public class Product : BaseAuditableEntity<ProductId>, IAggregateRoot
     public string DescriptionUk { get; private set; } = string.Empty;
     public string DescriptionRu { get; private set; } = string.Empty;
     public SewingProductDetails? SewingDetails { get; private set; }
+    public string? ModelCode { get; private set; }
+    public long CompositionVersion { get; private set; }
+    public IReadOnlyCollection<SewingArticle> Articles => _articles.AsReadOnly();
+    public IReadOnlyCollection<SewingMaterialLine> MaterialLines => _materialLines.AsReadOnly();
+    public IReadOnlyCollection<SewingOperationLine> OperationLines => _operationLines.AsReadOnly();
     public PpeProductDetails? PpeDetails { get; private set; }
     public IReadOnlyCollection<ProductPhoto> Photos => _photos.AsReadOnly();
     public IReadOnlyCollection<ProductCategoryReference> Categories => _categories.AsReadOnly();
@@ -48,6 +56,9 @@ public class Product : BaseAuditableEntity<ProductId>, IAggregateRoot
 
     public void Update(string name, string ruName, ProductSlug slug, ProductType type, DateTimeOffset updatedAt)
     {
+        if (type == ProductType.Ppe && Type == ProductType.Sewing &&
+            (_articles.Count != 0 || _materialLines.Count != 0 || _operationLines.Count != 0))
+            throw new DomainException(ProductErrors.TypeSpecificDataInvalid());
         SetName(name);
         SetRuName(ruName);
         SetSlug(slug);

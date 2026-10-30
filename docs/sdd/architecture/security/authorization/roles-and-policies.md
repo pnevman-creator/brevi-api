@@ -1,48 +1,54 @@
-# Авторизація
+# Authorization
 
-## Базове правило
+## Baseline rule
 
-`Host.Api` налаштовує fallback authorization policy, що вимагає автентифікованого користувача. Отже endpoint захищений, якщо він свідомо не оголошує `[AllowAnonymous]`. Анонімний доступ має бути явним в API-контракті та перевірятися у межах функціональності.
+`Host.Api` configures a fallback authorization policy requiring an authenticated user. An endpoint is therefore protected unless it explicitly declares `[AllowAnonymous]`. Anonymous access must be explicit in the API contract and verified as part of the feature.
 
-Автентифікація відповідає на питання **хто викликає**. Авторизація відповідає, **чи може цей викликач виконати операцію**.
+Authentication answers **who is calling**. Authorization answers **whether that caller may perform the operation**.
 
-## Ролі
+## Roles
 
-Канонічні константи ролей розміщені в `Identity.Domain/Authorization/RoleNames.cs`; у поточному legacy-коді також існує `Identity.Domain/Constants/AppRoles.cs` із тим самим набором значень.
+Canonical role constants are in `Identity.Domain/Authorization/RoleNames.cs`; inherited code also contains `Identity.Domain/Constants/AppRoles.cs` with the same set of values.
 
-| Роль | Поточне значення | Створюється seeder-ом |
+| Role | Current meaning | Created by seeding |
 | --- | --- | --- |
-| `Admin` | Адміністрування системи | так |
-| `Manager` | Доступ контент-менеджера | так |
-| `User` | Звичайний автентифікований користувач | так |
-| `Guest` | Визначена константа ролі без погодженого бізнес-значення | ні |
+| `Admin` | System administration | yes |
+| `Manager` | Content manager access | yes |
+| `User` | Regular authenticated user | yes |
+| `Guest` | Role constant defined without an agreed business meaning | no |
 
-Startup `RoleSeeder` наразі створює лише Admin, Manager і User. Не призначайте `Guest`, доки її seeding і бізнес-значення не буде свідомо додано.
+At startup, `RoleSeeder` currently creates only Admin, Manager, and User. Do not assign `Guest` until its seeding and business meaning are deliberately added.
 
-## Політики
+## Policies
 
-Назви політик розміщено в `Identity.Application/Security/Policies/PolicyNames.cs`; їхні role requirements компонуються у `Host.Api/AuthorizationPoliciesRegistrationExtensions`.
+Policy names are in `Identity.Application/Security/Policies/PolicyNames.cs`; their role requirements are composed in `Host.Api/AuthorizationPoliciesRegistrationExtensions`.
 
-| Політика | Дозволені ролі |
+| Policy | Allowed roles |
 | --- | --- |
 | `RequireAdminRole` / `CanManageUsers` | Admin |
 | `RequireManagerRole` / `CanManageProducts` / `CanManageOrders` | Manager, Admin |
 | `CatalogRead` / `OrderCreate` | User, Manager, Admin |
-| `RequireTenantAccess` | Константу визначено; policy наразі не зареєстровано |
+| `RequireTenantAccess` | Constant is defined; policy is not currently registered |
 
-Не використовуйте `RequireTenantAccess` на endpoint, доки не реалізовано реєстрацію в Host і не погоджено семантику policy.
+Do not use `RequireTenantAccess` on an endpoint until it is registered in Host and its policy semantics are agreed.
 
-## Захист endpoint-а
+## Protecting an endpoint
 
-Віддавайте перевагу наявній іменованій політиці, що виражає операцію. Контролер лише оголошує доступ; команда/запит усе одно проходить через `ISender`, а бізнес-інваріанти залишаються у Domain/Application. Не використовуйте role check у контролері як заміну політиці.
+Prefer an existing named policy that expresses the operation. The controller declares access only; the command or query still goes through `ISender`, and business invariants remain in Domain/Application. Do not use a role check in a controller instead of a policy.
 
-Для public endpoint використовуйте `[AllowAnonymous]` і зафіксуйте причину в контракті функціональності. Це перевизначає fallback policy.
+For a public endpoint, use `[AllowAnonymous]` and record the reason in the feature contract. This overrides the fallback policy.
 
-## Додавання політики або ролі
+## Current anonymous exceptions
 
-1. Перевірте, чи наявна політика вже охоплює бізнес-операцію.
-2. Якщо ні, визначте назву політики в Identity Application та role requirement у Host.Api.
-3. Якщо потрібна нова роль, додайте константу в Identity Domain і зробіть startup seeding свідомим; визначте, які наявні й майбутні користувачі її отримають.
-4. Захистіть endpoint новою політикою, оновіть API-контракт і вручну перевірте forbidden та permitted requests.
+As of 2026-10-28, these controllers declare `[AllowAnonymous]` on the whole class, so all their operations, including create, update, and delete, are public: `ProductsController`, `ProductCategoriesController`, `CatalogMediaController`, `SuppliersController`, `GarmentPartsController`, and `AdditionalReferencesController`. `FabricsController`, `GarmentAccessoriesController`, and `GarmentPartOperationsController` allow anonymous reads only; their writes require `CanManageProducts`. `AuthSessionController` allows anonymous login and refresh. The per-endpoint list is in the [frontend integration table](../../../contracts/frontend-integration.md).
 
-Додавання ролі — це зміна авторизації, а не просто зміна рядка: вона впливає на bootstrap, призначення користувачів, документацію та rollout.
+A class-level `[AllowAnonymous]` also overrides any `[Authorize]` on its methods. To protect a write, move `[AllowAnonymous]` to the read methods instead of adding a policy next to it. Update this list when an exception is added or removed.
+
+## Adding a policy or role
+
+1. Check whether an existing policy already covers the business operation.
+2. If not, define the policy name in Identity Application and its role requirement in Host.Api.
+3. If a new role is needed, add its constant in Identity Domain and deliberately configure seeding; define which existing and future users receive it.
+4. Protect the endpoint with the new policy, update the API contract, and manually verify denied and allowed requests.
+
+Adding a role is an authorization change, not just a string change: it affects seeding, user assignment, documentation, and deployment.

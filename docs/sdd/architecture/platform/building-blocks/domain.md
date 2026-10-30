@@ -1,6 +1,6 @@
 # BuildingBlocks.Domain
 
-## Структура
+## Structure
 
 ```text
 BuildingBlocks.Domain/
@@ -19,16 +19,16 @@ BuildingBlocks.Domain/
     └── DomainException
 ```
 
-## Доступні підходи
+## Available patterns
 
-- `BaseEntity` надає identity, equality за concrete type та non-transient ID, а також methods collection доменних подій.
-- `BaseAuditableEntity` додає audit fields і явні mark methods.
-- `DomainException` переносить `IDomainError`; `ExceptionBehavior` мапить його до `Result.Invalid` для Result-based handlers.
-- `IAggregateRoot` є marker для aggregate roots; `IHasDomainEvents` — контракт event lifecycle.
-- `MoneyAmount` і `CategoryPath` — наявні спільні value objects, які не слід дублювати з тією ж семантикою.
+- `BaseEntity` provides identity and equality by concrete type and non-transient ID, as well as methods for collecting domain events.
+- `BaseAuditableEntity` adds audit fields and explicit change-marking methods.
+- `DomainException` carries `IDomainError`; `ExceptionBehavior` converts it to `Result.Invalid` for handlers that return Result.
+- `IAggregateRoot` is a marker for aggregate roots; `IHasDomainEvents` is the event lifecycle contract.
+- `MoneyAmount` and `CategoryPath` are existing shared value objects and should not be duplicated with the same semantics.
 
-## Використання
+## Usage
 
-Наслідуйте aggregate/entity від відповідної бази лише коли її ID та event lifecycle підходять. Підіймайте event через `AddDomainEvent` усередині завершеної domain operation. Не dispatch-те його в Domain.
+Inherit an aggregate or entity from the corresponding base only when its ID and event lifecycle fit. Add an event through `AddDomainEvent` inside a completed domain operation. Do not publish it from Domain.
 
-Не додавайте сюди EF attributes, HTTP concepts, repository implementations або transport DTO.
+Do not add EF attributes, HTTP concepts, repository implementations, or transport DTOs here.

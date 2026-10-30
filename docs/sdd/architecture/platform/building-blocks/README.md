@@ -1,23 +1,23 @@
-# Довідка BuildingBlocks
+# BuildingBlocks Reference
 
-BuildingBlocks — спільна технічна основа. Він визначає cross-module primitives і реалізації, але ніколи не володіє бізнес-правилами Catalog, Reference, Identity, Accounting або Crm.
+BuildingBlocks is the shared technical foundation. It defines primitives and implementations for multiple modules, but never owns the business rules of Catalog, Reference, Identity, Accounting, or Crm.
 
-## Карта проєктів
+## Project Map
 
 ```text
 src/BuildingBlocks/
-├── BuildingBlocks.Domain/            примітиви сутностей, аудиту, помилок і подій
-├── BuildingBlocks.Application/       Mediator behaviors, контракти, notifications і logging
-├── BuildingBlocks.Infrastructure/    спільні adapter implementations, migrations і seeders
+├── BuildingBlocks.Domain/            entity, audit, error, and event primitives
+├── BuildingBlocks.Application/       Mediator behaviors, contracts, notifications, and logging
+├── BuildingBlocks.Infrastructure/    shared adapter implementations, migrations, and seeding
 └── BuildingBlocks.Api/               Ardalis.Result → MVC mapping
 ```
 
-## Читайте в такому порядку
+## Read in this order
 
 1. [Domain primitives](domain.md)
-2. [Application primitives і behaviors](application.md)
-3. [Infrastructure services і startup](infrastructure.md)
+2. [Application primitives and behaviors](application.md)
+3. [Infrastructure services and startup](infrastructure.md)
 4. [API result mapping](api.md)
-5. [Правила використання та доступність](usage-rules.md)
+5. [Usage rules and availability](usage-rules.md)
 
-Не створюйте інший shared base type, behavior або service abstraction до перевірки цієї довідки.
+Do not create another shared base type, pipeline behavior, or service abstraction before checking this reference.

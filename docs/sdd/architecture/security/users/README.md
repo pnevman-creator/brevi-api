@@ -1,5 +1,5 @@
-# Модуль користувачів
+# Users Module
 
-Використовуйте цей модуль для bootstrap accounts, registration, invitations і функціональностей керування користувачами.
+Use this module for initial accounts, registration, invitations, and user-management features.
 
-- [Provisioning і registration](provisioning-and-registration.md)
+- [Provisioning and registration](provisioning-and-registration.md)

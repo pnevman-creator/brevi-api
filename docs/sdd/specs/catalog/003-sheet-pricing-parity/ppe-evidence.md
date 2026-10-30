@@ -1,0 +1,31 @@
+# TS-006 evidence — 2026-10-25
+
+Backend and Admin implementation verified locally. No production deployment or real-data approval is claimed.
+
+- Red: `dotnet test tests/UnitTests/UnitTests.csproj --no-restore --filter PpePricingTests --verbosity quiet` — 5 failed / 1 passed against the noncalculating baseline. Failures were missing tier outputs/overflow result, not compilation.
+- Green: same filter — 6 passed after Domain implementation.
+- `dotnet test tests/UnitTests/UnitTests.csproj --no-restore --filter 'PpePricing|Aggregate_contract_is_valid_and_all_references_resolve' --verbosity quiet` — 25 passed. Covers serialization/schema parity, operation policies, input bounds/precision, approval distinction, arithmetic and precedence.
+- `dotnet test tests/IntegrationTests/IntegrationTests.csproj --no-restore --filter PpePricing --verbosity quiet` with local test connection — 2 passed in isolated PostgreSQL; draft bootstrap/replay, changed-source rejection, immutable history, actor-bound idempotency, stale version conflict, exact override prices, HTTP authentication/claim actor and repeated query IDs. Fresh regression including the Catalog-only upgrade path and neighboring sewing API: 6 passed. A first upgrade-test run mistakenly selected a Reference migration from the shared history table; the fixture now selects only Catalog-owned migration IDs.
+- Generated `AddPpePricingVersions` is additive: two Catalog tables, Product FK with Restrict, indexed scope and unique public/request UUIDs. No applied migration edited. Empty database path is exercised by the fixture; upgrade path uses the preceding migration and retains existing imported Products.
+
+Initial local boundary review: API binds/authorizes/maps only; Application owns read/approve scenarios; Domain arithmetic has no dependencies on transport/storage/jobs; Infrastructure owns persistence and bounded projections. The import planner maps source values only. Source capture files stay ignored; secrets are not included. No unstructured Common/Helpers folder or additional module dependency was introduced.
+
+Known existing warning: Microsoft.OpenApi.YamlReader 2.7.5 NU1903. It predates this feature and was not suppressed. Full suite, browser and production build are outside the requested focused verification.
+
+Final checkpoint checks: `PpePricing|SewingPricingContractTests|Aggregate_contract_is_valid_and_all_references_resolve` — 50 passed; affected C# whitespace formatted. Fresh Host.Seed build passed with zero warnings/errors; `dotnet ef migrations has-pending-model-changes --no-build --context CatalogDbContext --project src/Modules/Catalog/Catalog.Infrastructure/Catalog.Infrastructure/Catalog.Infrastructure.csproj --startup-project src/Bootstrapper/Host.Seed/Host.Seed.csproj` reported no changes. Source files are ignored. Only TS-006 files are included in the authorized local checkpoint; pre-existing SDD changes remain unstaged.
+
+## Request completeness follow-up
+
+Red regression `Incomplete_markup_request_is_rejected_before_any_approval_command` observed 404 instead of required 400 because absent numeric constructor properties bound as zero and reached Mediator. API-owned request types now require every documented JSON property and map explicitly to Application values; Domain/Application have no JSON attributes. Valid request, incomplete request and neighboring sewing API checks now pass: 7 integration tests. Serializer/property contract checks include the API request models (53 unit/contract cases in the final filter). The wire schema is unchanged.
+
+## Local execution
+
+Verified localhost:5432 / brevidb; created a custom pg_dump backup and successfully listed it with pg_restore before applying migrations via normal Host.Seed. Then ran the explicit PPE bootstrap and rerun against ignored frozen source: applied-drafts (10 rules, 119 offers), then already-applied (same counts). No input was approved and no price was published by the job. No source/backup/credentials were added to Git.
+
+## Consumer completion
+
+Admin PPE SDD 007 is implemented and verified against clean backend checkpoint c39c95127125c90b4f77bc00a531f0556cb728a2. Source sync/generate/check passed. Distinct focused client cases: 6 model, 16 data-access, 22 feature and 5 UI. The real RTK store test verifies both card/list cache refresh after an offer revision; component checks cover permission/empty/error/blockers, unchanged and edited retry identities, stale version reload and independent drafts. No client price formula exists. Types, lint, formatting and documentation navigation were checked in that repository. No browser/production deployment is claimed.
+
+Final backend commands: `dotnet test tests/UnitTests/UnitTests.csproj --no-restore --filter 'PpePricing|SewingPricingContractTests|Aggregate_contract_is_valid_and_all_references_resolve' --verbosity quiet` (53 passed); `dotnet test tests/IntegrationTests/IntegrationTests.csproj --no-restore --filter 'PpePricing|SewingPricingApiTests' --verbosity quiet` (7 passed with an isolated local test connection). Readback of the real local target confirmed 10 rules / 119 offers, with zero approved records in either table. Migration/import is separate from business approval.
+
+TS-007 remains the next step: representative catalogue discrepancy checks and retirement of legacy price consumers. No quotation history or production data was migrated by this slice.

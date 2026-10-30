@@ -1,12 +1,17 @@
-# Фонові задачі та runbook-и
+# Background jobs and runbooks
 
-У поточній перевіреній структурі BreviERP немає окремого console-хоста для імпорту, внутрішнього scheduler-а, черги, retry/backoff, distributed locking або recurring execution. `Host.Api` реєструє наявні background-job services через композицію хоста, але документація не може вигадувати команди чи процедури для не реалізованої задачі.
+BreviERP has no scheduler, queue, delayed retry mechanism, distributed lock, or periodic execution. `Host.Api` calls `AddBackgroundJobRegistrations()`, but that method currently registers no services.
+
+One-off operational jobs exist as libraries in `src/Jobs` ([overview](../../../../src/Jobs/README.md)): `CatalogImport` (catalogue import and PPE pricing bootstrap) and `SewingPricing` (pricing baseline, verification, readiness, input review, and activation). Only `Host.Seed` references and runs them, through command-line flags. Runbooks with exact commands:
+
+- [Catalogue import](../data/catalog-import.md) and [PPE pricing bootstrap](../data/ppe-pricing.md)
+- [Sewing pricing baseline](../data/sewing-pricing.md), [readiness](../data/pricing-readiness.md), [input review](../data/pricing-input-review.md), [activation](../data/pricing-activation.md), [cutover verification](../data/pricing-cutover.md)
 
 ```text
-оператор / cron / CI → погоджена реалізація задачі → scoped module service → PostgreSQL / зовнішній адаптер
+operator / cron / CI → agreed job implementation → scoped module service → PostgreSQL / external adapter
 ```
 
-- [Стан CLI задач](host-jobs-cli.md)
-- [Усунення проблем](troubleshooting.md)
+- [Job CLI status](host-jobs-cli.md)
+- [Troubleshooting](troubleshooting.md)
 
-Для нової фонової операції спочатку створіть SDD-специфікацію. Вона має визначати команду запуску, контракт, ідемпотентність, timeout/retry-поведінку, locking, observability, безпечний повтор і rollback. Ніколи не вставляйте секрети або справжні endpoint URL у output, issue чи документацію.
+For a new background operation, create an SDD first. It must define the start command, contract, idempotency, timeout and retry behavior, locking, observability, safe rerun, and rollback. Never put secrets or real endpoint URLs in output, tracker tasks, or documentation.

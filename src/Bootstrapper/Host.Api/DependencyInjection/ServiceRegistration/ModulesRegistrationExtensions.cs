@@ -1,3 +1,11 @@
+using Host.Api.Crm.CustomSewing.Pricing;
+using Host.Api.Crm.CustomSewing.Suggestions;
+using Crm.Infrastructure.DependencyInjection;
+using Crm.Application.Quotes.Pricing;
+using Crm.Application.Quotes.BuildIntroduction;
+using Crm.Application.Quotes.Introductions;
+using Crm.Application.Quotes.Ownership;
+using Host.Api.Crm;
 using Accounting.Infrastructure.DependencyInjection;
 using Catalog.Api.DependencyInjection;
 using Catalog.Application.Contracts.Reference;
@@ -26,8 +34,16 @@ public static class ModuleRegistrationsExtensions
         services.AddAccountingInfrastructureServices(configuration);
         services.AddCatalogInfrastructureServices(configuration);
         services.AddCatalogApiOptions(configuration);
+        services.AddCrmDbContextServices(configuration);
+        services.AddScoped<global::Crm.Application.CustomSewing.Pricing.ICustomSewingPricing, CustomSewingPricing>();
+        services.AddCrmSewingSuggestions();
+        services.AddScoped<IQuoteCatalogPriceReader, QuoteCatalogPriceReader>();
+        services.AddScoped<IIntroductionCatalogReader, IntroductionCatalogReader>();
+        services.AddScoped<IIntroductionSourceMappingReader, IntroductionSourceMappingReader>();
+        services.AddScoped<IntroductionFeaturedMappingService>();
+        services.AddScoped<IQuoteAssigneeReader, QuoteAssigneeReader>();
         services.AddScoped<IProductReferenceReader, CatalogProductReferenceReader>();
-        services.AddScoped<IProductListPricingReferenceReader, CatalogProductListPricingReferenceReader>();
+        services.AddScoped<Catalog.Application.Contracts.Pricing.IPricingReferenceVersionReader, CatalogPricingReferenceReader>();
         services.AddScoped<IProductUsageReader, CatalogProductUsageReader>();
         services.AddSingleton<IProductSlugGenerator, ProductSlugGenerator>();
 

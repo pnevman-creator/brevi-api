@@ -1,49 +1,49 @@
-# Product page — performance admin list query
+# Product page — admin list query performance
 
-**Статус:** реалізовано у коригувальному слайсі `03.9`
-**Scope:** `GET /api/v1/products`; HTTP/OpenAPI contract, schema та Product business rules не змінюються.
+**Status:** implemented in corrective slice `03.9`\
+**Scope:** `GET /api/v1/products`; the HTTP/OpenAPI contract, schema, and Product business rules do not change.
 
-## Спостереження
+## Observation
 
-Перший `GET /api/v1/products` після старту Host API 2026-08-19 повернув `200 OK`, але в логах були:
+The first `GET /api/v1/products` after starting Host API on 2026-08-19 returned `200 OK`, but logs showed:
 
-- EF Core `MultipleCollectionIncludeWarning` для query з кількома collection navigation;
-- `Slow request GetAdminProductsQuery: 7740 ms` за порогу 500 ms;
-- тривалість HTTP-запиту 9142 ms.
+- EF Core `MultipleCollectionIncludeWarning` for a query with multiple collection navigations;
+- `Slow request GetAdminProductsQuery: 7740 ms` against a 500 ms threshold;
+- HTTP request duration of 9142 ms.
 
-Повторні прогріті запити без перезапуску Host API повернули `200 OK` за 323.7063 ms та
-172.2967 ms. Обидва значення нижчі за поріг slow request 500 ms. Отже, на порожньому
-списку зафіксована затримка є cold-start cost (JIT, EF model/query compilation або перше
-DB connection), а не сталою latency list endpoint.
+Subsequent warmed requests without restarting Host API returned `200 OK` in 323.7063 ms and
+172.2967 ms. Both are below the 500 ms slow-request threshold. Thus, the recorded delay on an empty
+list is a cold-start cost (JIT, EF model/query compilation, or the first database connection), not a
+steady-state delay for the list endpoint.
 
-Поточний `GetAdminProductsSpec` проєктує `Categories`, головне фото та Sewing collections
-в один list-read query. Повний час handler також включає count, Media URL lookup і
-`IProductReferenceReader.GetSnapshotAsync`, тому warning не вважається єдиною причиною
-затримки без вимірювання.
+The current `GetAdminProductsSpec` projects `Categories`, the primary photo, and Sewing collections
+in one list read query. Total handler time also includes counting, resolving Media URLs, and
+`IProductReferenceReader.GetSnapshotAsync`, so the warning is not considered the sole cause of the
+delay without measurement.
 
-## Рішення
+## Decision
 
-1. Для поточної projection застосувати локальний EF Core `AsSplitQuery()`: collection
-   results матеріалізуються окремими фіксованими SQL queries, а не одним cartesian query.
-   Якщо наступне профілювання покаже, що fixed split-query set не вкладається в ціль,
-   наступним кроком буде плоский page projection і bounded batch projections за ID сторінки.
-2. Не застосовувати глобальний `QuerySplittingBehavior` і не додавати `Include` без SQL evidence.
+1. Apply local EF Core `AsSplitQuery()` to the current projection: collection results are materialized
+   with a fixed set of separate SQL queries instead of one cartesian query. If subsequent profiling
+   shows that the fixed set of split queries misses the target, the next step is a flat page
+   projection and bounded batch projections by page ID.
+2. Do not apply a global `QuerySplittingBehavior` or add `Include` without SQL evidence.
 
-## Незмінні властивості
+## Invariants
 
-- Filtering, category descendants, sorting, stable secondary sort `Id`, paging і total count
-  лишаються DB-side та семантично ідентичними.
-- Response зберігає `categoryIds`, `mainPhoto` URL/null і `minimumWholesalePrice`.
-- Додаткові SQL operations bounded за page, а не за кількістю Product rows; N+1 не допускається.
-- Міграції, таблиці, OpenAPI YAML та authorization не змінюються.
+- Filtering, child categories, sorting, stable secondary sorting by `Id`, pagination, and total count
+  remain in the database and semantically unchanged.
+- The response retains `categoryIds`, `mainPhoto` URL/null, and `minimumWholesalePrice`.
+- Additional SQL operations are bounded by page size, not by the number of Product rows; N+1 is not allowed.
+- Migrations, tables, OpenAPI YAML, and authorization do not change.
 
-## Критерії приймання
+## Acceptance criteria
 
-- Integration test не генерує `MultipleCollectionIncludeWarning` для list page projection.
-- SQL/projection tests підтверджують відсутність N+1 і збереження response contract.
+- The integration test does not produce `MultipleCollectionIncludeWarning` for the list page projection.
+- SQL/projection tests confirm no N+1 and preserve the response contract.
 
-## Реалізований крок
+## Implemented step
 
-`GetAdminProductsSpec` використовує `Query.AsNoTracking().AsSplitQuery()`.
-PostgreSQL integration test налаштовує `MultipleCollectionIncludeWarning` як exception
-і успішно виконує projection.
+`GetAdminProductsSpec` uses `Query.AsNoTracking().AsSplitQuery()`.
+The PostgreSQL integration test configures `MultipleCollectionIncludeWarning` as an exception
+and successfully executes the projection.

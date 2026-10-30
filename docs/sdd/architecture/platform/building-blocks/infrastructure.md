@@ -1,6 +1,6 @@
 # BuildingBlocks.Infrastructure
 
-## Структура
+## Structure
 
 ```text
 BuildingBlocks.Infrastructure/
@@ -22,20 +22,20 @@ BuildingBlocks.Infrastructure/
     └── FakePermissionService
 ```
 
-## Зареєстровані спільні сервіси
+## Registered shared services
 
-`AddInfrastructureServices` реєструє:
+`AddInfrastructureServices` registers:
 
-- `IDomainEventContext` як `EfDomainEventContext`;
-- `IDomainEventDispatcher` як `MediatorDomainEventDispatcher`;
-- спільні технічні сервіси, передбачені поточною композицією хоста.
+- `IDomainEventContext` as `EfDomainEventContext`;
+- `IDomainEventDispatcher` as `MediatorDomainEventDispatcher`;
+- shared technical services provided by the current host composition.
 
-## Підхід до startup і даних
+## Startup and data approach
 
-`DbMigrator` застосовує EF migrations через provider execution strategy. `UseAppMigrations` запускає всі зареєстровані `IDatabaseMigrator`; `UseAppSeeders` запускає кожен унікальний зареєстрований `ISeeder` у scoped startup operation.
+`DbMigrator` applies EF migrations through the provider execution strategy. `UseAppMigrations` runs all registered `IDatabaseMigrator` instances; `UseAppSeeders` runs each unique registered `ISeeder` during startup in a separate dependency injection scope.
 
-Ці startup extensions — host-level operations. Feature handler не може самостійно застосовувати migrations або seed data.
+These startup extensions run at the host level. A feature handler must not apply migrations or seed data itself.
 
-## Поведінка безпеки
+## Security behavior
 
-Поточний користувач і permissions мають споживатися через application-facing abstractions. Не обходьте їх, читаючи `HttpContext` усередині Application.
+The current user and permissions must be consumed through Application abstractions. Do not bypass them by reading `HttpContext` inside Application.

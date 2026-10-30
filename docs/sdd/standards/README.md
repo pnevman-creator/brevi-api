@@ -1,13 +1,13 @@
-# Інженерні правила backend
+# Backend engineering rules
 
-Ця папка містить сталі правила для кожної backend-зміни. Вона не містить frontend-правил: frontend є окремим проєктом.
+This directory contains stable rules for every backend change. It does not contain frontend rules; the frontend is a separate project.
 
-- [Backend rules](backend-rules.md) — шари, CQRS, DDD, Mediator і організація коду.
-- [Стратегія ідентифікаторів](identifier-strategy.md) — обов'язкові правила вибору ID перед створенням або зміною сутності.
-- [API rules](api-rules.md) — HTTP-контракти, валідація, результати й помилки.
-- [Database rules](database-rules.md) — EF Core, читання, транзакції, міграції та дані.
-- [Security and observability rules](security-observability-rules.md) — авторизація, privacy, Serilog і diagnostics.
-- [Testing rules](testing-rules.md) — покриття сценаріїв, Red → Green → Refactor, вибір тестів, винятки та обов’язкові команди перевірки.
-- [Delivery rules](delivery-rules.md) — behavior-first SDD flow, traceability, scope та definition of done.
+- [Backend rules](backend-rules.md) — layers, CQRS, DDD, Mediator, and code organization.
+- [Identifier strategy](identifier-strategy.md) — required rules for choosing IDs before creating or changing an entity.
+- [API rules](api-rules.md) — HTTP contracts, validation, results, and errors.
+- [Database rules](database-rules.md) — EF Core, reads, transactions, migrations, and data.
+- [Security and observability rules](security-observability-rules.md) — authorization, privacy, Serilog, and diagnostics.
+- [Testing rules](testing-rules.md) — scenario coverage, Red → Green → Refactor, test selection, exceptions, and required verification commands.
+- [Delivery rules](delivery-rules.md) — behavior-first SDD workflow, traceability, boundaries, and completion criteria.
 
-Feature-специфікації посилаються на ці правила, а не дублюють їх.
+Feature specifications link to these rules rather than duplicating them.

@@ -1,32 +1,29 @@
 # API rules
 
-## Стабільність контракту
+## Contract stability
 
-Публічні маршрути, action names і response fields стабільні за замовчуванням. Надавайте перевагу адитивним змінам. Несумісну зміну, зачеплених клієнтів, шлях міграції та rollout plan документуйте у feature-специфікації й контракті.
+Public routes, action names, and response fields are stable by default. Prefer additive changes. Document a breaking change, affected clients, migration path, and rollout plan in the feature specification and contract.
 
-Для нової або зміненої HTTP-поведінки пов'яжіть кожну операцію з її acceptance-сценаріями `SC-*`. Коли це практично, погодьте зрозумілий людині контракт і версійований OpenAPI-документ до реалізації transport-рівня. На основі погодженого контракту створіть сфокусовані Red-тести, реалізуйте transport і перед передачею споживачеві перевірте runtime-поведінку за OpenAPI.
+For new or changed HTTP behavior, link each operation to its `SC-*` acceptance scenarios. Where practical, agree on a human-readable contract and a versioned OpenAPI document before implementing the transport layer. Use the agreed contract to create focused Red tests, implement transport, and verify runtime behavior against OpenAPI before handing it to consumers.
 
-Використовуйте DTO, специфічні для задачі. Не розкривайте entities, persistence types, secrets або internal exceptions. Для write-операцій із ризиком повторного виконання визначайте семантику `Idempotency-Key` до реалізації.
+Use task-specific DTOs. Do not expose entities, persistence types, secrets, or internal exceptions. Define `Idempotency-Key` semantics before implementing write operations that might be retried.
 
-## Контролери
+## Controllers
 
-Контролери мають:
+Controllers must:
 
-- приймати явні request models;
-- передавати `CancellationToken` до Mediator;
-- повертати усталений Ardalis.Result HTTP mapping;
-- оголошувати релевантні `ProducesResponseType` attributes;
-- не містити validation, business або EF logic.
+- accept explicit request models;
+- pass `CancellationToken` to Mediator;
+- use the established Ardalis.Result-to-HTTP mapping;
+- declare relevant `ProducesResponseType` attributes;
+- contain no validation, business logic, or EF logic.
 
-Для paginated list endpoint controller повинен зберегти весь
-`PagedResult<IReadOnlyList<TItem>>` у response: `value` і `pagedInfo`. Не
-використовуйте generic Result-to-HTTP helper, якщо він повертає лише `result.Value`
-і відкидає `PagedInfo`; додайте або використайте mapping, що зберігає metadata.
+For a paginated list endpoint, the controller must preserve the entire `PagedResult<IReadOnlyList<TItem>>` in the response: both `value` and `pagedInfo`. Do not use a generic Result-to-HTTP helper if it returns only `result.Value` and drops `PagedInfo`; add or use a mapping that preserves the metadata.
 
-## Валідація, результати та помилки
+## Validation, results, and errors
 
-FluentValidation validators реєструються скануванням Application assembly і запускаються через Mediator validation behavior. Розміщуйте validator у папці відповідного use-case.
+FluentValidation validators are registered by scanning the Application assembly and run through the Mediator validation behavior. Place each validator in the corresponding scenario directory.
 
-Валідуйте форму input: required fields, ranges, formats, enum values, length і комбінації input. State/business invariants перевіряйте у Domain або Application use-case logic.
+Validate input shape: required fields, ranges, formats, enum values, length, and field combinations. Check state and business invariants in Domain or Application scenario logic.
 
-Для очікуваних failures повертайте Ardalis.Result. Зберігайте чинний API error mapping. Не використовуйте винятки для звичайного validation або not-found control flow і не розкривайте internal details у response.
+Return Ardalis.Result for expected failures. Preserve the current API error mapping. Do not use exceptions for ordinary validation or missing-resource control flow, and do not expose internal details in responses.

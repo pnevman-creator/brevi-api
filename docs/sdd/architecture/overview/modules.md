@@ -1,25 +1,25 @@
-# Модулі
+# Modules
 
-## Identity
+## Identity module
 
-Володіє користувачами, ролями, refresh-сесіями, автентифікацією та політиками доступу. Реалізовано маршрути `api/auth/session` для login, refresh, logout і поточного користувача.
+Owns users, roles, refresh sessions, authentication, and access policies. The `api/auth/session` routes for login, refresh, logout, and the current user are implemented.
 
-## Catalog
+## Catalog module
 
-Володіє товарами, категоріями товарів і медіафайлами каталогу. Публікує API категорій та медіа; зберігання медіа адаптовано через Infrastructure.
+Owns products, product categories, and catalog media. Publishes category and media APIs; media storage is adapted through Infrastructure.
 
-## Reference
+## Reference module
 
-Володіє довідниками постачальників, тканин, фурнітури, частин виробу, операцій над частинами та додаткових довідників.
+Owns reference data for suppliers, fabrics, accessories, garment parts, operations on parts, and additional reference data.
 
-## Accounting
+## Accounting module
 
-Володіє гаманцями, транзакціями й категоріями транзакцій. На момент аудиту API-сценарії модуля ще не представлені контролерами.
+Owns wallets, transactions, and transaction categories. At the audit date, the module's API scenarios are not yet represented by controllers.
 
-## Crm
+## Crm module
 
-Модуль присутній у рішенні з чотирма шарами, але предметні сценарії ще не реалізовані. Не вважайте його контрактом готової CRM-функціональності.
+The client/contact slice implements scoped customer APIs, exact source identity, revision/idempotency and Admin merge in the existing four layers. See the [feature map](../../features/crm/clients-and-quotes.md). Quotes, custom sewing, document delivery and historical migration remain planned in CRM-001.
 
-## BuildingBlocks
+## Shared BuildingBlocks
 
-Спільні domain-примітиви, application behaviors, обробка доменних подій, результатів і технічні адаптери.
+Shared domain primitives, Application behaviors, domain event and result handling, and technical adapters.

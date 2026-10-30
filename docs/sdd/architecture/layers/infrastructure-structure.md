@@ -1,40 +1,40 @@
-# Структура Infrastructure
+# Infrastructure Structure
 
-## Відповідальність
+## Responsibility
 
-Infrastructure — шар адаптерів. Він реалізує Application contracts і зберігає/передає дані до технологічно специфічних систем.
+Infrastructure is the adapter layer. It implements Application contracts and stores/transmits data through technology-specific systems.
 
-## Цільова структура модуля
+## Target module structure
 
 ```text
 <Module>.Infrastructure/
 ├── DataBase/
 │   └── <Module>DbContext.cs
-├── Configurations/          EF IEntityTypeConfiguration класи
-├── Migrations/              EF migrations і model snapshot
+├── Configurations/          EF IEntityTypeConfiguration classes
+├── Migrations/              EF migrations and model snapshot
 ├── Repositories/            EF repository implementations
-├── Projections/             побудова та persistence read-моделі
-├── Integrations/            HTTP/queue/storage adapter implementations
-├── Services/                storage, export, notification adapters
+├── Projections/             building read models from persisted data
+├── Integrations/            HTTP, queue, and storage adapters
+├── Services/                storage, export, and notification adapters
 ├── DependencyInjection/     Add<Module>... extension methods
 └── <Module>.Infrastructure.csproj
 ```
 
-## Візуалізація адаптера
+## Adapter diagram
 
 ```text
 Application abstraction
           ▲
-          │ реалізує
+          │ implemented by
 Infrastructure adapter
      ├── EF Core DbContext ──→ PostgreSQL
-     ├── external client ────→ storage / інший сервіс
+     ├── external client ────→ storage / another service
      └── projection builder ─→ read model
 ```
 
-## Правила
+## Rules
 
-- EF configurations і migrations ніколи не переносяться в Domain або Application.
-- Реєструйте адаптери через наявний module DI extension.
-- Infrastructure може посилатися на Application та Domain; зворотний напрямок заборонено.
-- Тримайте мапінг зовнішнього payload на межі адаптера та не допускайте generated client types усередину.
+- EF configurations and migrations never belong in Domain or Application.
+- Register adapters through the module's existing DI extension method.
+- Infrastructure may reference Application and Domain; the reverse direction is forbidden.
+- Keep external-data mapping at the adapter boundary and do not let generated client types leak inward.

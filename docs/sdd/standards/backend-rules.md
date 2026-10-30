@@ -1,47 +1,40 @@
 # Backend rules
 
-## Шари та залежності
+## Layers and dependencies
 
-Дотримуйтеся напрямку залежностей `API → Application → Domain`. Infrastructure залежить від внутрішніх шарів, але не навпаки.
+Follow the `API → Application → Domain` dependency direction. Infrastructure depends on inner layers, never the reverse.
 
-- Domain володіє business invariants, entities, value objects і domain services; у ньому немає transport DTO або Infrastructure dependencies.
-- Application оркеструє use-cases через abstractions, а не Infrastructure implementations.
-- Infrastructure містить persistence та integration adapters; не володіє business rules.
-- API виконує тільки HTTP binding, авторизацію та mapping результату; не містить EF або business logic.
+- Domain owns business invariants, entities, value objects, and domain services; it contains no transport DTOs or Infrastructure dependencies.
+- Application orchestrates scenarios through abstractions, not Infrastructure implementations.
+- Infrastructure contains persistence and integration adapters; it does not own business rules.
+- API performs only HTTP binding, authorization, and result mapping; it contains no EF or business logic.
 
-## Ідентифікатори сутностей
+## Entity identifiers
 
-Перед створенням або зміною ідентифікатора сутності дотримуйтеся [стратегії ідентифікаторів](identifier-strategy.md). Не використовуйте `Guid` автоматично: тип ID визначається життєвим циклом створення та інтеграції. У Domain обгортайте вибраний scalar у типізований value object; не використовуйте raw primitive ID у `BaseEntity`, `BaseAuditableEntity` або Domain foreign keys.
+Before creating or changing an entity identifier, follow the [identifier strategy](identifier-strategy.md). Do not use `Guid` automatically: the ID type depends on the creation and integration lifecycle. In Domain, wrap the chosen scalar value in a typed value object; do not use an unwrapped primitive ID in `BaseEntity`, `BaseAuditableEntity`, or Domain foreign keys.
 
-## CQRS, Mediator і код
+## CQRS, Mediator, and code
 
-Використовуйте feature-by-folder усередині Application. Тримайте command/query, handler, validator і private DTO разом за сценарієм. Один Mediator handler володіє одним use-case; commands змінюють стан, queries не змінюють його.
+Organize Application by feature. Keep a command/query, handler, validator, and private DTOs together by scenario. One Mediator handler owns one scenario; commands change state, while queries do not.
 
-Передавайте `CancellationToken` крізь увесь flow. Cross-cutting concerns залишайте у pipeline behaviors; не переміщуйте business rules у behaviors.
+Pass `CancellationToken` through the entire execution flow. Keep cross-cutting concerns in pipeline behaviors; do not move business rules into those behaviors.
 
 ### Ardalis.Result
 
-- Для очікуваних outcomes use case використовуйте `Ardalis.Result`, а не власні
-  success/error wrappers. Для paginated list query базовим результатом є
-  `PagedResult<IReadOnlyList<TItem>>` із `PagedInfo`; не створюйте локальний DTO,
-  що дублює page/page-size/total metadata.
-- Для чистого перетворення `Result<TSource>` у `Result<TTarget>` використовуйте
-  `Map`. Для послідовності операцій, що кожна повертає `Result`, використовуйте
-  `Bind`/`BindAsync`, коли це прибирає повторні перевірки status. Не приховуйте
-  через них write side effects або суттєві DB/state checks.
+- Use `Ardalis.Result` for expected scenario outcomes rather than custom success/error wrappers. For a paginated list query, the default result is `PagedResult<IReadOnlyList<TItem>>` with `PagedInfo`; do not create a local DTO that duplicates page, page-size, and total-count metadata.
+- Use `Map` for a pure conversion from `Result<TSource>` to `Result<TTarget>`. For a sequence of operations that each return `Result`, use `Bind`/`BindAsync` when they remove repeated status checks. Do not use them to hide write side effects or important database and state checks.
 
-Використовуйте явні імена: `CreateOrderCommand`, `GetPublicProductListQuery`, `GetAdminProductListQueryHandler`. Не створюйте generic folders або names на кшталт `Common`, `Misc`, `Helper`, `Utils`, `Manager`. Не додавайте abstractions без конкретної потреби.
+Use explicit names such as `CreateOrderCommand`, `GetPublicProductListQuery`, and `GetAdminProductListQueryHandler`. Do not create generic directories or names such as `Common`, `Misc`, `Helper`, `Utils`, or `Manager`. Do not add abstractions without a concrete need.
 
-## Якість структури файлів
+## File structure quality
 
-- Один production-файл має одну основну відповідальність і, як правило, один top-level type. Не об'єднуйте в одному файлі кілька DTO, specifications, handlers або не пов'язані допоміжні типи лише для скорочення кількості файлів.
-- Розташовуйте код у feature-by-folder: command/query, handler, validator, DTO та specification належать конкретному use-case. Specifications завжди зберігайте в `<UseCase>/Specifications/`; заборонено створювати загальну `<Area>/Specifications/` або використовувати specification іншого use-case. `Shared` допускається лише для справді спільного коду Product/feature, а не як місце для неструктурованих типів.
-- Назва файла відповідає public top-level type: `CreateProductCommand.cs`, `CreateProductCommandHandler.cs`, `ProductByIdSpec.cs` тощо.
-- Дотримуйтеся наявного форматування проєкту. Не використовують стиснутий однорядковий стиль для namespaces, класів, handlers, validators або складних DTO. Перед завершенням зміни запустіть formatter або перевірте diff на відповідність сусіднім файлам.
-- Спочатку дослідіть наявні conventions, контракти та залежності, потім вносіть мінімальну завершену реалізацію. Заборонені тимчасові заглушки, часткові каркаси й передчасні твердження про завершення, якщо ними не можна закрити task і підтвердити це перевіркою.
-- Не дублюйте capability уже підключеної бібліотеки власним wrapper/utility, доки
-  не перевірено, що її тип або extension не покриває погоджений use case.
+- One production code file has one primary responsibility and generally one top-level type. Do not combine multiple DTOs, specifications, handlers, or unrelated helper types in one file merely to reduce file count.
+- Organize code by feature: command/query, handler, validator, DTO, and specification belong to a particular scenario. Always keep specifications in `<UseCase>/Specifications/`; a generic `<Area>/Specifications/` directory or a specification reused from another scenario is forbidden. `Shared` is allowed only for genuinely shared Product/feature code, not as a dumping ground for unstructured types.
+- Match the filename to its public top-level type: `CreateProductCommand.cs`, `CreateProductCommandHandler.cs`, `ProductByIdSpec.cs`, and so on.
+- Follow the project's existing formatting. Do not use compressed one-line style for namespaces, classes, handlers, validators, or complex DTOs. Before completing a change, run the formatter or compare the diff with adjacent files.
+- Investigate existing conventions, contracts, and dependencies first, then make the smallest complete implementation. Temporary stubs, partial scaffolds, and premature completion claims are forbidden when they cannot close the task and be verified.
+- Do not duplicate a capability of an already installed library with a custom wrapper or utility until you have checked that its type or extension does not cover the agreed scenario.
 
-## Domain events і транзакції
+## Domain events and transactions
 
-Дотримуйтеся наявного lifecycle domain events: `collect → dispatch → clear`. Use-cases з кількома змінами aggregate-ів координують транзакцію через наявний `IUnitOfWork`.
+Follow the existing domain event lifecycle: `collect → dispatch → clear`. The current code has no shared `IUnitOfWork`. For a scenario changing multiple aggregates, define the transaction boundary, possibility of partial completion, and verification in the specification; do not assume automatic atomicity across contexts.

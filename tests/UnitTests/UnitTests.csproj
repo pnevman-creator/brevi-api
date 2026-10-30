@@ -31,6 +31,8 @@
 
     <ItemGroup>
         <ProjectReference Include="..\..\src\Modules\Catalog\Catalog.Domain\Catalog.Domain\Catalog.Domain.csproj" />
+        <ProjectReference Include="..\..\src\Jobs\CatalogImport\CatalogImport.csproj" />
+        <ProjectReference Include="..\..\src\Jobs\SewingPricing\SewingPricing.csproj" />
         <ProjectReference Include="..\..\src\Modules\Catalog\Catalog.Application\Catalog.Application\Catalog.Application.csproj" />
         <ProjectReference Include="..\..\src\Modules\Catalog\Catalog.Api\Catalog.Api\Catalog.Api.csproj" />
         <ProjectReference Include="..\..\src\Modules\Identity\Identity.Api\Identity.Api\Identity.Api.csproj" />
@@ -38,4 +40,13 @@
         <ProjectReference Include="..\..\src\Modules\Reference\Reference.Domain\Reference.Domain\Reference.Domain.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+        <Content Include="../Fixtures/catalog-import.json" Link="Fixtures/catalog-import.json" CopyToOutputDirectory="PreserveNewest" />
+    </ItemGroup>
+    <ItemGroup>
+      <ProjectReference Include="..\..\src\Modules\Crm\Crm.Domain\Crm.Domain\Crm.Domain.csproj" />
+    </ItemGroup>
+    <ItemGroup>
+      <ProjectReference Include="..\..\src\Modules\Crm\Crm.Application\Crm.Application\Crm.Application.csproj" />
+    </ItemGroup>
 </Project>

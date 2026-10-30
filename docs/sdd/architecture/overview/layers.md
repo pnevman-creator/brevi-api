@@ -1,25 +1,25 @@
-# Межі шарів
+# Layer Boundaries
 
-## Domain
+## Domain Layer
 
-Володіє агрегатами, сутностями, value objects, доменними помилками та доменними подіями. Бізнес-інваріанти належать сюди та мають забезпечуватися конструкторами, фабриками або поведінковими методами. Domain не має залежності від transport DTO, EF, HTTP, логування, конфігурації чи Infrastructure.
+Owns aggregates, entities, value objects, domain errors, and domain events. Business invariants belong here and must be enforced by constructors, factories, or behavior methods. Domain must not depend on transport DTOs, EF, HTTP, logging, configuration, or Infrastructure.
 
-Використовуйте value objects для перевірених концептуальних ідентифікаторів і значень. Не робіть сутність публічною request/response-моделлю.
+Use value objects for validated conceptual identifiers and values. Do not expose an entity as a public request/response model.
 
-## Application
+## Application Layer
 
-Володіє сценаріями, командами, запитами, handlers, validators та абстракціями, які реалізують адаптери. Кожен Mediator handler реалізує один сценарій. Команди змінюють стан; запити не змінюють стан і за можливості використовують no-tracking/read projections.
+Owns use cases, commands, queries, handlers, validators, and abstractions implemented by adapters. Each Mediator handler implements one use case. Commands change state; queries do not and should use untracked read projections where possible.
 
-Application повертає контракти Ardalis.Result. Вона визначає persistence/integration interfaces, як read contexts або repositories, але ніколи не конструює їхні реалізації.
+Application returns Ardalis.Result contracts. It defines persistence and integration interfaces, such as read contexts or repositories, but never creates their implementations.
 
-## Infrastructure
+## Infrastructure Layer
 
-Володіє EF Core DbContexts, конфігураціями сутностей, міграціями, реалізаціями repository, зовнішніми клієнтами, persistence projections та реєстраціями адаптерів. Він може залежати від внутрішніх шарів; внутрішні шари не можуть залежати від нього.
+Owns EF Core DbContexts, entity configurations, migrations, repository implementations, external clients, persisted-data projections, and adapter registrations. It may depend on inner layers; inner layers may not depend on it.
 
-## API
+## API Layer
 
-Контролери — тонкий транспорт: зв’язують input, відправляють один mediator request із cancellation token і маплять Result через усталений API mapping. Контролери не містять бізнес-правил, EF-запитів або транзакційної оркестрації.
+Controllers are thin transport adapters: they bind input, send one Mediator request with a cancellation token, and map Result using established API conventions. Controllers contain no business rules, EF queries, or transaction orchestration.
 
-## Bootstrapper
+## Host Composition (Bootstrapper)
 
-Хости компонують модулі, налаштовують middleware та реєструють кросфункціональні сервіси. Це не місце для логіки сценарію.
+Hosts compose modules, configure middleware, and register cross-cutting services. They are not a place for use-case logic.
