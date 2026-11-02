@@ -22,7 +22,7 @@ Pricing API (start with Sewing or PPE pricing):
 
 Pricing data operations (local `Host.Seed` jobs, not HTTP), in run order:
 
-- [Local catalogue import](catalog/catalog-import.md) — frozen source, transactional model/Article/PPE transfer, provenance and reconciliation.
+- [Catalogue import](catalog/catalog-import.md) — frozen source, transactional model/Article/PPE transfer, provenance, reconciliation and dedicated cloud job with target/source pins.
 - [Imported pricing readiness](catalog/pricing-readiness.md) — full strict inventory before review/activation.
 - [Frozen-source pricing input review](catalog/pricing-input-review.md) — per-field source checks and activation holds.
 - [Explicit local pricing activation](catalog/pricing-activation.md) — reviewed plan, confirmation/publication and progress.
@@ -43,11 +43,11 @@ Pricing data operations (local `Host.Seed` jobs, not HTTP), in run order:
 
 ## Other modules
 
-[Accounting and Crm](../architecture/overview/modules.md) exist in the structure; as of the check date, they have no separate HTTP scenarios in controllers. They are not marked as completed features. See [operations](../operations/data/migrations-and-seeding.md) for schema preparation and seed.
+The [module map](../architecture/overview/modules.md) describes Accounting/Crm boundaries; implemented Crm workflows are listed below.
 
 ## Crm
 
-- [Clients and contacts](crm/clients-and-quotes.md) — P1–P4 scoped clients, immutable quotes/custom versions, private files, templates and suggestions; consumer FE-006/007 verified. P5 issuer/template settings, ready and private PDF artifact backend passed focused local checks; frontend consumer and deployment remain separate.
+- [Clients, quotes and archive planning](crm/clients-and-quotes.md) — versioned CRM/customer/custom/document/delivery workflows plus offline frozen-source history staging and dry-run reconciliation. Controlled historical writes remain separate.
 
 ## Reminders
 
