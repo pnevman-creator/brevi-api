@@ -29,6 +29,8 @@ public static class ModuleRegistrationsExtensions
         IConfiguration configuration)
     {
         services.AddIdentityConfiguration(configuration);
+        // Before Identity, which falls back to switched-off avatars when nothing is registered.
+        services.AddSingleton<Identity.Application.Services.IAvatarStorage, IdentityAvatarStorage>();
         services.AddIdentityInfrastructureServices(configuration);
 
         services.AddInfrastructureServices(configuration);
@@ -51,6 +53,7 @@ public static class ModuleRegistrationsExtensions
         services.AddScoped<IQuoteAssigneeReader, QuoteAssigneeReader>();
         services.AddScoped<IProductReferenceReader, CatalogProductReferenceReader>();
         services.AddScoped<IProductSectionReader, CatalogProductSectionReader>();
+        services.AddScoped<IFabricNameReader, CatalogFabricNameReader>();
         services.AddScoped<IProductReferenceCodeReader, CatalogProductReferenceCodeReader>();
         services.AddScoped<Catalog.Application.Contracts.Pricing.IPricingReferenceVersionReader, CatalogPricingReferenceReader>();
         services.AddScoped<IProductUsageReader, CatalogProductUsageReader>();
