@@ -8,7 +8,7 @@ See the feature card's “Code structure” section for actual file paths and ro
 
 Products:
 
-- [Catalog products](catalog/products.md) — create, read, replace, and delete Sewing/PPE products; the «Товари» page overview (section, season, check, current site link, quote description). Planned modules: [«Контент сайту»](../specs/content/001-site-content/README.md), [«Розрахунок КП»](../specs/quotes/001-quote-calculation/README.md).
+- [Catalog products](catalog/products.md) — create, read, replace, and delete Sewing/PPE products; the «Товари» page overview (section, season, check, current site link, quote description). Planned modules: [«Контент сайту»](../specs/content/001-site-content/README.md).
 - [Product categories](catalog/categories.md) — Admin CRUD and Storefront list.
 - [Sewing Articles and composition](catalog/sewing-composition.md) — sale SKUs, shared/Article material norms, shared operations and review readiness.
 
@@ -16,7 +16,7 @@ Pricing API (start with Sewing or PPE pricing):
 
 - [Sewing Article pricing](catalog/sewing-pricing.md) — versioned inputs, strict calculation, saved snapshots/publication API and private custom arithmetic adapter.
 - [PPE pricing](catalog/ppe-pricing.md) — versioned supplier offers, exact rule scope and three-tier calculation.
-- [PPE supplier price import](catalog/ppe-supplier-prices.md) — «Імпорт цін»: supplier sources, discounts, Insight XML and СЕМТО PDF uploads with preview.
+- [PPE supplier price import](catalog/ppe-supplier-prices.md) — «Імпорт цін»: supplier sources, discounts, Insight XML and СЕМТО PDF uploads with preview, Monday АВ-Центр/3C-Маркет/Перчатка-центр update and «Оновити зараз».
 - [Current pricing boundaries](catalog/pricing-cutover.md) — Product reads carry metadata only; prices come from the pricing APIs.
 - [Reference pricing versions](reference/pricing-input-versions.md) — Reference-owned cost and norm versions used by pricing.
 
@@ -50,7 +50,7 @@ The [module map](../architecture/overview/modules.md) describes Accounting/Crm b
 
 ## Crm
 
-- [Clients, quotes and archive planning](crm/clients-and-quotes.md) — versioned CRM/customer/custom/document/delivery workflows, clients from KeepinCRM plus offline frozen-source history staging and dry-run reconciliation. Controlled historical writes remain separate.
+- [Clients and КП](crm/clients-and-quotes.md) — clients and contacts from KeepinCRM; КП (commercial proposals) stage 1: create, «Товари та ціни», reprice, give to a manager.
 
 ## Media
 
