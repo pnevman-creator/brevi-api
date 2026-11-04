@@ -11,17 +11,22 @@ internal static class QuoteResponseMapper
         new QuotePersonResponse(quote.AuthorUserId, quote.AuthorName),
         new QuotePersonResponse(quote.ResponsibleUserId, quote.ResponsibleName),
         quote.CreatedAt, quote.UpdatedAt, quote.LastSentAt, quote.Version,
-        quote.Items.OrderBy(x => x.Position).Select(ToResponse).ToArray());
+        quote.Items.OrderBy(x => x.Position).Select(ToResponse).ToArray(),
+        quote.IntroLayout is { } layout
+            ? new QuoteIntroductionResponse(layout.ToString(), quote.RecipientEmail, quote.LetterName)
+            : null);
 
     private static QuoteItemResponse ToResponse(QuoteItem item) => new(
         item.Id, item.Kind.ToString(), item.ProductId, item.Code, item.Name, item.Subtitle, item.Description,
         item.SiteUrl, item.PhotoUrl, item.Season, item.SupplierUrl,
-        item.Options.OrderBy(x => x.Position).Select(ToResponse).ToArray());
+        item.Options.OrderBy(x => x.Position).Select(ToResponse).ToArray(),
+        item.Lines.OrderBy(x => x.Position).Select(x => new QuoteItemLineResponse(x.Id, x.Kind.ToString(),
+            x.ReferenceId, x.Name, x.Unit, x.Quantity, x.ManualMinutes, x.CostCode)).ToArray());
 
     private static QuoteOptionResponse ToResponse(QuoteItemOption option) => new(
         option.Id, option.ArticleId, option.FabricId, option.Title, option.Details, option.IsRecommended,
         ToResponse(option.Retail), ToResponse(option.Wholesale), ToResponse(option.Large),
-        option.ManualReason, option.ManualByName, option.ManualAt, option.PricesTakenAt);
+        option.ManualReason, option.ManualByName, option.ManualAt, option.PricesTakenAt, option.FabricMeters);
 
     private static QuotePriceResponse ToResponse(QuotePrice price) =>
         new(price.Amount, price.Source, price.IsManual, price.Shown);

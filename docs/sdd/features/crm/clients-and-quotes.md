@@ -1,6 +1,6 @@
 # «Менеджер сервісу»: clients and КП
 
-**Implemented:** customer/contact master with clients from KeepinCRM, and КП (commercial proposals) stages 1–3: create, edit «Товари та ціни», reprice, give to a manager, «Налаштування КП», the PDF and sending from each staff member's own Gmail. The earlier Codex quote, custom sewing, PDF, email and archive work was removed on 2026-11-04.
+**Implemented:** customer/contact master with clients from KeepinCRM, and КП (commercial proposals) stages 1–5a: create, edit «Товари та ціни», reprice, give to a manager, «Налаштування КП», the PDF, sending from each staff member's own Gmail, «КП для знайомства» with «Готові шаблони», «Виріб з нуля». The earlier Codex quote, custom sewing, PDF, email and archive work was removed on 2026-11-04.
 
 Authenticated Admin/Manager can create, read, search/page, revise and deactivate customers and contacts. Admin-only merge retains victim roots/audit while moving contacts/external identities to the survivor. Exact external identities are unique; similar names/shared emails never auto-merge. Manager reads/writes owned clients. Every mutation has requestId replay and a root revision; successful intent/result audit is stored in the same transaction. No destructive customer/contact delete API. Clients come from KeepinCRM: the daily `keepin-clients` step and `POST /api/crm/customers/keepin-sync` refresh them by KeepinCRM ID; the one-time transfer deletes unlinked Brevi clients unless a КП uses them ([CRM-002](../../specs/crm/002-keepincrm-clients/README.md), [runbook](../../operations/jobs/sync-job.md#keepin-clients)).
 
@@ -63,7 +63,7 @@ The transaction coordinator retains commit/rollback ownership; the journal uses 
 
 ## КП (commercial proposals)
 
-[QTE-001](../../specs/crm/003-quotes/README.md), [API contract](../../contracts/crm/quotes.openapi.yaml), tables `Quotes`, `QuoteItems`, `QuoteItemOptions`, `QuoteSettings` in [schema crm](../../architecture/data-model/crm.md).
+[QTE-001](../../specs/crm/003-quotes/README.md), [API contract](../../contracts/crm/quotes.openapi.yaml), tables `Quotes`, `QuoteItems`, `QuoteItemOptions`, `QuoteSettings`, `StaffMailboxes`, `QuoteSendings`, `QuoteIntroTemplates` in [schema crm](../../architecture/data-model/crm.md).
 
 - Any Manager creates a КП and becomes responsible; a Manager sees and changes only own КП. Admin (the Director also holds Admin) sees all and gives a КП to any active manager (`PUT /api/crm/quotes/{id}/responsible`).
 - Number «n-month-year» (`37-9-2026`), counted per Kyiv month; a parallel create retries with the next number.
@@ -74,40 +74,53 @@ The transaction coordinator retains commit/rollback ownership; the journal uses 
 - «Налаштування КП» (`GET`/`PUT /api/crm/quote-settings`, Admin role): requisites and logo, each staff member's КП contact, letter template, PDF texts, introduction catalogue texts with five «Переваги», letter variants. Before the first save the old Calculator values are returned with version 0.
 - «Сформувати КП» (`GET /api/crm/quotes/{id}/pdf`): PDF of the saved КП, drawn on request by QuestPDF with embedded Noto Sans; only shown items and prices, client comment, the responsible manager's contact (saved one, else the account's) and requisites.
 - Gmail (R-15): `POST /api/crm/mailboxes/{userId}/connect` gives the Google consent address (send permission only), the anonymous `google-callback` stores the address and the encrypted refresh token in `crm.StaffMailboxes`; `GET /api/crm/quotes/{id}/send-draft` gives the letters with marks filled, `POST /api/crm/quotes/{id}/send` sends the PDF from the sender's own Gmail, logs `crm.QuoteSendings` and marks the КП Sent. Setup: [Gmail for КП](../../operations/configuration/crm-gmail.md).
-- Later stages (not built): «КП для знайомства», composition editing and archive.
+- «КП для знайомства» (R-16–R-18): `POST`/`PUT /api/crm/quote-introductions` save a КП of kind Introduction with a layout (summer and winter pages, or one) of 4 models each: the main model of the season first (codes in «Налаштування КП», defaults MOD-166 «Імпульс» and MOD-169 «Прайм»), then 3 models of that season, one fabric each. The server turns them into ordinary sewing items with only the від 41 шт. price shown, so saved prices stay. `GET /api/crm/quote-lookups/introduction` gives the main models and letter names, `searchCrmQuoteCatalog` takes `season`, `GET /api/crm/quote-lookups/products?ids=` reloads chosen models. The PDF of an introduction is a catalogue (season pages with model cards, «Переваги», next step and contact); its send draft puts the chosen letter first and fills «Кому».
+- «Готові шаблони» (R-19): `GET`/`POST /api/crm/quote-intro-templates`, `DELETE …/{id}`; shared by all staff, unique name, no prices; the author, Director or Admin delete.
+- «Виріб з нуля» (R-20): an item of kind CustomSewing has no Catalog product: the manager names it and picks accessories and operations (shared) and one or more fabrics with metres. `POST /api/crm/quote-lookups/custom-sewing-price` prices each fabric through the Catalog query `CalculateSewingCompositionQuery` (the same formula, settings and reference versions as a Catalog article; nothing saved) and returns line names, minutes, labour and the three prices or the problems. Saving prices it the same way; while its composition and fabrics stay, a save keeps the prices, and «Перерахувати» prices it again from the saved composition. Lines are in `crm.QuoteItemLines`, metres in `QuoteItemOptions.FabricMeters`.
+- «Змінити склад» (R-21): `GET /api/crm/quote-lookups/catalog/{productId}/composition` returns a sewing model's Catalog composition (variant fabrics with metres, shared accessories, extra fabrics, services and operations) through `IQuoteModelCompositionReader`. The changed item is a CustomSewing that keeps the model's `ProductId`, code, link and season; services are lines of kind `Service` with the other-cost code, extra fabrics lines of kind `Fabric`.
+- Later stages (not built): changing the composition of a Catalog model in a КП, history and archive, old КП import.
 
 ```text
 src/Modules/Crm/
-  Crm.Domain/Crm.Domain/Quotes/          Quote, QuoteItem, QuoteItemOption, QuotePrice, QuoteNumber, limits
+  Crm.Domain/Crm.Domain/Quotes/          Quote (with QuoteIntroduction), QuoteItem, QuoteItemOption, QuotePrice, QuoteNumber, limits
+    Introductions/                       QuoteIntroTemplate («Готовий шаблон») and its limits
     Settings/                            QuoteSettings (one row), its sections, defaults from the Calculator
     Sending/                             StaffMailbox (connected Gmail), QuoteSending (sent letter), limits
   Crm.Application/Crm.Application/Quotes/
     Access/                              QuoteActor (own vs all), messages, actor name lookup
     Contracts/                           inputs and responses
     Validation/                          FluentValidation of the editor content
-    Building/                            QuoteItemsBuilder (Catalog prices, manual price audit), Kyiv clock
+    Building/                            QuoteItemsBuilder (Catalog prices, manual price audit), QuoteNumbering, Kyiv clock
     Catalog/, Staff/                     ports implemented in Host.Api
+    CustomSewing/                        «Виріб з нуля» and changed models: IQuoteSewingCalculator and IQuoteModelCompositionReader ports, item builder, price preview and model composition queries
     Persistence/                         IQuoteStore (CrmDbContext) and load query
     Mapping/                             responses
     CreateQuote/, SaveQuote/, DeleteQuote/, GetQuote/, GetQuotes/,
     SetResponsible/, RepriceQuote/,
-    SearchCatalog/, GetStaff/            one use case per folder: command/query, validator, handler
+    SearchCatalog/, GetCatalogProducts/,
+    GetStaff/                            one use case per folder: command/query, validator, handler
+    Introductions/                       Contracts/, Validation/, Building/ (pages → items, page rules), Setup/,
+                                         CreateIntroduction/, SaveIntroduction/, Templates/ (Create/Delete/GetTemplates)
     Settings/                            Contracts/ (DTOs, mapper), Reading/, GetSettings/, SaveSettings/
-    Pdf/                                 QuotePdfModel (client view) and builder, IQuotePdfRenderer, Composing/ (shared PDF build), GetPdf/
+    Pdf/                                 QuotePdfModel (client view) and builder, IQuotePdfRenderer, Composing/ (shared PDF build), GetPdf/,
+                                         Introduction/ (catalogue client view and builder)
     Sending/                             Gmail/ (ports, options), Connect/, Disconnect/, Draft/, Send/, recipients, marks
   Crm.Infrastructure/Crm.Infrastructure/
     Persistence/Configurations/Quotes/   EF mappings of КП, settings, mailboxes and sendings
     Persistence/Quotes/                  unique-number, settings and mailbox race detection
-    Quotes/Pdf/                          QuestPDF document, renderer, photo loader, embedded fonts
+    Quotes/Pdf/                          QuestPDF documents (КП, introduction catalogue), shared parts, renderer, photo loader, fonts
     Quotes/Sending/                      GmailClient (OAuth + upload send), MIME letter, Data Protection token store, options
-  Crm.Api/Crm.Api/Quotes/                QuotesController, QuoteLookupsController, QuoteSettingsController, MailboxesController, Requests/
+  Crm.Api/Crm.Api/Quotes/                QuotesController, QuoteIntroductionsController, QuoteIntroTemplatesController,
+                                         QuoteLookupsController, QuoteSettingsController, MailboxesController, Requests/
 src/Bootstrapper/Host.Api/Crm/
   QuoteCatalogReader.cs                  Catalog overview, admin detail photo and Reference fabrics through Mediator
   QuoteStaffReader.cs                    active Manager/Admin users from Identity
+  QuoteSewingCalculator.cs               «Виріб з нуля» through the Catalog composition query, names from Reference
+  QuoteModelCompositionReader.cs         model composition for «Змінити склад» through the Catalog sewing card query
 ```
 
 ## Tests
 
-- КП rules, builder, settings validation, sending (recipients, MIME letter, consent address, ID token) and PDF (client view, render smoke; `BREVI_QUOTE_PDF_OUT=<file>` saves the sample): `dotnet test tests/UnitTests/UnitTests.csproj --filter FullyQualifiedName~UnitTests.Crm.Quotes`.
-- КП on PostgreSQL (numbers, own vs all, stale version, reprice, responsible, delete; settings save and PDF source; Gmail connect, send, failure and send draft with fakes): `dotnet test tests/IntegrationTests/IntegrationTests.csproj --filter FullyQualifiedName~IntegrationTests.Crm.Quote` with `BREVIERP_CRM_TEST_CONNECTION` pointing at a local PostgreSQL.
+- КП rules, builder, settings validation, sending (recipients, MIME letter, consent address, ID token), PDF (client view, render smoke; `BREVI_QUOTE_PDF_OUT=<file>` saves the sample) and introductions (page rules, catalogue view; `BREVI_QUOTE_INTRO_PDF_OUT=<file>`), «Виріб з нуля» (`QuoteCustomSewingTests`; Catalog formula in `SewingCompositionPricingTests`): `dotnet test tests/UnitTests/UnitTests.csproj --filter FullyQualifiedName~UnitTests.Crm.Quotes`.
+- КП on PostgreSQL (numbers, own vs all, stale version, reprice, responsible, delete; settings save and PDF source; Gmail connect, send, failure and send draft with fakes; introductions and templates; «Виріб з нуля» save and reprice): `dotnet test tests/IntegrationTests/IntegrationTests.csproj --filter FullyQualifiedName~IntegrationTests.Crm.Quote` with `BREVIERP_CRM_TEST_CONNECTION` pointing at a local PostgreSQL.
 - KeepinCRM clients: `tests/UnitTests/Crm/Customers/KeepinCrmClientSyncTests.cs` (`--filter FullyQualifiedName~KeepinCrmClientSync`); customers on PostgreSQL: `--filter FullyQualifiedName~CustomerPersistenceTests`.

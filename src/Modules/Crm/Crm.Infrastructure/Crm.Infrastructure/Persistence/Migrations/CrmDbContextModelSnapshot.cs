@@ -218,6 +218,56 @@ namespace Crm.Infrastructure.Persistence.Migrations
                     b.ToTable("CustomerExternalIdentities", "crm");
                 });
 
+            modelBuilder.Entity("Crm.Domain.Quotes.Introductions.QuoteIntroTemplate", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("AuthorName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<int>("AuthorUserId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Layout")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("LetterName")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("NameKey")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Pages")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NameKey")
+                        .IsUnique();
+
+                    b.ToTable("QuoteIntroTemplates", "crm");
+                });
+
             modelBuilder.Entity("Crm.Domain.Quotes.Quote", b =>
                 {
                     b.Property<long>("Id")
@@ -253,6 +303,10 @@ namespace Crm.Infrastructure.Persistence.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
+                    b.Property<string>("IntroLayout")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
                     b.Property<string>("Kind")
                         .IsRequired()
                         .HasMaxLength(20)
@@ -260,6 +314,10 @@ namespace Crm.Infrastructure.Persistence.Migrations
 
                     b.Property<DateTimeOffset?>("LastSentAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("LetterName")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
 
                     b.Property<string>("ManagerNote")
                         .HasMaxLength(4000)
@@ -278,6 +336,10 @@ namespace Crm.Infrastructure.Persistence.Migrations
 
                     b.Property<int>("NumberYear")
                         .HasColumnType("integer");
+
+                    b.Property<string>("RecipientEmail")
+                        .HasMaxLength(320)
+                        .HasColumnType("character varying(320)");
 
                     b.Property<string>("RecipientName")
                         .HasMaxLength(200)
@@ -392,7 +454,67 @@ namespace Crm.Infrastructure.Persistence.Migrations
                         {
                             t.HasCheckConstraint("CK_QuoteItems_Position", "\"Position\" >= 0");
 
-                            t.HasCheckConstraint("CK_QuoteItems_Product", "(\"Kind\" = 'OneOffPpe' AND \"ProductId\" IS NULL) OR (\"Kind\" <> 'OneOffPpe' AND \"ProductId\" IS NOT NULL)");
+                            t.HasCheckConstraint("CK_QuoteItems_Product", "(\"Kind\" = 'OneOffPpe' AND \"ProductId\" IS NULL) OR \"Kind\" = 'CustomSewing' OR (\"Kind\" NOT IN ('OneOffPpe', 'CustomSewing') AND \"ProductId\" IS NOT NULL)");
+                        });
+                });
+
+            modelBuilder.Entity("Crm.Domain.Quotes.QuoteItemLine", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("CostCode")
+                        .HasMaxLength(80)
+                        .HasColumnType("character varying(80)");
+
+                    b.Property<long>("ItemId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<decimal?>("ManualMinutes")
+                        .HasPrecision(12, 4)
+                        .HasColumnType("numeric(12,4)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<int>("Position")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("Quantity")
+                        .HasPrecision(12, 4)
+                        .HasColumnType("numeric(12,4)");
+
+                    b.Property<int>("ReferenceId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Unit")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ItemId", "Position");
+
+                    b.ToTable("QuoteItemLines", "crm", t =>
+                        {
+                            t.HasCheckConstraint("CK_QuoteItemLines_ManualMinutes", "\"ManualMinutes\" IS NULL OR (\"Kind\" = 'Operation' AND \"ManualMinutes\" > 0)");
+
+                            t.HasCheckConstraint("CK_QuoteItemLines_Position", "\"Position\" >= 0");
+
+                            t.HasCheckConstraint("CK_QuoteItemLines_Quantity", "\"Quantity\" > 0");
+
+                            t.HasCheckConstraint("CK_QuoteItemLines_Reference", "(\"Kind\" = 'Service' AND \"ReferenceId\" = 0 AND \"CostCode\" IS NOT NULL) OR (\"Kind\" <> 'Service' AND \"ReferenceId\" > 0 AND \"CostCode\" IS NULL)");
                         });
                 });
 
@@ -413,6 +535,10 @@ namespace Crm.Infrastructure.Persistence.Migrations
 
                     b.Property<int?>("FabricId")
                         .HasColumnType("integer");
+
+                    b.Property<decimal?>("FabricMeters")
+                        .HasPrecision(12, 4)
+                        .HasColumnType("numeric(12,4)");
 
                     b.Property<bool>("IsRecommended")
                         .HasColumnType("boolean");
@@ -892,6 +1018,15 @@ namespace Crm.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Crm.Domain.Quotes.QuoteItemLine", b =>
+                {
+                    b.HasOne("Crm.Domain.Quotes.QuoteItem", null)
+                        .WithMany("Lines")
+                        .HasForeignKey("ItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Crm.Domain.Quotes.QuoteItemOption", b =>
                 {
                     b.HasOne("Crm.Domain.Quotes.QuoteItem", null)
@@ -947,6 +1082,8 @@ namespace Crm.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("Crm.Domain.Quotes.QuoteItem", b =>
                 {
+                    b.Navigation("Lines");
+
                     b.Navigation("Options");
                 });
 
