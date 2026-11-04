@@ -54,6 +54,7 @@ public static class ModuleRegistrationsExtensions
         services.AddRemindersInfrastructure(configuration);
         services.AddMediaInfrastructure(configuration);
         services.AddScoped<IProductMediaReader, CatalogProductMediaReader>();
+        services.AddHttpClient<IProductPhotoSource, CatalogProductPhotoSource>(client => client.Timeout = TimeSpan.FromSeconds(30));
         services.AddScoped<IMediaUsageReader, MediaProductUsageReader>();
         services.AddScoped<IProductReferenceReader, CatalogProductReferenceReader>();
         services.AddScoped<IProductSectionReader, CatalogProductSectionReader>();
@@ -66,6 +67,7 @@ public static class ModuleRegistrationsExtensions
         services.AddScoped<IProductionModelReader, ProductionModelReader>();
         services.AddScoped<IProductionQuoteReader, ProductionQuoteReader>();
         services.AddScoped<IProductionFabricReader, ProductionFabricReader>();
+        services.AddScoped<IProductionSupplierReader, ProductionSupplierReader>();
         services.AddScoped<IProductionStaffReader, ProductionStaffReader>();
         services.AddScoped<IPayrollParameterReader, PayrollParameterReader>();
         services.AddScoped<IProductionFileStorage, ProductionFileStorage>();

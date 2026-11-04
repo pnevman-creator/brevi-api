@@ -109,6 +109,10 @@ paths:
     $ref: ./catalog/product-overview.openapi.yaml#/paths/~1api~1v1~1products~1{id}~1overview
   /api/v1/products/sheet-import:
     $ref: ./catalog/product-overview.openapi.yaml#/paths/~1api~1v1~1products~1sheet-import
+  /api/v1/products/{id}/photos:
+    $ref: ./catalog/product-photos.openapi.yaml#/paths/~1api~1v1~1products~1{id}~1photos
+  /api/v1/products/old-site-photo-import:
+    $ref: ./catalog/product-photos.openapi.yaml#/paths/~1api~1v1~1products~1old-site-photo-import
   /api/v1/products/{productId}/articles:
     $ref: ./catalog/sewing-composition.openapi.yaml#/paths/~1api~1v1~1products~1{productId}~1articles
   /api/v1/products/{productId}/composition:
@@ -187,6 +191,8 @@ paths:
     $ref: ./crm/quotes.openapi.yaml#/paths/~1api~1crm~1quotes~1{id}~1restore
   /api/crm/quotes/{id}/copy:
     $ref: ./crm/quotes.openapi.yaml#/paths/~1api~1crm~1quotes~1{id}~1copy
+  /api/crm/quotes/{id}/embroidery:
+    $ref: ./crm/quotes.openapi.yaml#/paths/~1api~1crm~1quotes~1{id}~1embroidery
   /api/crm/mailboxes/{userId}/connect:
     $ref: ./crm/quotes.openapi.yaml#/paths/~1api~1crm~1mailboxes~1{userId}~1connect
   /api/crm/mailboxes/{userId}:
@@ -223,6 +229,10 @@ paths:
     $ref: ./crm/embroidery.openapi.yaml#/paths/~1api~1crm~1embroidery~1calculate
   /api/crm/embroidery/settings:
     $ref: ./crm/embroidery.openapi.yaml#/paths/~1api~1crm~1embroidery~1settings
+  /api/crm/embroidery/calculations:
+    $ref: ./crm/embroidery.openapi.yaml#/paths/~1api~1crm~1embroidery~1calculations
+  /api/crm/embroidery/calculations/{id}:
+    $ref: ./crm/embroidery.openapi.yaml#/paths/~1api~1crm~1embroidery~1calculations~1{id}
   /api/crm/tasks:
     $ref: ./crm/tasks.openapi.yaml#/paths/~1api~1crm~1tasks
   /api/crm/tasks/board:
@@ -289,6 +299,28 @@ paths:
     $ref: ./production/production-orders.openapi.yaml#/paths/~1api~1production~1orders~1{id}~1telegram
   /api/production/orders/progress-import:
     $ref: ./production/production-orders.openapi.yaml#/paths/~1api~1production~1orders~1progress-import
+  /api/production/fabric-stock:
+    $ref: ./production/fabric-stock.openapi.yaml#/paths/~1api~1production~1fabric-stock
+  /api/production/fabric-stock/choices:
+    $ref: ./production/fabric-stock.openapi.yaml#/paths/~1api~1production~1fabric-stock~1choices
+  /api/production/fabric-stock/{id}:
+    $ref: ./production/fabric-stock.openapi.yaml#/paths/~1api~1production~1fabric-stock~1{id}
+  /api/production/fabric-stock/movements:
+    $ref: ./production/fabric-stock.openapi.yaml#/paths/~1api~1production~1fabric-stock~1movements
+  /api/production/fabric-stock/{id}/correction:
+    $ref: ./production/fabric-stock.openapi.yaml#/paths/~1api~1production~1fabric-stock~1{id}~1correction
+  /api/production/fabric-stock/{id}/movements/{movementId}/reverse:
+    $ref: ./production/fabric-stock.openapi.yaml#/paths/~1api~1production~1fabric-stock~1{id}~1movements~1{movementId}~1reverse
+  /api/production/fabric-stock/consumption:
+    $ref: ./production/fabric-stock.openapi.yaml#/paths/~1api~1production~1fabric-stock~1consumption
+  /api/production/fabric-stock/import:
+    $ref: ./production/fabric-stock.openapi.yaml#/paths/~1api~1production~1fabric-stock~1import
+  /api/production/orders/{id}/items/{itemId}/fabric:
+    $ref: ./production/fabric-stock.openapi.yaml#/paths/~1api~1production~1orders~1{id}~1items~1{itemId}~1fabric
+  /api/production/orders/{id}/items/{itemId}/fabric-issues:
+    $ref: ./production/fabric-stock.openapi.yaml#/paths/~1api~1production~1orders~1{id}~1items~1{itemId}~1fabric-issues
+  /api/production/orders/{id}/fabric-issues/{issueId}/reverse:
+    $ref: ./production/fabric-stock.openapi.yaml#/paths/~1api~1production~1orders~1{id}~1fabric-issues~1{issueId}~1reverse
   /api/production/settings:
     $ref: ./production/production-orders.openapi.yaml#/paths/~1api~1production~1settings
   /api/production/settings/telegram-test:

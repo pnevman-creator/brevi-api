@@ -21,6 +21,7 @@ This is an index of project decisions and delivery; the [implemented feature map
 | Catalog  | [015 Fabric variants](catalog/015-fabric-variants/README.md) | backend implemented 2026-11-03 |
 | Catalog  | [016 Sewing card in one request](catalog/016-sewing-card-one-request/README.md) | backend implemented 2026-11-04 |
 | Catalog  | [017 PPE supplier price import («Імпорт цін»)](catalog/017-ppe-supplier-price-import/README.md) | stages 1–3 backend implemented 2026-11-04 |
+| Catalog  | [018 Product photos, old-site photo import and the active switch](catalog/018-product-photos-and-old-site-import/README.md) | implemented 2026-11-04 |
 | Content  | [001 «Контент сайту» site content](content/001-site-content/README.md) | planned only (draft) |
 | Catalog  | [Admin product category list](catalog/admin-product-list/README.md)                                      | verified 2026-07-27                                                                                                |
 | Catalog  | [Media files](catalog/media-files/README.md)                                                             | history; moved to Media MED-001                                                                                    |
@@ -39,6 +40,7 @@ This is an index of project decisions and delivery; the [implemented feature map
 | Production | [001 «Швейний цех»: module, head of the workshop, references](production/001-workshop-references/README.md) | stage 1 implemented 2026-11-04 |
 | Production | [002 Production orders from КП](production/002-production-orders/README.md) | stage 2 implemented 2026-11-04 |
 | Production | [003 Stages, shipments, files, Telegram](production/003-order-tracking/README.md) | stage 3 implemented 2026-11-04 |
+| Production | [004 Fabric stock](production/004-fabric-stock/README.md) | stage 4 implemented 2026-11-04 |
 | Reminders | [001 Telegram deadline reminders](reminders/001-telegram-reminders/README.md) | implemented and locally verified 2026-11-01; not deployed |
 | Identity | [001 Cookie sign-in like Kedr](identity/001-cookie-sign-in/README.md) | implemented 2026-11-03; not deployed |
 | Platform | [001 module schemas](platform/001-module-schemas/README.md)                                              | implementation                                                                                                     |

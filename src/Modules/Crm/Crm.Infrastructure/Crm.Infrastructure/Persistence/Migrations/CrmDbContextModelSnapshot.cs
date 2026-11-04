@@ -218,6 +218,72 @@ namespace Crm.Infrastructure.Persistence.Migrations
                     b.ToTable("CustomerExternalIdentities", "crm");
                 });
 
+            modelBuilder.Entity("Crm.Domain.Embroidery.Saved.EmbroiderySavedCalculation", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreatedByName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<int>("CreatedByUserId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("CustomerName")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<Guid?>("CustomerPublicId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("Incomplete")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Input")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("Mode")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Result")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("Snapshot")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedAt");
+
+                    b.HasIndex("CustomerPublicId");
+
+                    b.ToTable("EmbroideryCalculations", "crm", t =>
+                        {
+                            t.HasCheckConstraint("CK_EmbroideryCalculations_Quantity", "\"Quantity\" > 0");
+                        });
+                });
+
             modelBuilder.Entity("Crm.Domain.Embroidery.Settings.EmbroiderySettings", b =>
                 {
                     b.Property<int>("Id")
@@ -483,6 +549,9 @@ namespace Crm.Infrastructure.Persistence.Migrations
                         .HasMaxLength(4000)
                         .HasColumnType("character varying(4000)");
 
+                    b.Property<long?>("EmbroideryCalculationId")
+                        .HasColumnType("bigint");
+
                     b.Property<string>("Kind")
                         .IsRequired()
                         .HasMaxLength(20)
@@ -524,15 +593,19 @@ namespace Crm.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("EmbroideryCalculationId");
+
                     b.HasIndex("ProductId");
 
                     b.HasIndex("QuoteId", "Position");
 
                     b.ToTable("QuoteItems", "crm", t =>
                         {
+                            t.HasCheckConstraint("CK_QuoteItems_Embroidery", "(\"Kind\" = 'Embroidery') = (\"EmbroideryCalculationId\" IS NOT NULL)");
+
                             t.HasCheckConstraint("CK_QuoteItems_Position", "\"Position\" >= 0");
 
-                            t.HasCheckConstraint("CK_QuoteItems_Product", "(\"Kind\" = 'OneOffPpe' AND \"ProductId\" IS NULL) OR \"Kind\" = 'CustomSewing' OR (\"Kind\" NOT IN ('OneOffPpe', 'CustomSewing') AND \"ProductId\" IS NOT NULL)");
+                            t.HasCheckConstraint("CK_QuoteItems_Product", "(\"Kind\" IN ('OneOffPpe', 'Embroidery') AND \"ProductId\" IS NULL) OR \"Kind\" = 'CustomSewing' OR (\"Kind\" NOT IN ('OneOffPpe', 'CustomSewing', 'Embroidery') AND \"ProductId\" IS NOT NULL)");
                         });
                 });
 
