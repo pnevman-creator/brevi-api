@@ -48,7 +48,7 @@ BreviERP PostgreSQL
 ├── media / MediaDbContext — 2 tables + own history
 │   ├── Folders                        # photo folder tree
 │   └── Files                          # photos on the CDN
-├── production / ProductionDbContext — 15 tables + own history
+├── production / ProductionDbContext — 22 tables + own history
 │   ├── Employees                      # workers of the workshop
 │   ├── FabricNorms                    # fabric per item of a sewing model
 │   ├── Orders                         # «Виробничі завдання» from КП
@@ -59,7 +59,16 @@ BreviERP PostgreSQL
 │   ├── FabricIssues                   # «Видача» packages to order items
 │   ├── FabricIssueLines               # lines of a package with plan coverage
 │   ├── Work                           # «Журнал робіт»: pieces sewn or cut
-│   └── ForecastQueues                 # saved order of «Прогноз пошиття»
+│   ├── ForecastQueues                 # saved order of «Прогноз пошиття»
+│   ├── TimeEntries, TimeChanges       # «Робочий час» and its history
+│   ├── PayrollMonths, PayrollRoles    # «Зарплата»: month, embroidery, closing; master and chief
+│   └── PayrollPayments, PayrollAdjustments, PayrollIssued  # payments, adjustments, «Видано»
+├── purchasing / PurchasingDbContext — 5 tables + own history
+│   ├── Messages                       # «Рахунки на закупку»: one Telegram message
+│   ├── SourceRows                     # one UID of the sheet «финансы»
+│   ├── SourceRevisions                # raw history of a row
+│   ├── MessageFiles                   # links to original invoices
+│   └── SyncStates                     # last sheet sync
 ├── reminders / RemindersDbContext — 6 tables + own history
 │   ├── Tasks                          # reminder tasks and schedule
 │   ├── Occurrences                    # one period per task: deadline, status, who closed
@@ -82,5 +91,6 @@ BreviERP PostgreSQL
 | `reference` / Reference | [Reference tables, PKs, and FKs](reference.md) |
 | `identity` / Identity | [Identity tables, PKs, and FKs](identity.md) |
 | `accounting` / Accounting | [TransactionCategories](accounting.md) |
+| `purchasing` / Purchasing | [Purchase invoice register](purchasing.md) |
 
 The module documents cover 28 business and Identity model tables; the [module schema decision](../../specs/platform/001-module-schemas/README.md) describes the operational migration history. Schema `crm` holds five client tables and six КП tables; see [Crm](crm.md). The earlier counts/tree above are the historical 2026-10-21 snapshot, not a current total. Module documents explain cross-module IDs without physical FKs. After a schema change, update only the affected module and this tree if the table list or placement changed.

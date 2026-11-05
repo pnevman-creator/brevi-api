@@ -51,8 +51,12 @@ The [module map](../architecture/overview/modules.md) describes Accounting/Crm b
 ## Crm
 
 - [Clients and КП](crm/clients-and-quotes.md) — clients and contacts from KeepinCRM; КП (commercial proposals) stages 1–6: create, «Товари та ціни», reprice, give to a manager, settings, PDF, Gmail, introductions, «Виріб з нуля», history, archive, copy, old КП transfer.
-- [Embroidery price](crm/embroidery-price.md) — «Ціна вишивки»: live cost and three prices of embroidery or chevrons; settings for Director and Admin.
+- [Embroidery price](crm/embroidery-price.md) — «Ціна вишивки»: live cost and three prices of embroidery or chevrons; settings for Director and Admin; «Збережені», «Додати в КП», «Макет» and the link to production orders.
 - [Manager tasks](crm/manager-tasks.md) — Director and Admin give tasks to managers and track workload; managers move them on the «Мої завдання» kanban.
+
+## Purchasing
+
+- [Purchase invoices «Рахунки на закупку»](purchasing/purchase-invoices.md) — register of purchase invoices from the Google Sheet «финансы»: sync, problems with reasons, search; Director, Accountant and Admin.
 
 ## Media
 
@@ -64,6 +68,7 @@ The [module map](../architecture/overview/modules.md) describes Accounting/Crm b
 - [Production orders «Виробничі завдання»](production/production-orders.md) — orders from sent КП with snapshot, history, copy, soft delete and transfer of old orders (stage 2); stages, shipments, close/cancel, files on the CDN, one Telegram message to the workshop group, «Налаштування цеху» (stage 3).
 - [Fabric stock «Склад тканин»](production/fabric-stock.md) — balances by fabric and colour, movements with history, reservation from norms, issues to order items, value, consumption summary, transfer of the old stock (stage 4).
 - [Work log and sewing forecast](production/work-log.md) — «Журнал робіт» with rate snapshot, over-plan reasons and «Сторно», «Робота» of an item, «Прогноз пошиття» with the saved queue, transfer of the old log (stage 5).
+- [Timesheet and payroll](production/payroll.md) — «Робочий час» with change history, «Зарплата» of a month from the work log and «Параметри ціноутворення», payments and adjustments, closing a month (stage 6).
 
 ## Reminders
 

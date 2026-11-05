@@ -235,6 +235,8 @@ paths:
     $ref: ./crm/embroidery.openapi.yaml#/paths/~1api~1crm~1embroidery~1calculations~1import
   /api/crm/embroidery/calculations/{id}:
     $ref: ./crm/embroidery.openapi.yaml#/paths/~1api~1crm~1embroidery~1calculations~1{id}
+  /api/crm/embroidery/calculations/{id}/mockup:
+    $ref: ./crm/embroidery.openapi.yaml#/paths/~1api~1crm~1embroidery~1calculations~1{id}~1mockup
   /api/crm/tasks:
     $ref: ./crm/tasks.openapi.yaml#/paths/~1api~1crm~1tasks
   /api/crm/tasks/board:
@@ -273,6 +275,8 @@ paths:
     $ref: ./production/production-orders.openapi.yaml#/paths/~1api~1production~1orders~1quote-sources
   /api/production/orders/quote-sources/{quoteId}:
     $ref: ./production/production-orders.openapi.yaml#/paths/~1api~1production~1orders~1quote-sources~1{quoteId}
+  /api/production/orders/embroideries:
+    $ref: ./production/production-orders.openapi.yaml#/paths/~1api~1production~1orders~1embroideries
   /api/production/orders/import:
     $ref: ./production/production-orders.openapi.yaml#/paths/~1api~1production~1orders~1import
   /api/production/orders/{id}:
@@ -337,10 +341,42 @@ paths:
     $ref: ./production/work-log.openapi.yaml#/paths/~1api~1production~1forecast
   /api/production/forecast/queue:
     $ref: ./production/work-log.openapi.yaml#/paths/~1api~1production~1forecast~1queue
+  /api/production/timesheet:
+    $ref: ./production/payroll.openapi.yaml#/paths/~1api~1production~1timesheet
+  /api/production/payroll/{month}:
+    $ref: ./production/payroll.openapi.yaml#/paths/~1api~1production~1payroll~1{month}
+  /api/production/payroll/{month}/employees/{employeeId}:
+    $ref: ./production/payroll.openapi.yaml#/paths/~1api~1production~1payroll~1{month}~1employees~1{employeeId}
+  /api/production/payroll/history/{year}:
+    $ref: ./production/payroll.openapi.yaml#/paths/~1api~1production~1payroll~1history~1{year}
+  /api/production/payroll/{month}/roles:
+    $ref: ./production/payroll.openapi.yaml#/paths/~1api~1production~1payroll~1{month}~1roles
+  /api/production/payroll/{month}/embroidery:
+    $ref: ./production/payroll.openapi.yaml#/paths/~1api~1production~1payroll~1{month}~1embroidery
+  /api/production/payroll/{month}/payments:
+    $ref: ./production/payroll.openapi.yaml#/paths/~1api~1production~1payroll~1{month}~1payments
+  /api/production/payroll/payments/{paymentId}/void:
+    $ref: ./production/payroll.openapi.yaml#/paths/~1api~1production~1payroll~1payments~1{paymentId}~1void
+  /api/production/payroll/{month}/adjustments:
+    $ref: ./production/payroll.openapi.yaml#/paths/~1api~1production~1payroll~1{month}~1adjustments
+  /api/production/payroll/adjustments/{adjustmentId}/void:
+    $ref: ./production/payroll.openapi.yaml#/paths/~1api~1production~1payroll~1adjustments~1{adjustmentId}~1void
+  /api/production/payroll/{month}/issued:
+    $ref: ./production/payroll.openapi.yaml#/paths/~1api~1production~1payroll~1{month}~1issued
+  /api/production/payroll/{month}/close:
+    $ref: ./production/payroll.openapi.yaml#/paths/~1api~1production~1payroll~1{month}~1close
+  /api/production/payroll/{month}/reopen:
+    $ref: ./production/payroll.openapi.yaml#/paths/~1api~1production~1payroll~1{month}~1reopen
   /api/production/settings:
     $ref: ./production/production-orders.openapi.yaml#/paths/~1api~1production~1settings
   /api/production/settings/telegram-test:
     $ref: ./production/production-orders.openapi.yaml#/paths/~1api~1production~1settings~1telegram-test
+  /api/purchasing/invoices:
+    $ref: ./purchasing/purchase-invoices.openapi.yaml#/paths/~1api~1purchasing~1invoices
+  /api/purchasing/invoices/sync-state:
+    $ref: ./purchasing/purchase-invoices.openapi.yaml#/paths/~1api~1purchasing~1invoices~1sync-state
+  /api/purchasing/invoices/sync:
+    $ref: ./purchasing/purchase-invoices.openapi.yaml#/paths/~1api~1purchasing~1invoices~1sync
   /api/reminders/non-working-days:
     $ref: ./reminders/telegram-reminders.openapi.yaml#/paths/~1api~1reminders~1non-working-days
   /api/reminders/non-working-days/{date}:

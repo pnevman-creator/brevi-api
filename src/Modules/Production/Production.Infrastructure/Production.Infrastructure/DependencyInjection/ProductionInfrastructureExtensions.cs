@@ -8,6 +8,8 @@ using Production.Application.Stock;
 using Production.Application.Stock.Issues;
 using Production.Application.Work;
 using Production.Application.Forecast;
+using Production.Application.Payroll;
+using Production.Application.Timesheet;
 using Production.Infrastructure.Persistence;
 
 namespace Production.Infrastructure.DependencyInjection;
@@ -24,6 +26,7 @@ public static class ProductionInfrastructureExtensions
         services.AddScoped<IDatabaseMigrator, DbMigrator<ProductionDbContext>>();
         services.AddScoped<QuoteItemResolver>();
         services.AddScoped<OrderCards>();
+        services.AddScoped<Production.Application.Orders.Embroidery.EmbroideryLinks>();
         services.AddScoped<OrderTracking>();
         services.AddScoped<StockReservations>();
         services.AddScoped<StockRows>();
@@ -31,6 +34,9 @@ public static class ProductionInfrastructureExtensions
         services.AddScoped<ItemFabricCards>();
         services.AddScoped<WorkCards>();
         services.AddScoped<ForecastQueueReader>();
+        services.AddScoped<PayrollSheets>();
+        services.AddScoped<PayrollChanges>();
+        services.AddScoped<TimesheetDays>();
         services.TryAddSingleton(new ProductionLinks(configuration["Production:AdminUrl"] is { Length: > 0 } url
             ? url
             : "https://office.brevi.com.ua"));
