@@ -3,7 +3,10 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Time.Testing;
 using Purchasing.Application.Abstractions;
+using Purchasing.Application.Register.Review;
 using Purchasing.Application.Register.Sync;
+using Purchasing.Application.Documents.Recognize;
+using Purchasing.Domain.Documents;
 using Purchasing.Domain.Files;
 using Purchasing.Domain.Ingestion;
 using Purchasing.Domain.Messages;
@@ -41,6 +44,53 @@ internal sealed class FakeSheetReader : IPurchaseSheetReader
             : Task.FromResult(new PurchaseSheetContent(SpreadsheetId, SheetId, Rows.ToList()));
 }
 
+internal sealed class FakeSupplierReader : IPurchasingSupplierReader
+{
+    public List<PurchasingSupplier> Suppliers { get; } =
+    [
+        new(7, "Текстиль-Контакт", true),
+        new(8, "ФОП Бистров", true),
+        new(9, "Старий постачальник", false),
+    ];
+
+    public Task<IReadOnlyList<PurchasingSupplier>> ListAsync(CancellationToken cancellationToken) =>
+        Task.FromResult<IReadOnlyList<PurchasingSupplier>>(Suppliers.ToList());
+}
+
+internal sealed class FakeFileDownloader : IPurchaseFileDownloader
+{
+    public List<string> Downloads { get; } = [];
+    public Exception? Failure { get; set; }
+
+    public Task<PurchaseFileContent> DownloadAsync(string url, CancellationToken cancellationToken)
+    {
+        Downloads.Add(url);
+        if (Failure is not null) return Task.FromException<PurchaseFileContent>(Failure);
+        if (url.Contains(".xlsx", StringComparison.Ordinal))
+            return Task.FromException<PurchaseFileContent>(new PurchaseFileUnavailableException("Файл «.xlsx» ШІ не читає.", unsupported: true));
+        return Task.FromResult(new PurchaseFileContent("invoice.pdf", "application/pdf", [37, 80, 68, 70]));
+    }
+}
+
+/// <summary>Answers from a queue; each answer costs 0.002 $ unless it is not an answer.</summary>
+internal sealed class FakeRecognizer : IPurchaseDocumentRecognizer
+{
+    public Queue<PurchaseRecognitionAnswer> Answers { get; } = new();
+    public List<PurchaseRecognitionRequest> Requests { get; } = [];
+
+    public static PurchaseRecognitionAnswer Json(string json, string model = "gpt-6-luna") =>
+        new(PurchaseRecognitionStatus.Answered, json, model, 0.002m, null);
+
+    public static PurchaseRecognitionAnswer Off() =>
+        new(PurchaseRecognitionStatus.Unavailable, null, null, 0m, "ШІ вимкнено в «Налаштування ШІ».");
+
+    public Task<PurchaseRecognitionAnswer> RecognizeAsync(PurchaseRecognitionRequest request, CancellationToken cancellationToken)
+    {
+        Requests.Add(request);
+        return Task.FromResult(Answers.Count > 0 ? Answers.Dequeue() : Off());
+    }
+}
+
 /// <summary>The real module DbContext on in-memory SQLite; the PostgreSQL advisory lock becomes a flag.</summary>
 internal sealed class SqlitePurchasingDb(PurchasingDbContext db) : IPurchasingDbContext
 {
@@ -52,13 +102,17 @@ internal sealed class SqlitePurchasingDb(PurchasingDbContext db) : IPurchasingDb
     public DbSet<PurchaseSourceRevision> SourceRevisions => db.SourceRevisions;
     public DbSet<PurchaseMessageFile> Files => db.Files;
     public DbSet<PurchaseSyncState> SyncStates => db.SyncStates;
+    public DbSet<PurchaseReviewChange> ReviewChanges => db.ReviewChanges;
+    public DbSet<PurchaseCheckedDocument> CheckedDocuments => db.CheckedDocuments;
+    public DbSet<PurchaseCheckedDocumentHistory> CheckedDocumentHistory => db.CheckedDocumentHistory;
+    public DbSet<PurchaseRecognitionAttempt> RecognitionAttempts => db.RecognitionAttempts;
 
-    public async Task<IPurchaseSyncScope?> TryBeginSyncAsync(CancellationToken cancellationToken) =>
+    public async Task<IPurchaseWriteScope?> TryBeginWriteAsync(CancellationToken cancellationToken) =>
         LockHeld ? null : new Scope(await db.Database.BeginTransactionAsync(cancellationToken));
 
     public Task<int> SaveChangesAsync(CancellationToken cancellationToken) => db.SaveChangesAsync(cancellationToken);
 
-    private sealed class Scope(Microsoft.EntityFrameworkCore.Storage.IDbContextTransaction transaction) : IPurchaseSyncScope
+    private sealed class Scope(Microsoft.EntityFrameworkCore.Storage.IDbContextTransaction transaction) : IPurchaseWriteScope
     {
         private bool disposed;
         public Task CommitAsync(CancellationToken cancellationToken) => transaction.CommitAsync(cancellationToken);
@@ -88,8 +142,17 @@ internal sealed class PurchasingTestHarness : IDisposable
     public FakeTimeProvider Time { get; } = new(new DateTimeOffset(2026, 11, 5, 8, 0, 0, TimeSpan.Zero));
     public FakeSheetReader Sheet { get; } = new();
     public SqlitePurchasingDb Db { get; }
+    public FakeSupplierReader Suppliers { get; } = new();
 
     public PurchaseRegisterSync Sync() => new(Db, Sheet, Time, NullLogger<PurchaseRegisterSync>.Instance);
+
+    public ReviewPurchaseInvoiceCommandHandler Review() => new(Db, Suppliers, Time);
+
+    public FakeFileDownloader Downloader { get; } = new();
+    public FakeRecognizer Recognizer { get; } = new();
+
+    public PurchaseFileRecognition Recognition() =>
+        new(Db, Downloader, Recognizer, Time, NullLogger<PurchaseFileRecognition>.Instance);
 
     /// <summary>A fresh context on the same database, so reads do not see tracked entities.</summary>
     public PurchasingDbContext Fresh() =>

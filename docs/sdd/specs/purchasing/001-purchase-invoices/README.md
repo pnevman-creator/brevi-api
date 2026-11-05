@@ -1,6 +1,6 @@
 # PUR-001 «Рахунки на закупку»
 
-**Status:** stage 1 backend implemented 2026-11-05. **Module:** Purchasing (new, schema `purchasing`). **Consumer:** brevi-web «Загальні довідники → Контрагенти → Рахунки на закупку».
+**Status:** stages 1–3 implemented 2026-11-05. **Module:** Purchasing (new, schema `purchasing`). **Consumer:** brevi-web «Загальні довідники → Контрагенти → Рахунки на закупку».
 
 ## Goal
 
@@ -20,15 +20,17 @@ The client's technical description of version 217 is kept outside the repository
 | D6 | The sync never changes the manual supplier link, note and their version. Rows and links missing from the sheet become inactive and stay. |
 | D7 | No «all good» status: the card shows only problems with their reason (`NeedsReview` + issues). |
 | D8 | The «Фінанси» tab of version 217 is not moved: Brevi has no finance module. |
-| D9 | Old data: the export has no supplier links, notes or audit and one checked document; that document is moved in stage 3. No separate migration stage. |
+| D9 | Old data: the export has no supplier links, notes or audit and one checked document; that document is moved in stage 3 by uploading its facts as JSON (converted to the stage 3 format). No separate migration stage. |
+| D10 | Stage 3 reads originals with OpenAI through the Ai module ([AI-001](../../ai/001-ai-settings/README.md); user decision 2026-11-05, replacing the earlier Gemini choice). Only the facts the accountant needs (user decision 2026-11-05): document type, number, date, supplier, VAT mode and positions as printed, VAT amount and total. The old 217 schema with per-line VAT columns is not kept. |
+| D11 | VAT: «З ПДВ» only when VAT is clearly printed; otherwise «Без ПДВ», also when unsure (user decision 2026-11-05). |
 
 ## Stages
 
 | Stage | Scope | Status |
 | --- | --- | --- |
-| 1 | Register: tables, sheet read, sync («Оновити зараз» + daily step `purchase-invoices`), list with search and «Потребує перевірки» filter | backend implemented 2026-11-05 |
-| 2 | Manual supplier link and note with optimistic version and audit | planned |
-| 3 | Checked invoice JSON: validation of VAT arithmetic in kopecks, hash, idempotent save; move the one old checked document | planned |
+| 1 | Register: tables, sheet read, sync («Оновити зараз» + daily step `purchase-invoices`), list with search and «Потребує перевірки» filter | implemented 2026-11-05 |
+| 2 | Manual supplier link and note with optimistic version and history; filter «Без постачальника» | implemented 2026-11-05 |
+| 3 | Invoice data: recognition of the original by OpenAI (Ai module), kopeck check (a mismatch → strong model, then «Потребує перевірки»), «Розпізнати всі нові» in batches, «Розпізнати знову», manual JSON, hash, history of replaced facts; move the one old checked document | implemented 2026-11-05 |
 | 4 | Read-only «Рахунки на закупку» in the supplier card; «КП» and «Завдання в цех» in the client card | planned |
 | 5 | Copies of the original documents on the Brevi CDN (`invoices/`): downloaded on sync, the card opens the copy; the Dropbox URL stays the identity (user request 2026-11-05) | planned |
 
@@ -40,10 +42,29 @@ The client's technical description of version 217 is kept outside the repository
 - `MarkedPaid` only when trimmed, upper-cased Status equals «СПЛАЧЕНО». It is a note, not a payment.
 - One card per message; the representative row is the active row with the smallest row number. Order: recognised message date (DD.MM.YYYY, DD/MM/YYYY, ISO) newest first, unknown dates last, then UID.
 
+## Stage 2 rules
+
+- `PUT /api/purchasing/invoices/{messageId}/review` takes `supplierId` (null unlinks), `note` (trimmed, empty removes, at most 1000) and the `version` the user saw. A stale version → 409 «Цей рахунок уже змінили…»; the newer change stays.
+- A new link needs an active Reference supplier; a supplier that became inactive may stay linked. Unknown supplier or card → 404.
+- Each real change adds 1 to the version, stores who (e-mail) and when, and appends a `ReviewChanges` entry with the values before and after. Saving the same values changes nothing.
+- Reviews and the sheet sync share one advisory lock, so they never interleave; a review during a sync → 409 «Оновлення реєстру вже виконується…».
+- The accountant cannot read the Reference supplier list, so the register offers `GET /api/purchasing/invoices/suppliers` (active suppliers by name).
+
+## Stage 3 rules
+
+- Facts JSON (`PurchaseDocumentFile` in the contract): `documentType`, `documentNumber`, `documentDate` (YYYY-MM-DD), `supplierName`, `vat` (`with_vat` / `without_vat`), `pricesIncludeVat`, `items` (1–200: `name`, `quantity` ≤ 4 places, `unit` or null, `price` ≤ 4 places, `sum` ≤ 2 places), `vatAmount` (required with VAT, otherwise null or 0), `totalPayable`. Decimals are strings with a dot; numbers in JSON are read as their text. Positions are numbered by the server.
+- Check in kopecks: Σ sums = total, or Σ sums + VAT = total when the prices are without VAT. A line whose quantity × price differs from its sum by more than 1 грн and 1 % is a misreading; smaller gaps are rounded prices and pass.
+- «Розпізнати» downloads the Dropbox original (`dl=1`, safe links only, ≤ 20 MB, PDF or picture; Excel and Word are «Skipped» with a reason), asks the fast model, retries once with the strong model, and records the attempt. Valid facts are saved with the model and cost; a recognised file can be recognised again, and the previous facts go to `CheckedDocumentHistory`.
+- «Розпізнати всі нові» takes 5 files per call that were never tried (newest messages first); the admin repeats it while files remain. It stops when the AI is off, has no key or reached its monthly limit (503 for a single file; nothing is recorded).
+- Problems of the last attempt of a file without facts are card issues («<file>: <problem>») and put it in «Потребує перевірки».
+- Manual JSON: `sourceUID` must be an active row of the file's message and `originalFileLink` its exact link. Canonical JSON (fixed order) → SHA-256: the same facts change nothing; different facts need `replace = true`. `GET …/document-template` gives the saved facts, the last AI answer or empty fields as the start.
+- `supplierName` from the document never links a Brevi supplier by itself.
+- Recognition, saving and the sheet sync share the register lock; during a sync → 409.
+
 ## Contract and tests
 
-[OpenAPI](../../../contracts/purchasing/purchase-invoices.openapi.yaml): `getPurchaseInvoices`, `getPurchaseInvoicesSyncState`, `syncPurchaseInvoices`. Tests: `dotnet test tests/UnitTests/UnitTests.csproj --filter "FullyQualifiedName~UnitTests.Purchasing"` (source rules, sync on SQLite, list query, contract) and `tests/ArchitectureTests/PurchasingDependencyTests.cs`.
+[OpenAPI](../../../contracts/purchasing/purchase-invoices.openapi.yaml): `getPurchaseInvoices`, `getPurchaseInvoicesSyncState`, `syncPurchaseInvoices`, `getPurchaseInvoiceSuppliers`, `reviewPurchaseInvoice`, `recognizePurchaseFile`, `recognizeNewPurchaseFiles`, `savePurchaseDocument`, `getPurchaseDocumentTemplate`. Tests: `dotnet test tests/UnitTests/UnitTests.csproj --filter "FullyQualifiedName~UnitTests.Purchasing"` (source rules, sync on SQLite, list query, review, facts rules, recognition, manual JSON, contract) and `tests/ArchitectureTests/PurchasingDependencyTests.cs`.
 
 ## Deployment
 
-The migration `InitialPurchasing` runs with the normal deploy. Before the first sync: enable Google Sheets API in project `brevistoreapi` and share the sheet with the runtime service account as a viewer ([runbook](../../../operations/jobs/sync-job.md#purchase-invoices)).
+The migrations `InitialPurchasing`, `AddPurchaseReview` and `AddPurchaseDocuments` run with the normal deploy. Stage 3 needs the OpenAI key in «Налаштування ШІ» ([AI-001](../../ai/001-ai-settings/README.md)). Before the first sync: enable Google Sheets API in project `brevistoreapi` and share the sheet with the runtime service account as a viewer ([runbook](../../../operations/jobs/sync-job.md#purchase-invoices)).

@@ -24,6 +24,170 @@ namespace Purchasing.Infrastructure.Persistence.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("Purchasing.Domain.Documents.PurchaseCheckedDocument", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateTimeOffset>("CheckedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CheckedBy")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<decimal?>("CostUsd")
+                        .HasPrecision(12, 6)
+                        .HasColumnType("numeric(12,6)");
+
+                    b.Property<string>("MessageId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("Model")
+                        .HasMaxLength(80)
+                        .HasColumnType("character varying(80)");
+
+                    b.Property<string>("Origin")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("OriginalUrl")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("PayloadHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("PayloadJson")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("SourceUid")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MessageId");
+
+                    b.HasIndex("SourceUid");
+
+                    b.ToTable("CheckedDocuments", "purchasing");
+                });
+
+            modelBuilder.Entity("Purchasing.Domain.Documents.PurchaseCheckedDocumentHistory", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTimeOffset>("CheckedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CheckedBy")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("FileId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("Origin")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("PayloadHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("PayloadJson")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset>("ReplacedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ReplacedBy")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FileId", "Id");
+
+                    b.ToTable("CheckedDocumentHistory", "purchasing");
+                });
+
+            modelBuilder.Entity("Purchasing.Domain.Documents.PurchaseRecognitionAttempt", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTimeOffset>("At")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("By")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<decimal>("CostUsd")
+                        .HasPrecision(12, 6)
+                        .HasColumnType("numeric(12,6)");
+
+                    b.Property<string>("FileId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("MessageId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("Model")
+                        .HasMaxLength(80)
+                        .HasColumnType("character varying(80)");
+
+                    b.Property<string>("Outcome")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("OutputJson")
+                        .HasColumnType("text");
+
+                    b.PrimitiveCollection<string[]>("Problems")
+                        .IsRequired()
+                        .HasColumnType("text[]");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MessageId");
+
+                    b.HasIndex("FileId", "Id");
+
+                    b.ToTable("RecognitionAttempts", "purchasing");
+                });
+
             modelBuilder.Entity("Purchasing.Domain.Files.PurchaseMessageFile", b =>
                 {
                     b.Property<string>("Id")
@@ -92,6 +256,13 @@ namespace Purchasing.Infrastructure.Persistence.Migrations
                     b.Property<int>("ReviewVersion")
                         .HasColumnType("integer");
 
+                    b.Property<DateTimeOffset?>("ReviewedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ReviewedBy")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
                     b.Property<string>("StatusOriginal")
                         .IsRequired()
                         .HasColumnType("text");
@@ -120,6 +291,70 @@ namespace Purchasing.Infrastructure.Persistence.Migrations
                         .IsUnique();
 
                     b.ToTable("Messages", "purchasing");
+                });
+
+            modelBuilder.Entity("Purchasing.Domain.Messages.PurchaseReviewChange", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTimeOffset>("At")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("MessageId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("Reviewer")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.ComplexProperty(typeof(Dictionary<string, object>), "After", "Purchasing.Domain.Messages.PurchaseReviewChange.After#PurchaseReview", b1 =>
+                        {
+                            b1.IsRequired();
+
+                            b1.Property<string>("Note")
+                                .HasMaxLength(1000)
+                                .HasColumnType("character varying(1000)")
+                                .HasColumnName("AfterNote");
+
+                            b1.Property<int?>("SupplierId")
+                                .HasColumnType("integer")
+                                .HasColumnName("AfterSupplierId");
+
+                            b1.Property<int>("Version")
+                                .HasColumnType("integer")
+                                .HasColumnName("AfterVersion");
+                        });
+
+                    b.ComplexProperty(typeof(Dictionary<string, object>), "Before", "Purchasing.Domain.Messages.PurchaseReviewChange.Before#PurchaseReview", b1 =>
+                        {
+                            b1.IsRequired();
+
+                            b1.Property<string>("Note")
+                                .HasMaxLength(1000)
+                                .HasColumnType("character varying(1000)")
+                                .HasColumnName("BeforeNote");
+
+                            b1.Property<int?>("SupplierId")
+                                .HasColumnType("integer")
+                                .HasColumnName("BeforeSupplierId");
+
+                            b1.Property<int>("Version")
+                                .HasColumnType("integer")
+                                .HasColumnName("BeforeVersion");
+                        });
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MessageId", "Id");
+
+                    b.ToTable("ReviewChanges", "purchasing");
                 });
 
             modelBuilder.Entity("Purchasing.Domain.Sources.PurchaseSourceRevision", b =>
@@ -219,7 +454,55 @@ namespace Purchasing.Infrastructure.Persistence.Migrations
                     b.ToTable("SyncStates", "purchasing");
                 });
 
+            modelBuilder.Entity("Purchasing.Domain.Documents.PurchaseCheckedDocument", b =>
+                {
+                    b.HasOne("Purchasing.Domain.Files.PurchaseMessageFile", null)
+                        .WithOne()
+                        .HasForeignKey("Purchasing.Domain.Documents.PurchaseCheckedDocument", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Purchasing.Domain.Messages.PurchaseMessage", null)
+                        .WithMany()
+                        .HasForeignKey("MessageId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Purchasing.Domain.Documents.PurchaseCheckedDocumentHistory", b =>
+                {
+                    b.HasOne("Purchasing.Domain.Files.PurchaseMessageFile", null)
+                        .WithMany()
+                        .HasForeignKey("FileId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Purchasing.Domain.Documents.PurchaseRecognitionAttempt", b =>
+                {
+                    b.HasOne("Purchasing.Domain.Files.PurchaseMessageFile", null)
+                        .WithMany()
+                        .HasForeignKey("FileId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Purchasing.Domain.Messages.PurchaseMessage", null)
+                        .WithMany()
+                        .HasForeignKey("MessageId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Purchasing.Domain.Files.PurchaseMessageFile", b =>
+                {
+                    b.HasOne("Purchasing.Domain.Messages.PurchaseMessage", null)
+                        .WithMany()
+                        .HasForeignKey("MessageId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Purchasing.Domain.Messages.PurchaseReviewChange", b =>
                 {
                     b.HasOne("Purchasing.Domain.Messages.PurchaseMessage", null)
                         .WithMany()
