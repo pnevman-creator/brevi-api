@@ -14,10 +14,12 @@
     </ItemGroup>
     <ItemGroup>
         <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.14" PrivateAssets="all" />
+        <PackageReference Include="Google.Apis.Auth" Version="1.78.0" />
         <PackageReference Include="QuestPDF" Version="2026.9.1" />
     </ItemGroup>
     <ItemGroup>
         <EmbeddedResource Include="Quotes\Pdf\Fonts\*.ttf" />
+        <EmbeddedResource Include="Quotes\Pdf\Banners\*.jpg" LogicalName="Brevi.Quotes.Pdf.Banners.%(Filename)%(Extension)" />
     </ItemGroup>
     <ItemGroup>
         <InternalsVisibleTo Include="UnitTests" />

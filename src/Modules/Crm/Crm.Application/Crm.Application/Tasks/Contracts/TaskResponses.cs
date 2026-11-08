@@ -18,11 +18,12 @@ public sealed record TaskSummaryResponse(
     int StepsDone,
     DateTimeOffset? CompletedAt,
     DateTimeOffset UpdatedAt,
-    int Version);
+    int Version,
+    DateTimeOffset CreatedAt);
 
 public sealed record TaskPageResponse(IReadOnlyList<TaskSummaryResponse> Items, int Page, int PageSize, int Total);
 
-/// <summary>Open tasks and those done in the last 7 days, for the «Мої завдання» board.</summary>
+/// <summary>Open tasks and those done in the chosen period, newest added first, for the «Мої завдання» board.</summary>
 public sealed record TaskBoardResponse(IReadOnlyList<TaskSummaryResponse> Items, DateTimeOffset At);
 
 public sealed record TaskStepResponse(long Id, int Position, string Text, bool IsDone);
@@ -49,7 +50,8 @@ public sealed record TaskDetailResponse(
     DateTimeOffset? CompletedAt,
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt,
-    int Version);
+    int Version,
+    long? LeadId = null);
 
 /// <summary>Counts for the metric strip and the filter chips (R-09).</summary>
 /// <param name="OnTimePercent">Share of tasks done in the last 30 days that were done by their due time; null when none.</param>
