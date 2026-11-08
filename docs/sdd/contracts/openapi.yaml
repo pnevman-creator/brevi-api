@@ -15,6 +15,14 @@ paths:
     $ref: ./identity/session.openapi.yaml#/paths/~1api~1auth~1cookie~1logout
   /api/auth/session/me:
     $ref: ./identity/session.openapi.yaml#/paths/~1api~1auth~1session~1me
+  /api/auth/session/access:
+    $ref: ./identity/session.openapi.yaml#/paths/~1api~1auth~1session~1access
+  /api/admin/access:
+    $ref: ./identity/access.openapi.yaml#/paths/~1api~1admin~1access
+  /api/admin/access/roles:
+    $ref: ./identity/access.openapi.yaml#/paths/~1api~1admin~1access~1roles
+  /api/admin/access/roles/{role}:
+    $ref: ./identity/access.openapi.yaml#/paths/~1api~1admin~1access~1roles~1{role}
   /api/accounting/settings:
     $ref: ./accounting/finance.openapi.yaml#/paths/~1api~1accounting~1settings
   /api/accounting/accounts:
@@ -73,6 +81,24 @@ paths:
     $ref: ./accounting/finance.openapi.yaml#/paths/~1api~1accounting~1counterparties~1{id}~1merge
   /api/accounting/counterparties/{id}/history:
     $ref: ./accounting/finance.openapi.yaml#/paths/~1api~1accounting~1counterparties~1{id}~1history
+  /api/accounting/transactions/{id}/attachments:
+    $ref: ./accounting/finance.openapi.yaml#/paths/~1api~1accounting~1transactions~1{id}~1attachments
+  /api/accounting/attachments/{id}:
+    $ref: ./accounting/finance.openapi.yaml#/paths/~1api~1accounting~1attachments~1{id}
+  /api/accounting/attachments/{id}/content:
+    $ref: ./accounting/finance.openapi.yaml#/paths/~1api~1accounting~1attachments~1{id}~1content
+  /api/accounting/legacy-import:
+    $ref: ./accounting/finance.openapi.yaml#/paths/~1api~1accounting~1legacy-import
+  /api/accounting/statements:
+    $ref: ./accounting/finance.openapi.yaml#/paths/~1api~1accounting~1statements
+  /api/accounting/statements/{id}:
+    $ref: ./accounting/finance.openapi.yaml#/paths/~1api~1accounting~1statements~1{id}
+  /api/accounting/statements/{id}/lines/{lineId}:
+    $ref: ./accounting/finance.openapi.yaml#/paths/~1api~1accounting~1statements~1{id}~1lines~1{lineId}
+  /api/accounting/statements/{id}/book:
+    $ref: ./accounting/finance.openapi.yaml#/paths/~1api~1accounting~1statements~1{id}~1book
+  /api/accounting/statements/{id}/rollback:
+    $ref: ./accounting/finance.openapi.yaml#/paths/~1api~1accounting~1statements~1{id}~1rollback
   /api/admin/users:
     $ref: ./identity/users.openapi.yaml#/paths/~1api~1admin~1users
   /api/admin/users/{userId}:

@@ -34,7 +34,7 @@ BreviERP PostgreSQL
 │   ├── GarmentPartOperations          # operations on garment parts
 │   ├── PricingParameters              # «Параметри ціноутворення»: sheet «Налаштування цін», left table
 │   └── PpeMarkupRules                 # PPE markup rules: right table of the same sheet
-├── identity / AppIdentityDbContext — 8 tables
+├── identity / AppIdentityDbContext — 9 tables
 │   ├── AspNetUsers                    # users
 │   ├── AspNetRoles                    # roles
 │   ├── AspNetUserRoles                # role assignments
@@ -42,13 +42,17 @@ BreviERP PostgreSQL
 │   ├── AspNetRoleClaims               # role claims
 │   ├── AspNetUserLogins               # external logins
 │   ├── AspNetUserTokens               # tokens
-│   └── DataProtectionKeys            # keys that sign the session cookie
-├── accounting / AccountingDbContext — 6 tables + own history
+│   ├── DataProtectionKeys            # keys that sign the session cookie
+│   └── role_access                   # «Права доступу»: saved rights per role
+├── accounting / AccountingDbContext — 9 tables + own history
 │   ├── Accounts                       # «Рахунки і каси» with the balance on 01.10
 │   ├── Categories                     # «Категорії»: two levels per area and direction
 │   ├── Transactions                   # «Операції» with the counterparty kind and id
 │   ├── Transfers                      # «Перекази» between own accounts
 │   ├── Counterparties                 # finance counterparties («Фінансові»)
+│   ├── Attachments                    # files of operations in the private bucket
+│   ├── BankStatements                 # «Виписки банку»: uploaded statements
+│   ├── BankStatementLines             # their lines with what was recognised and chosen
 │   └── AuditEntries                   # change log with JSON snapshots
 ├── media / MediaDbContext — 2 tables + own history
 │   ├── Folders                        # photo folder tree

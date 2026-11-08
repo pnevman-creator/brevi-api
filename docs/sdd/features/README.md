@@ -42,6 +42,7 @@ Pricing data operations (local `Host.Seed` jobs, not HTTP), in run order:
 
 - [User session](identity/session.md) — Admin sign-in with the session cookie, CSRF, lockout, first administrator.
 - [Staff accounts](identity/staff-accounts.md) — «Користувачі»: administrators and the director create, re-role, block, reset and delete staff accounts.
+- [Access rights](identity/access-rights.md) — «Права доступу»: per-role pages and actions, new roles; every work page's API checks them.
 - [Own profile](identity/own-profile.md) — «Мій кабінет»: own name and photo for every staff member; phone, email and password for administrators.
 
 ## Other modules
@@ -64,7 +65,7 @@ The [module map](../architecture/overview/modules.md) describes module boundarie
 
 ## Purchasing
 
-- [Purchase invoices «Рахунки на закупку»](purchasing/purchase-invoices.md) — register of purchase invoices from the Google Sheet «финансы»: sync, problems with reasons, search, supplier link and note, invoice facts read by AI with a kopeck check or uploaded as JSON; Director, Accountant and Admin.
+- [Purchase invoices «Рахунки на закупку»](purchasing/purchase-invoices.md) — register of purchase invoices from the Google Sheet «финансы»: sync, problems with reasons, search, supplier link and note, invoice facts read by AI with a kopeck check or uploaded as JSON; Director only.
 
 ## Media
 

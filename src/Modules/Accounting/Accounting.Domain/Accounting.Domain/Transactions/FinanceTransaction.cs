@@ -4,6 +4,7 @@ using Accounting.Domain.Counterparties;
 using Accounting.Domain.Errors;
 using Accounting.Domain.Ledger;
 using Accounting.Domain.Movements;
+using Accounting.Domain.Statements;
 
 namespace Accounting.Domain.Transactions;
 
@@ -139,6 +140,52 @@ public sealed class FinanceTransaction : IAggregateRoot
         };
     }
 
+    /// <summary>
+    /// A line of a bank statement booked by «Провести виписку» (stage 6): date, type and amount come from the bank, the
+    /// currency from the account, the category and who it is with from the director's choice. The bank id, fingerprint
+    /// and purpose are kept so the line is never added again. No category → «Потребують перевірки».
+    /// </summary>
+    public static FinanceTransaction FromBank(FinanceTransactionId id, BankStatementLine line, FinanceAccount account,
+        FinanceCategory? category, CounterpartyState? counterparty, string by, DateTimeOffset now)
+    {
+        if (line.Date is not { } date || line.Type is not { } type || line.AmountMinor is not { } amount
+            || line.TransferAccountId is not null)
+            throw new InvalidOperationException("Only a read income or expense line becomes an operation.");
+        if (category?.Id != line.CategoryId || counterparty?.Link != line.Counterparty)
+            throw new InvalidOperationException("The category and counterparty must be the ones of the line.");
+        MovementRules.CheckDate(date, LedgerScope.Current, null);
+        MovementRules.CheckAccount(account, date, LedgerScope.Current, unchanged: false);
+        MovementRules.CheckAmount(amount);
+        var transaction = new FinanceTransaction
+        {
+            Id = id,
+            Scope = LedgerScope.Current,
+            Source = MovementSource.BankImport,
+            Status = MovementStatus.Active,
+            Version = 1,
+            CreatedBy = by,
+            CreatedAt = now,
+            UpdatedAt = now,
+            Date = date,
+            Type = type,
+            AccountId = account.Id,
+            Currency = account.Currency,
+            AmountMinor = amount,
+            Description = line.Description,
+            Comment = line.Comment,
+            ExternalId = line.BankId,
+            Fingerprint = line.Fingerprint,
+            BankTransactionId = line.BankId,
+            BankPurpose = line.Purpose,
+        };
+        // A category switched off after it was chosen for the line still books: the choice was made while it was on.
+        if (category is not null) transaction.CheckCategory(category, type, keeps: true);
+        transaction.CategoryId = category?.Id;
+        transaction.SetCounterparty(counterparty?.Link, counterparty is null ? line.OneoffName : string.Empty);
+        transaction.Verification = VerificationOf(transaction.CategoryId, counterparty);
+        return transaction;
+    }
+
     /// <summary>Changes the fields; returns false when nothing differs (the version stays).</summary>
     public bool Update(FinanceTransactionDetails details, FinanceAccount account, FinanceCategory category,
         CounterpartyState? counterparty, DateTimeOffset now)
@@ -211,6 +258,19 @@ public sealed class FinanceTransaction : IAggregateRoot
         SetCounterparty(counterparty.Link, string.Empty);
         Verification = VerificationOf(CategoryId, counterparty);
         Touch(now);
+    }
+
+    /// <summary>
+    /// «Відкотити виписку»: a cancelled record of a rolled back statement gives up its bank identity, so the same bank
+    /// line can be booked again and is not taken for a duplicate.
+    /// </summary>
+    public void ReleaseBankIdentity()
+    {
+        if (Status != MovementStatus.Void)
+            throw new InvalidOperationException("Only a cancelled record gives up its bank identity.");
+        ExternalId = null;
+        Fingerprint = null;
+        BankTransactionId = null;
     }
 
     /// <summary>«Анулювати»: the operation stays in the journal and the log but no longer counts.</summary>
