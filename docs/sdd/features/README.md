@@ -31,6 +31,7 @@ Pricing data operations (local `Host.Seed` jobs, not HTTP), in run order:
 
 - [Suppliers](reference/suppliers.md) — CRUD, list reads and KeepinCRM refresh.
 - [Fabrics](reference/fabrics.md) — CRUD, list reads and import of the Calculator sheet «Тканини».
+- [Colours](reference/fabric-colors.md) — «Кольори» of «Матеріали»: the sheet colours list, CRUD; the workshop picks colours only from it.
 - [Garment accessories](reference/garment-accessories.md) — CRUD, list reads and import of the Calculator sheet «Фурнітура».
 - [Garment parts](reference/garment-parts.md) — CRUD and list reads.
 - [Sewing operations](reference/garment-part-operations.md) — CRUD, list reads, and import of the Calculator sheet «Операції».
@@ -67,6 +68,10 @@ The [module map](../architecture/overview/modules.md) describes module boundarie
 ## Purchasing
 
 - [Purchase invoices «Рахунки на закупку»](purchasing/purchase-invoices.md) — register of purchase invoices from the Google Sheet «финансы»: sync, problems with reasons, search, supplier link and note, invoice facts read by AI with a kopeck check or uploaded as JSON; Director only.
+
+## Content
+
+- [Product pages «Контент → Товари»](content/product-pages.md) — the site page of each Catalog product: «Показувати на сайті», address, name, SEO, short facts, description and characteristics in Ukrainian and Russian; Admin edits, Manager reads. Also the anonymous read-only catalog of the public site `/api/public/catalog`.
 
 ## Media
 
