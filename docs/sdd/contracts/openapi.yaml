@@ -443,20 +443,42 @@ paths:
     $ref: ./production/workshop-archive.openapi.yaml#/paths/~1api~1production~1archive~1import
   /api/warehouse/fabric-stock:
     $ref: ./warehouse/fabric-stock.openapi.yaml#/paths/~1api~1warehouse~1fabric-stock
-  /api/warehouse/fabric-stock/choices:
-    $ref: ./warehouse/fabric-stock.openapi.yaml#/paths/~1api~1warehouse~1fabric-stock~1choices
   /api/warehouse/fabric-stock/{id}:
     $ref: ./warehouse/fabric-stock.openapi.yaml#/paths/~1api~1warehouse~1fabric-stock~1{id}
+  /api/warehouse/fabric-stock/choices:
+    $ref: ./warehouse/fabric-stock.openapi.yaml#/paths/~1api~1warehouse~1fabric-stock~1choices
   /api/warehouse/fabric-stock/movements:
     $ref: ./warehouse/fabric-stock.openapi.yaml#/paths/~1api~1warehouse~1fabric-stock~1movements
-  /api/warehouse/fabric-stock/{id}/correction:
-    $ref: ./warehouse/fabric-stock.openapi.yaml#/paths/~1api~1warehouse~1fabric-stock~1{id}~1correction
-  /api/warehouse/fabric-stock/{id}/movements/{movementId}/reverse:
-    $ref: ./warehouse/fabric-stock.openapi.yaml#/paths/~1api~1warehouse~1fabric-stock~1{id}~1movements~1{movementId}~1reverse
+  /api/warehouse/fabric-stock/openings:
+    $ref: ./warehouse/fabric-stock.openapi.yaml#/paths/~1api~1warehouse~1fabric-stock~1openings
+  /api/warehouse/fabric-stock/receipts:
+    $ref: ./warehouse/fabric-stock.openapi.yaml#/paths/~1api~1warehouse~1fabric-stock~1receipts
+  /api/warehouse/fabric-stock/issues:
+    $ref: ./warehouse/fabric-stock.openapi.yaml#/paths/~1api~1warehouse~1fabric-stock~1issues
+  /api/warehouse/fabric-stock/adjustments:
+    $ref: ./warehouse/fabric-stock.openapi.yaml#/paths/~1api~1warehouse~1fabric-stock~1adjustments
+  /api/warehouse/fabric-stock/movements/{movementId}/reverse:
+    $ref: ./warehouse/fabric-stock.openapi.yaml#/paths/~1api~1warehouse~1fabric-stock~1movements~1{movementId}~1reverse
+  /api/warehouse/fabric-stock/movements/{movementId}:
+    $ref: ./warehouse/fabric-stock.openapi.yaml#/paths/~1api~1warehouse~1fabric-stock~1movements~1{movementId}
+  /api/warehouse/fabric-stock/movements/{movementId}/void:
+    $ref: ./warehouse/fabric-stock.openapi.yaml#/paths/~1api~1warehouse~1fabric-stock~1movements~1{movementId}~1void
+  /api/warehouse/fabric-stock/movements/{movementId}/restore:
+    $ref: ./warehouse/fabric-stock.openapi.yaml#/paths/~1api~1warehouse~1fabric-stock~1movements~1{movementId}~1restore
+  /api/warehouse/fabric-stock/movements/{movementId}/revisions:
+    $ref: ./warehouse/fabric-stock.openapi.yaml#/paths/~1api~1warehouse~1fabric-stock~1movements~1{movementId}~1revisions
   /api/warehouse/fabric-stock/consumption:
     $ref: ./warehouse/fabric-stock.openapi.yaml#/paths/~1api~1warehouse~1fabric-stock~1consumption
   /api/warehouse/fabric-stock/import:
     $ref: ./warehouse/fabric-stock.openapi.yaml#/paths/~1api~1warehouse~1fabric-stock~1import
+  /api/warehouse/fabric-stock/issue-items:
+    $ref: ./warehouse/fabric-stock.openapi.yaml#/paths/~1api~1warehouse~1fabric-stock~1issue-items
+  /api/warehouse/fabric-stock/issue-items/{orderId}/{itemId}:
+    $ref: ./warehouse/fabric-stock.openapi.yaml#/paths/~1api~1warehouse~1fabric-stock~1issue-items~1{orderId}~1{itemId}
+  /api/warehouse/fabric-stock/issue-items/{orderId}/{itemId}/issues:
+    $ref: ./warehouse/fabric-stock.openapi.yaml#/paths/~1api~1warehouse~1fabric-stock~1issue-items~1{orderId}~1{itemId}~1issues
+  /api/warehouse/fabric-stock/issue-items/{orderId}/{itemId}/plan:
+    $ref: ./warehouse/fabric-stock.openapi.yaml#/paths/~1api~1warehouse~1fabric-stock~1issue-items~1{orderId}~1{itemId}~1plan
   /api/warehouse/orders/{id}/items/{itemId}/fabric:
     $ref: ./warehouse/fabric-stock.openapi.yaml#/paths/~1api~1warehouse~1orders~1{id}~1items~1{itemId}~1fabric
   /api/warehouse/orders/{id}/items/{itemId}/fabric-issues:
@@ -587,6 +609,14 @@ paths:
     $ref: ./content/content-categories.openapi.yaml#/paths/~1api~1content~1categories~1{id}
   /api/content/categories/{id}/visibility:
     $ref: ./content/content-categories.openapi.yaml#/paths/~1api~1content~1categories~1{id}~1visibility
+  /api/content/articles:
+    $ref: ./content/content-articles.openapi.yaml#/paths/~1api~1content~1articles
+  /api/content/articles/old-site-import:
+    $ref: ./content/content-articles.openapi.yaml#/paths/~1api~1content~1articles~1old-site-import
+  /api/content/articles/{id}:
+    $ref: ./content/content-articles.openapi.yaml#/paths/~1api~1content~1articles~1{id}
+  /api/content/articles/{id}/visibility:
+    $ref: ./content/content-articles.openapi.yaml#/paths/~1api~1content~1articles~1{id}~1visibility
   /api/public/catalog/tree:
     $ref: ./content/content-public-catalog.openapi.yaml#/paths/~1api~1public~1catalog~1tree
   /api/public/catalog/products:
@@ -601,3 +631,7 @@ paths:
     $ref: ./content/content-public-catalog.openapi.yaml#/paths/~1api~1public~1catalog~1category-slugs
   /api/public/catalog/product-slugs:
     $ref: ./content/content-public-catalog.openapi.yaml#/paths/~1api~1public~1catalog~1product-slugs
+  /api/public/articles:
+    $ref: ./content/content-public-articles.openapi.yaml#/paths/~1api~1public~1articles
+  /api/public/articles/{slug}:
+    $ref: ./content/content-public-articles.openapi.yaml#/paths/~1api~1public~1articles~1{slug}

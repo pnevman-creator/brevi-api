@@ -129,11 +129,11 @@ public sealed class WorkshopReportHandlerTests
         workshop.Attached.Add(stock);
         workshop.Stock = new HarnessProductionStockReader(stock.Facts());
         var keeper = new global::Warehouse.Application.Access.WarehouseActor(4, false, false, true);
-        await WarehouseStockHandlerTests.Receive(stock, keeper, "Opening", 10m, null);
+        await WarehouseStockHandlerTests.Receive(stock, keeper, "Opening", 10m);
         var order = (await ProductionOrderHandlerTests.Create(workshop, Manager, ProductionOrderHandlerTests.Input())).Value;
         var itemId = order.Items[0].Id;
         await WarehouseStockHandlerTests.Issue(stock, keeper, order.Id, itemId, order.Version,
-            WarehouseStockHandlerTests.L("Planned", "темно-сірий", 23, "Темно-сірий", 4m));
+            WarehouseStockHandlerTests.L("темно-сірий", "Темно-сірий", 4m));
         var record = new CreateProductionWorkCommandHandler(workshop.Db, workshop.Staff, new WorkCards(workshop.Db),
             workshop.Time);
         await record.Handle(new(Chief, order.Id, itemId, new(seamstress, "Sewing", 3, Day, false, null, null)),

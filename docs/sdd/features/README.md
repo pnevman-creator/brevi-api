@@ -73,6 +73,7 @@ The [module map](../architecture/overview/modules.md) describes module boundarie
 
 - [Product pages «Контент → Товари»](content/product-pages.md) — the site page of each Catalog product: «Показувати на сайті», address, name, SEO, short facts, description and characteristics in Ukrainian and Russian; Admin edits, Manager reads. Also the anonymous read-only catalog of the public site `/api/public/catalog`.
 - [Site categories «Контент → Розділи»](content/site-categories.md) — the two-level category tree of the public site: add, edit, move, reorder, hide and delete categories and subcategories; name, SEO and text in Ukrainian and Russian; Admin edits, Manager reads.
+- [Articles «Контент → Статті»](content/articles.md) — articles of the public site: address, date, «Показувати на сайті», cover, title, SEO and text with pictures from «Фото» in Ukrainian and Russian; Admin edits, Manager reads.
 
 ## Media
 
@@ -89,7 +90,7 @@ The [module map](../architecture/overview/modules.md) describes module boundarie
 
 ## Warehouse
 
-- [Fabric stock «Склад тканин»](warehouse/fabric-stock.md) — own module and schema `warehouse` (WH-001): balances by fabric and colour, movements with history, reservation from the workshop norms, issues to order items, value, consumption summary, transfer of the old stock; «Звіти цеху» read it through a port.
+- [Fabric stock «Склад тканин»](warehouse/fabric-stock.md) — own module and schema `warehouse` (WH-001…WH-004): pairs of fabric and colour with alias groups, «Залишки», «Рух тканини», «Початкові залишки», opening, receipt, issue without an order, «Уточнити», edit, void and restore of movements with «Історія правок», operation ids, reservation from the workshop norms, issues to order items by actual cutting with a saved item plan, consumption summary, transfer of the old stock; «Звіти цеху» read it through a port.
 
 ## Reminders
 

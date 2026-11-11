@@ -8,6 +8,7 @@ using Warehouse.Application.Colors;
 using Warehouse.Application.Stock;
 using Warehouse.Application.Stock.Facts;
 using Warehouse.Application.Stock.Issues;
+using Warehouse.Application.Stock.Revisions;
 using Warehouse.Infrastructure.Persistence;
 
 namespace Warehouse.Infrastructure.DependencyInjection;
@@ -26,10 +27,13 @@ public static class WarehouseInfrastructureExtensions
         services.AddScoped<IWarehouseDbContext>(sp => sp.GetRequiredService<WarehouseDbContext>());
         services.AddScoped<IDatabaseMigrator, DbMigrator<WarehouseDbContext>>();
         services.AddScoped<StockReservations>();
-        services.AddScoped<StockRows>();
+        services.AddScoped<StockOperations>();
+        services.AddScoped<StockPairs>();
+        services.AddScoped<MovementRevisions>();
         services.AddScoped<StockChanges>();
         services.AddScoped<WarehouseColors>();
         services.AddScoped<ItemFabricCards>();
+        services.AddScoped<ItemPlans>();
         services.AddScoped<StockFacts>();
         services.TryAddSingleton(TimeProvider.System);
         return services;

@@ -7,28 +7,40 @@ using YamlDotNet.RepresentationModel;
 
 namespace UnitTests.Warehouse;
 
-/// <summary>Stock types and operations match docs/sdd/contracts/warehouse/fabric-stock.openapi.yaml (WH-001).</summary>
+/// <summary>Stock types and operations match docs/sdd/contracts/warehouse/fabric-stock.openapi.yaml (WH-001…WH-004).</summary>
 public sealed class FabricStockContractTests
 {
     [TestCase(typeof(FabricStockPermissions))]
-    [TestCase(typeof(FabricStockFabricChoice))]
-    [TestCase(typeof(FabricStockSupplierChoice))]
-    [TestCase(typeof(FabricStockChoicesResponse))]
-    [TestCase(typeof(FabricStockRowResponse))]
-    [TestCase(typeof(FabricStockTotals))]
+    [TestCase(typeof(FabricStockSourceResponse))]
+    [TestCase(typeof(FabricStockColorResponse))]
+    [TestCase(typeof(FabricStockFabricResponse))]
     [TestCase(typeof(FabricStockListResponse))]
-    [TestCase(typeof(FabricMovementResponse))]
-    [TestCase(typeof(FabricReservationResponse))]
-    [TestCase(typeof(FabricStockLineResponse))]
-    [TestCase(typeof(CreateFabricMovementInput))]
-    [TestCase(typeof(CorrectFabricStockInput))]
+    [TestCase(typeof(FabricMovementRowResponse))]
+    [TestCase(typeof(FabricMovementPageResponse))]
+    [TestCase(typeof(FabricStockFabricChoice))]
+    [TestCase(typeof(FabricStockChoicesResponse))]
+    [TestCase(typeof(OpenFabricStockInput))]
+    [TestCase(typeof(ReceiveFabricInput))]
+    [TestCase(typeof(IssueFabricInput))]
+    [TestCase(typeof(AdjustFabricStockInput))]
     [TestCase(typeof(ReverseFabricMovementInput))]
+    [TestCase(typeof(FabricStockOperationResponse))]
+    [TestCase(typeof(EditFabricMovementInput))]
+    [TestCase(typeof(VoidFabricMovementInput))]
+    [TestCase(typeof(RestoreFabricMovementInput))]
+    [TestCase(typeof(FabricMovementStateResponse))]
+    [TestCase(typeof(FabricMovementRevisionResponse))]
+    [TestCase(typeof(FabricMovementHistoryResponse))]
     [TestCase(typeof(FabricPlanPartResponse))]
     [TestCase(typeof(FabricIssueLineResponse))]
     [TestCase(typeof(FabricIssueResponse))]
     [TestCase(typeof(ProductionItemFabricResponse))]
     [TestCase(typeof(FabricIssueLineInput))]
     [TestCase(typeof(CreateFabricIssueInput))]
+    [TestCase(typeof(FabricIssueComparisonResponse))]
+    [TestCase(typeof(RefreshItemFabricPlanInput))]
+    [TestCase(typeof(FabricIssueItemResponse))]
+    [TestCase(typeof(FabricIssueItemsResponse))]
     [TestCase(typeof(ReverseFabricIssueInput))]
     [TestCase(typeof(FabricConsumptionRowResponse))]
     [TestCase(typeof(FabricConsumptionResponse))]
@@ -60,7 +72,7 @@ public sealed class FabricStockContractTests
         Assert.Multiple(() =>
         {
             Assert.That(policies, Is.EqualTo(new[] { "access:fabric-stock", "access:production-orders" }));
-            Assert.That(operations, Has.Length.EqualTo(11));
+            Assert.That(operations, Has.Length.EqualTo(22));
             Assert.That(Operations(), Is.EquivalentTo(operations));
         });
     }

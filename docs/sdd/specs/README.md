@@ -24,7 +24,8 @@ This is an index of project decisions and delivery; the [implemented feature map
 | Catalog  | [018 Product photos, old-site photo import and the active switch](catalog/018-product-photos-and-old-site-import/README.md) | implemented 2026-11-04 |
 | Content  | [001 «Контент сайту» site content](content/001-site-content/README.md) | planned only (draft) |
 | Content  | [002 «Контент → Товари» product pages for the site](content/002-product-pages/README.md) | stage 1 (module, admin API) implemented 2026-11-11 |
-| Content  | [003 «Контент → Розділи» categories of the site](content/003-site-categories/README.md) | stages 1 and 3 (admin API, product categories, old-site transfer) implemented 2026-11-11; stages 4–5 planned |
+| Content  | [003 «Контент → Розділи» categories of the site](content/003-site-categories/README.md) | stages 1–5 implemented 2026-11-11 (stages 2 and 5 in brevi-web) |
+| Content  | [004 «Контент → Статті» articles of the site](content/004-articles/README.md) | stages 1 (admin API), 3 (old-site transfer) and 4 (public API) implemented 2026-11-11; the site reads it in brevi-web |
 | Catalog  | [Admin product category list](catalog/admin-product-list/README.md)                                      | verified 2026-07-27                                                                                                |
 | Catalog  | [Media files](catalog/media-files/README.md)                                                             | history; moved to Media MED-001                                                                                    |
 | Catalog  | [Early product snapshot](catalog/product-page/README.md)                                                 | history; superseded by 001                                                                                         |
@@ -50,6 +51,9 @@ This is an index of project decisions and delivery; the [implemented feature map
 | Production | [007 Reports and overview](production/007-workshop-reports/README.md) | stage 7 implemented 2026-11-05 |
 | Production | [008 Archive and cutover](production/008-workshop-archive/README.md) | stage 8 implemented 2026-11-05 |
 | Warehouse | [001 «Склад тканин» as its own module](warehouse/001-warehouse-module/README.md) | stage 1 (module, data move) implemented 2026-11-11 |
+| Warehouse | [002 Ledger rules, «Рух тканини», «Залишки», «Початкові залишки»](warehouse/002-ledger-rules/README.md) | stage 2 implemented 2026-11-11 |
+| Warehouse | [003 Edit, void and restore of movements](warehouse/003-movement-revisions/README.md) | stage 3 implemented 2026-11-11 |
+| Warehouse | [004 Issue by actual cutting](warehouse/004-issue-by-cutting/README.md) | stage 4 implemented 2026-11-11 |
 | Ai | [001 «Налаштування ШІ»](ai/001-ai-settings/README.md) | implemented 2026-11-05 |
 | Accounting | [001 «Бухгалтерія»](accounting/001-finance/README.md) | stages 1–3 implemented 2026-11-05 |
 | Purchasing | [001 «Рахунки на закупку»](purchasing/001-purchase-invoices/README.md) | stages 1–3 implemented 2026-11-05 |

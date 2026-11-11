@@ -13,7 +13,12 @@ namespace UnitTests.Warehouse;
 
 internal sealed class FakeWarehouseReferenceReader : IWarehouseReferenceReader
 {
-    public List<WarehouseFabric> Fabrics { get; } = [new(23, "FAB-023", "Тканина «Грета»", 120m)];
+    public List<WarehouseFabric> Fabrics { get; } =
+    [
+        new(23, "FAB-023", "Тканина «Грета»", 120m, "53% бавовна, 47% поліестер", "220", "Тексика"),
+        new(67, "FAB-067", "Тканина «Грета»", 110m, "53 % бавовна, 47 % поліестер", "220 г/м²", "Черкаси ВВ"),
+        new(5, "FAB-005", "Оксфорд", 90m, "100% поліестер", "150", "Тексика")
+    ];
     public List<WarehouseSupplier> Suppliers { get; } = [new(7, "Тексика")];
     public List<string> Colors { get; } = ["Темно-сірий", "Червоний", "Жовтий", "Сірий"];
 
@@ -59,7 +64,7 @@ internal sealed class HarnessWarehouseProductionReader(ProductionFabricPlans pla
         plans.RecordFabricAsync(orderId, itemId, text, actorName, cancellationToken);
 
     private static WarehousePlanItem Map(ProductionPlanItem x) => new(x.OrderId, x.OrderNumber, x.OrderVersion,
-        x.IsOpen, x.ItemId, x.ModelName, x.FabricCode, x.FabricName, x.Quantity, x.HasNorm,
+        x.IsOpen, x.ClientName, x.ItemId, x.ModelName, x.FabricCode, x.FabricName, x.Quantity, x.HasNorm,
         x.Parts.Select(p => new WarehousePlanPart(p.FabricCode, p.Color, p.ColorKey, p.Meters)).ToArray());
 }
 
@@ -106,13 +111,17 @@ internal sealed class WarehouseTestHarness : IDisposable
 
     public WarehouseColors Colors() => new(Reference);
 
-    public StockReservations Reservations() => new(Db, Production);
+    public StockReservations Reservations() => new(Db, Production, Plans());
 
-    public StockRows StockRows() => new(Reference);
+    public ItemPlans Plans() => new(Db);
 
-    public StockChanges StockChanges() => new(Db, Staff, Reference, Reservations(), StockRows(), Workshop.Time);
+    public StockChanges StockChanges() => new(Db, Staff, Reference, Workshop.Time);
 
-    public ItemFabricCards ItemFabric() => new(Db, Reservations());
+    public StockOperations Operations() => new(Db);
+
+    public StockPairs Pairs() => new(Db, Operations(), Workshop.Time);
+
+    public ItemFabricCards ItemFabric() => new(Db, Reservations(), Plans());
 
     public StockFacts Facts() => new(Db);
 
