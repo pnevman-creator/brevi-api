@@ -24,6 +24,7 @@ This is an index of project decisions and delivery; the [implemented feature map
 | Catalog  | [018 Product photos, old-site photo import and the active switch](catalog/018-product-photos-and-old-site-import/README.md) | implemented 2026-11-04 |
 | Content  | [001 «Контент сайту» site content](content/001-site-content/README.md) | planned only (draft) |
 | Content  | [002 «Контент → Товари» product pages for the site](content/002-product-pages/README.md) | stage 1 (module, admin API) implemented 2026-11-11 |
+| Content  | [003 «Контент → Розділи» categories of the site](content/003-site-categories/README.md) | stages 1 and 3 (admin API, product categories, old-site transfer) implemented 2026-11-11; stages 4–5 planned |
 | Catalog  | [Admin product category list](catalog/admin-product-list/README.md)                                      | verified 2026-07-27                                                                                                |
 | Catalog  | [Media files](catalog/media-files/README.md)                                                             | history; moved to Media MED-001                                                                                    |
 | Catalog  | [Early product snapshot](catalog/product-page/README.md)                                                 | history; superseded by 001                                                                                         |
@@ -43,11 +44,12 @@ This is an index of project decisions and delivery; the [implemented feature map
 | Production | [001 «Швейний цех»: module, head of the workshop, references](production/001-workshop-references/README.md) | stage 1 implemented 2026-11-04 |
 | Production | [002 Production orders from КП](production/002-production-orders/README.md) | stage 2 implemented 2026-11-04 |
 | Production | [003 Stages, shipments, files, Telegram](production/003-order-tracking/README.md) | stage 3 implemented 2026-11-04 |
-| Production | [004 Fabric stock](production/004-fabric-stock/README.md) | stage 4 implemented 2026-11-04 |
+| Production | [004 Fabric stock](production/004-fabric-stock/README.md) | stage 4 implemented 2026-11-04; moved to Warehouse WH-001 |
 | Production | [005 Work log and sewing forecast](production/005-work-log/README.md) | stage 5 implemented 2026-11-05 |
 | Production | [006 Timesheet and payroll](production/006-timesheet-payroll/README.md) | stage 6 implemented 2026-11-05 |
 | Production | [007 Reports and overview](production/007-workshop-reports/README.md) | stage 7 implemented 2026-11-05 |
 | Production | [008 Archive and cutover](production/008-workshop-archive/README.md) | stage 8 implemented 2026-11-05 |
+| Warehouse | [001 «Склад тканин» as its own module](warehouse/001-warehouse-module/README.md) | stage 1 (module, data move) implemented 2026-11-11 |
 | Ai | [001 «Налаштування ШІ»](ai/001-ai-settings/README.md) | implemented 2026-11-05 |
 | Accounting | [001 «Бухгалтерія»](accounting/001-finance/README.md) | stages 1–3 implemented 2026-11-05 |
 | Purchasing | [001 «Рахунки на закупку»](purchasing/001-purchase-invoices/README.md) | stages 1–3 implemented 2026-11-05 |

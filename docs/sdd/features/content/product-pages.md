@@ -12,7 +12,8 @@ The site page of each Catalog product: the «Показувати на сайт�
 src/Modules/Content/
   Content.Domain/Content.Domain/
     ProductPages/      # ProductPage (mark, slug, revision, Replace), ProductPageText (cleans one language),
-                       # ProductPageContent (facts, blocks, spec groups), ProductPageRules (limits, slug rule)
+                       # ProductPageContent (facts, blocks, spec groups), ProductPageRules (limits, slug rule),
+                       # ProductTextBlocks (block cleaner, shared with site categories)
   Content.Application/Content.Application/
     Abstractions/      # IContentDbContext, IContentCatalogReader (products of other modules)
     Contracts/         # responses of the admin API and of the public catalog
@@ -23,7 +24,7 @@ src/Modules/Content/
     ProductPages/Delete/
     ProductPages/ImportOldSite/  # one-time transfer: link matching, dry run, overwrite
     ProductPages/Shared/         # mapping, free slug, messages
-    PublicCatalog/     # snapshot of what the site shows (kept for a minute), tree, cards, product, addresses
+    PublicCatalog/     # snapshot of what the site shows (kept for a minute), tree, site categories, cards, product, addresses
   Content.Infrastructure/Content.Infrastructure/
     Persistence/       # ContentDbContext (schema content), configurations (jsonb lists), migrations
     DependencyInjection/
@@ -42,4 +43,4 @@ tests/ArchitectureTests/ContentDependencyTests.cs
 
 ## Data
 
-Schema `content`: ProductPages, ProductPageTexts. Catalog product id is kept without a database link.
+Schema `content`: ProductPages, ProductPageTexts (and the [site category](site-categories.md) tables). Catalog product id is kept without a database link.
