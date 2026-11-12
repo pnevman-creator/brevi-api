@@ -10,4 +10,25 @@ internal static class ContentAccess
 
     /// <summary>«Контент → Статті» on «Права доступу» (CNT-004 R-04): Admin all, Manager view by default.</summary>
     public const string ArticlesPolicy = "access:content-articles";
+
+    /// <summary>«Контент → Переадресації» on «Права доступу» (CNT-005 R-03): Admin all, Manager view by default.</summary>
+    public const string RedirectsPolicy = "access:content-redirects";
+
+    /// <summary>«Контент → Налаштування SEO сайту» on «Права доступу» (CNT-006 R-03): Admin view and edit, Manager view.</summary>
+    public const string SeoSettingsPolicy = "access:content-seo-settings";
+
+    /// <summary>«Контент → Сторінки сайту» on «Права доступу» (CNT-007 R-04): Admin view and edit, Manager view.</summary>
+    public const string SitePagesPolicy = "access:content-site-pages";
+
+    /// <summary>«Контент → SEO-огляд» on «Права доступу» (CNT-008 R-04): Admin and Manager view.</summary>
+    public const string SeoOverviewPolicy = "access:content-seo-overview";
+
+    /// <summary>«Контент → Контакти та компанія» on «Права доступу» (CNT-009 R-04): Admin view and edit, Manager view.</summary>
+    public const string CompanyPolicy = "access:content-company";
+
+    /// <summary>«Контент → Наші роботи» on «Права доступу» (CNT-011 R-07): Admin view and edit, Manager view.</summary>
+    public const string WorksPolicy = "access:content-works";
+
+    /// <summary>«Контент → Сертифікати» on «Права доступу» (CNT-011 R-07): Admin view and edit, Manager view.</summary>
+    public const string CertificatesPolicy = "access:content-certificates";
 }

@@ -36,7 +36,13 @@ public sealed class ApiAccessTests
         "GET api/public/catalog/categories/{slug}",
         "GET api/public/catalog/category-slugs",
         "GET api/public/articles",
-        "GET api/public/articles/{slug}"
+        "GET api/public/articles/{slug}",
+        "GET api/public/redirects",
+        "GET api/public/site-settings",
+        "GET api/public/site-pages",
+        "GET api/public/company",
+        "GET api/public/galleries",
+        "POST api/public/site-requests"
     ];
 
     [Test]
@@ -95,10 +101,9 @@ public sealed class ApiAccessTests
         Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.Forbidden));
     }
 
-    [TestCase("Accountant")]
     [TestCase("Admin")]
     [TestCase("Manager")]
-    public async Task Only_the_director_opens_purchase_invoices(string role)
+    public async Task Only_the_director_and_the_accountant_open_purchase_invoices(string role)
     {
         await using var host = await Fixture.CreateAsync();
         host.Client.DefaultRequestHeaders.Add("X-Fixture-Role", role);

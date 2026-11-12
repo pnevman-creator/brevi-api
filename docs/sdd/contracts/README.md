@@ -30,13 +30,24 @@ Each feature SDD contains `contracts/api-contract.md` for human-readable decisio
 
 Do not create a public OpenAPI document for internal-only changes. Before adding an HTTP contract, agree on the route, method, operation ID, DTOs, examples, errors, security, idempotency for side-effecting writes, and migration path for breaking changes.
 
-- Crm: [clients and contacts](crm/clients-quotes.openapi.yaml), [КП (commercial proposals)](crm/quotes.openapi.yaml), [manager tasks](crm/tasks.openapi.yaml), [leads](crm/leads.openapi.yaml), [embroidery price](crm/embroidery.openapi.yaml).
+- Crm: [clients and contacts](crm/clients-quotes.openapi.yaml), [КП (commercial proposals)](crm/quotes.openapi.yaml), [manager tasks](crm/tasks.openapi.yaml), [leads](crm/leads.openapi.yaml), [site requests](crm/site-requests.openapi.yaml), [embroidery price](crm/embroidery.openapi.yaml).
 
 - Ai: [«Налаштування ШІ»](ai/ai-settings.openapi.yaml) — the OpenAI key (write-only), models, prices, limit and extra rules.
 - Accounting: [«Бухгалтерія»](accounting/finance.openapi.yaml) — «Рахунки і каси» with balances, «Категорії», «Операції», «Перекази», «Огляд», «Контрагенти», «Потребують перевірки» and their change log; director only.
 - Content: [«Контент → Товари» site pages of products](content/content-products.openapi.yaml) — the «Показувати на сайті» mark, address and texts in two languages.
 - Content: [«Контент → Розділи» categories of the site](content/content-categories.openapi.yaml) — the two-level tree, the «Показувати на сайті» mark, address, order and texts in two languages.
 - Content: [«Контент → Статті» articles of the site](content/content-articles.openapi.yaml) — the «Показувати на сайті» mark, address, date, cover and texts with SEO in two languages; pictures are photos of the «Фото» library; one-time transfer of the old-site articles with their pictures.
+- Content: [«Контент → Переадресації» redirects of the site](content/content-redirects.openapi.yaml) — 301 redirects: list, add, change, delete and the transfer of the old-site addresses.
+- Content: [«Контент → Налаштування SEO сайту»](content/content-seo-settings.openapi.yaml) — analytics ids, verification codes and the default sharing picture.
+- Content: [public site settings](content/content-public-site-settings.openapi.yaml) — anonymous read of those settings for the site.
+- Content: [«Контент → Сторінки сайту»](content/content-site-pages.openapi.yaml) — search titles and descriptions of the fixed site pages.
+- Content: [«Контент → SEO-огляд»](content/content-seo-overview.openapi.yaml) — read-only list of what the site misses for search.
+- Content: [«Контент → Контакти та компанія»](content/content-company.openapi.yaml) — company phone, email, address, hours, managers, payment details and links of the site.
+- Content: [public company facts](content/content-public-company.openapi.yaml) — anonymous read of those facts for the site.
+- Content: [«Контент → Наші роботи» and «Сертифікати»](content/content-galleries.openapi.yaml) — pictures of the two site pages, saved as whole lists, and their transfer into the «Фото» library.
+- Content: [public works and certificates](content/content-public-galleries.openapi.yaml) — anonymous read of those pictures for the site.
+- Content: [public site page texts](content/content-public-site-pages.openapi.yaml) — anonymous read of those texts for the site.
+- Content: [public redirects of the site](content/content-public-redirects.openapi.yaml) — anonymous list of every redirect with the final page of its chain.
 - Content: [public articles of the site](content/content-public-articles.openapi.yaml) — anonymous read-only list and page of the articles marked «Показувати на сайті», with SEO, text and CDN pictures; Ukrainian when there is no Russian text.
 - Content: [public catalog of the site](content/content-public-catalog.openapi.yaml) — anonymous read-only tree, site categories with SEO and text, product cards with «від» (also by category), product by address, addresses for the sitemap.
 - Purchasing: [«Рахунки на закупку» register](purchasing/purchase-invoices.openapi.yaml) — purchase invoices read from the Google Sheet «финансы».

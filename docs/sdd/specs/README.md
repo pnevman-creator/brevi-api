@@ -26,6 +26,13 @@ This is an index of project decisions and delivery; the [implemented feature map
 | Content  | [002 «Контент → Товари» product pages for the site](content/002-product-pages/README.md) | stage 1 (module, admin API) implemented 2026-11-11 |
 | Content  | [003 «Контент → Розділи» categories of the site](content/003-site-categories/README.md) | stages 1–5 implemented 2026-11-11 (stages 2 and 5 in brevi-web) |
 | Content  | [004 «Контент → Статті» articles of the site](content/004-articles/README.md) | stages 1 (admin API), 3 (old-site transfer) and 4 (public API) implemented 2026-11-11; the site reads it in brevi-web |
+| Content  | [005 «Контент → Переадресації» redirects of the site](content/005-redirects/README.md) | implemented 2026-11-11 (stage 2 in brevi-web) |
+| Content  | [006 «Контент → Налаштування SEO сайту»](content/006-seo-settings/README.md) | implemented 2026-11-11 (backend and brevi-web) |
+| Content  | [007 «Контент → Сторінки сайту»](content/007-site-pages/README.md) | stage 1 (backend) implemented 2026-11-11; stage 2 in brevi-web |
+| Content  | [008 «Контент → SEO-огляд»](content/008-seo-overview/README.md) | stage 1 (backend) implemented 2026-11-11; stage 2 in brevi-web |
+| Content  | [009 «Контент → Контакти та компанія»](content/009-site-company/README.md) | stage 1 (backend) implemented 2026-11-11; stage 2 in brevi-web |
+| Content  | [010 Main texts and frequent questions of the site pages](content/010-site-page-texts/README.md) | stage 1 (backend) implemented 2026-11-11; stage 2 in brevi-web |
+| Content  | [011 «Наші роботи» and «Сертифікати» in the «Фото» library](content/011-site-galleries/README.md) | stage 1 (backend) implemented 2026-11-11; stage 2 in brevi-web |
 | Catalog  | [Admin product category list](catalog/admin-product-list/README.md)                                      | verified 2026-07-27                                                                                                |
 | Catalog  | [Media files](catalog/media-files/README.md)                                                             | history; moved to Media MED-001                                                                                    |
 | Catalog  | [Early product snapshot](catalog/product-page/README.md)                                                 | history; superseded by 001                                                                                         |
@@ -35,6 +42,7 @@ This is an index of project decisions and delivery; the [implemented feature map
 | Crm      | [004 Manager tasks and kanban (TSK-001)](crm/004-manager-tasks/README.md) | backend implemented 2026-11-04; Admin in brevi-web |
 | Crm      | [005 «Ціна вишивки» (EMB-001)](crm/005-embroidery-price/README.md) | stage 1 (Розрахунок + Налаштування) implemented 2026-11-04 |
 | Crm      | [006 «Ліди» (LEAD-001)](crm/006-leads/README.md) | backend implemented 2026-11-08; Admin in brevi-web |
+| Crm      | [007 «Заявки з сайту» (LEAD-002)](crm/007-site-requests/README.md) | backend implemented 2026-11-11; Admin and site in brevi-web |
 | Reference | [001 Suppliers from the Calculator and KeepinCRM](reference/001-suppliers-keepincrm/README.md) | implemented 2026-11-02; live KeepinCRM run pending secret |
 | Reference | [002 Fabrics and accessories from the Calculator sheet](reference/002-fabrics-accessories-sheet/README.md) | implemented 2026-11-02 |
 | Reference | [003 Operations from the Calculator sheet](reference/003-operations-sheet/README.md) | implemented 2026-11-02 |
@@ -63,6 +71,7 @@ This is an index of project decisions and delivery; the [implemented feature map
 | Reminders | [001 Telegram deadline reminders](reminders/001-telegram-reminders/README.md) | implemented and locally verified 2026-11-01; not deployed |
 | Identity | [001 Cookie sign-in like Kedr](identity/001-cookie-sign-in/README.md) | implemented 2026-11-03; not deployed |
 | Identity | [002 «Права доступу» (ACC-001)](identity/002-access-rights/README.md) | implemented 2026-11-08 |
+| Identity | [003 Role «SEO-фахівець» and «Робочі столи» (DESK-001)](identity/003-role-desks/README.md) | implemented 2026-11-11 |
 | Platform | [001 module schemas](platform/001-module-schemas/README.md)                                              | implementation                                                                                                     |
 
 When a specification's status changes, update its row here in the same change.

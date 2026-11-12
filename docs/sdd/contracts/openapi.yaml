@@ -267,6 +267,8 @@ paths:
     $ref: ./crm/clients-quotes.openapi.yaml#/paths/~1api~1crm~1customers~1{customerId}~1merge
   /api/crm/quotes:
     $ref: ./crm/quotes.openapi.yaml#/paths/~1api~1crm~1quotes
+  /api/crm/quotes/period:
+    $ref: ./crm/quotes.openapi.yaml#/paths/~1api~1crm~1quotes~1period
   /api/crm/quotes/{id}:
     $ref: ./crm/quotes.openapi.yaml#/paths/~1api~1crm~1quotes~1{id}
   /api/crm/quotes/{id}/pdf:
@@ -351,6 +353,12 @@ paths:
     $ref: ./crm/tasks.openapi.yaml#/paths/~1api~1crm~1tasks~1{id}~1urgent
   /api/crm/tasks/{id}/steps/{stepId}:
     $ref: ./crm/tasks.openapi.yaml#/paths/~1api~1crm~1tasks~1{id}~1steps~1{stepId}
+  /api/crm/site-requests:
+    $ref: ./crm/site-requests.openapi.yaml#/paths/~1api~1crm~1site-requests
+  /api/crm/site-requests/{id}/change:
+    $ref: ./crm/site-requests.openapi.yaml#/paths/~1api~1crm~1site-requests~1{id}~1change
+  /api/public/site-requests:
+    $ref: ./crm/site-requests.openapi.yaml#/paths/~1api~1public~1site-requests
   /api/crm/leads:
     $ref: ./crm/leads.openapi.yaml#/paths/~1api~1crm~1leads
   /api/crm/leads/my-day:
@@ -625,6 +633,30 @@ paths:
     $ref: ./content/content-articles.openapi.yaml#/paths/~1api~1content~1articles~1{id}
   /api/content/articles/{id}/visibility:
     $ref: ./content/content-articles.openapi.yaml#/paths/~1api~1content~1articles~1{id}~1visibility
+  /api/content/redirects:
+    $ref: ./content/content-redirects.openapi.yaml#/paths/~1api~1content~1redirects
+  /api/content/redirects/old-site-import:
+    $ref: ./content/content-redirects.openapi.yaml#/paths/~1api~1content~1redirects~1old-site-import
+  /api/content/redirects/{id}:
+    $ref: ./content/content-redirects.openapi.yaml#/paths/~1api~1content~1redirects~1{id}
+  /api/content/seo-settings:
+    $ref: ./content/content-seo-settings.openapi.yaml#/paths/~1api~1content~1seo-settings
+  /api/content/company:
+    $ref: ./content/content-company.openapi.yaml#/paths/~1api~1content~1company
+  /api/content/works:
+    $ref: ./content/content-galleries.openapi.yaml#/paths/~1api~1content~1works
+  /api/content/works/transfer:
+    $ref: ./content/content-galleries.openapi.yaml#/paths/~1api~1content~1works~1transfer
+  /api/content/certificates:
+    $ref: ./content/content-galleries.openapi.yaml#/paths/~1api~1content~1certificates
+  /api/content/certificates/transfer:
+    $ref: ./content/content-galleries.openapi.yaml#/paths/~1api~1content~1certificates~1transfer
+  /api/content/seo-overview:
+    $ref: ./content/content-seo-overview.openapi.yaml#/paths/~1api~1content~1seo-overview
+  /api/content/site-pages:
+    $ref: ./content/content-site-pages.openapi.yaml#/paths/~1api~1content~1site-pages
+  /api/content/site-pages/{key}:
+    $ref: ./content/content-site-pages.openapi.yaml#/paths/~1api~1content~1site-pages~1{key}
   /api/public/catalog/tree:
     $ref: ./content/content-public-catalog.openapi.yaml#/paths/~1api~1public~1catalog~1tree
   /api/public/catalog/products:
@@ -643,3 +675,13 @@ paths:
     $ref: ./content/content-public-articles.openapi.yaml#/paths/~1api~1public~1articles
   /api/public/articles/{slug}:
     $ref: ./content/content-public-articles.openapi.yaml#/paths/~1api~1public~1articles~1{slug}
+  /api/public/redirects:
+    $ref: ./content/content-public-redirects.openapi.yaml#/paths/~1api~1public~1redirects
+  /api/public/site-settings:
+    $ref: ./content/content-public-site-settings.openapi.yaml#/paths/~1api~1public~1site-settings
+  /api/public/company:
+    $ref: ./content/content-public-company.openapi.yaml#/paths/~1api~1public~1company
+  /api/public/galleries:
+    $ref: ./content/content-public-galleries.openapi.yaml#/paths/~1api~1public~1galleries
+  /api/public/site-pages:
+    $ref: ./content/content-public-site-pages.openapi.yaml#/paths/~1api~1public~1site-pages

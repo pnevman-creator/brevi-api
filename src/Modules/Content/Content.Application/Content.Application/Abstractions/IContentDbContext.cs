@@ -1,6 +1,11 @@
 using Content.Domain.Articles;
 using Content.Domain.ProductPages;
+using Content.Domain.Redirects;
 using Content.Domain.SiteCategories;
+using Content.Domain.SiteCompany;
+using Content.Domain.SiteGalleries;
+using Content.Domain.SitePages;
+using Content.Domain.SiteSettings;
 
 namespace Content.Application.Abstractions;
 
@@ -11,6 +16,11 @@ public interface IContentDbContext
     DbSet<SiteCategory> SiteCategories { get; }
     DbSet<SiteCategoryProduct> SiteCategoryProducts { get; }
     DbSet<Article> Articles { get; }
+    DbSet<SiteRedirect> SiteRedirects { get; }
+    DbSet<SiteSeoSettings> SiteSeoSettings { get; }
+    DbSet<SitePage> SitePages { get; }
+    DbSet<SiteCompanyInfo> CompanyInfo { get; }
+    DbSet<SiteGallery> SiteGalleries { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);
 }

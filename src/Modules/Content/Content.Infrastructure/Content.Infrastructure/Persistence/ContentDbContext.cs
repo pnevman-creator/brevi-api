@@ -1,7 +1,12 @@
 using Content.Application.Abstractions;
 using Content.Domain.Articles;
 using Content.Domain.ProductPages;
+using Content.Domain.Redirects;
 using Content.Domain.SiteCategories;
+using Content.Domain.SiteCompany;
+using Content.Domain.SiteGalleries;
+using Content.Domain.SitePages;
+using Content.Domain.SiteSettings;
 using Microsoft.EntityFrameworkCore;
 
 namespace Content.Infrastructure.Persistence;
@@ -14,6 +19,11 @@ public sealed class ContentDbContext(DbContextOptions<ContentDbContext> options)
     public DbSet<SiteCategory> SiteCategories => Set<SiteCategory>();
     public DbSet<SiteCategoryProduct> SiteCategoryProducts => Set<SiteCategoryProduct>();
     public DbSet<Article> Articles => Set<Article>();
+    public DbSet<SiteRedirect> SiteRedirects => Set<SiteRedirect>();
+    public DbSet<SiteSeoSettings> SiteSeoSettings => Set<SiteSeoSettings>();
+    public DbSet<SitePage> SitePages => Set<SitePage>();
+    public DbSet<SiteCompanyInfo> CompanyInfo => Set<SiteCompanyInfo>();
+    public DbSet<SiteGallery> SiteGalleries => Set<SiteGallery>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

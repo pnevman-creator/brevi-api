@@ -13,6 +13,25 @@ using Content.Application.ProductPages.Save;
 using Content.Application.ProductPages.SetVisibility;
 using Content.Application.PublicArticles;
 using Content.Application.PublicCatalog;
+using Content.Application.PublicRedirects;
+using Content.Application.PublicSitePages;
+using Content.Application.PublicSiteSettings;
+using Content.Application.PublicSiteCompany;
+using Content.Application.SeoOverview;
+using Content.Application.PublicSiteGalleries;
+using Content.Application.SiteCompany.Get;
+using Content.Application.SiteCompany.Save;
+using Content.Application.SiteGalleries.Get;
+using Content.Application.SiteGalleries.Save;
+using Content.Application.SiteGalleries.Transfer;
+using Content.Application.SitePages.GetList;
+using Content.Application.SitePages.Save;
+using Content.Application.SiteSettings.Get;
+using Content.Application.SiteSettings.Save;
+using Content.Application.Redirects.Delete;
+using Content.Application.Redirects.GetList;
+using Content.Application.Redirects.ImportOldSite;
+using Content.Application.Redirects.Save;
 using Content.Application.SiteCategories.Delete;
 using Content.Application.SiteCategories.GetList;
 using Content.Application.SiteCategories.GetOne;
@@ -22,6 +41,11 @@ using Content.Application.SiteCategories.Save;
 using Content.Application.SiteCategories.SetVisibility;
 using Content.Domain.Articles;
 using Content.Domain.ProductPages;
+using Content.Domain.Redirects;
+using Content.Domain.SiteCompany;
+using Content.Domain.SiteGalleries;
+using Content.Domain.SitePages;
+using Content.Domain.SiteSettings;
 using Content.Domain.SiteCategories;
 using Content.Infrastructure.Persistence;
 using Microsoft.Data.Sqlite;
@@ -93,6 +117,11 @@ internal sealed class SqliteContentDb(ContentDbContext db) : IContentDbContext
     public DbSet<SiteCategory> SiteCategories => db.SiteCategories;
     public DbSet<SiteCategoryProduct> SiteCategoryProducts => db.SiteCategoryProducts;
     public DbSet<Article> Articles => db.Articles;
+    public DbSet<SiteRedirect> SiteRedirects => db.SiteRedirects;
+    public DbSet<SiteSeoSettings> SiteSeoSettings => db.SiteSeoSettings;
+    public DbSet<SitePage> SitePages => db.SitePages;
+    public DbSet<SiteCompanyInfo> CompanyInfo => db.CompanyInfo;
+    public DbSet<SiteGallery> SiteGalleries => db.SiteGalleries;
     public Task<int> SaveChangesAsync(CancellationToken cancellationToken) => db.SaveChangesAsync(cancellationToken);
 }
 
@@ -170,6 +199,41 @@ internal sealed class ContentTestHarness : IDisposable
     public GetContentArticleQueryHandler Article() => new(new SqliteContentDb(Open()), Media);
     public ImportOldSiteArticlesCommandHandler ImportArticles() => new(new SqliteContentDb(Open()), OldSitePhotos, Time);
     public GetContentArticlesQueryHandler Articles() => new(new SqliteContentDb(Open()), Media);
+
+    public SaveSiteRedirectCommandHandler SaveRedirect() => new(new SqliteContentDb(Open()), Time);
+    public DeleteSiteRedirectCommandHandler DeleteRedirect() => new(new SqliteContentDb(Open()));
+    public GetSiteRedirectsQueryHandler Redirects() => new(new SqliteContentDb(Open()));
+    public ImportOldSiteRedirectsCommandHandler ImportRedirects() => new(new SqliteContentDb(Open()), Catalog, Time);
+
+    public SaveSiteSeoSettingsCommandHandler SaveSeoSettings() => new(new SqliteContentDb(Open()), Media, Time);
+    public GetSiteSeoSettingsQueryHandler SeoSettings() => new(new SqliteContentDb(Open()), Media);
+
+    public SaveSitePageCommandHandler SaveSitePage() => new(new SqliteContentDb(Open()), Time);
+    public GetSitePagesQueryHandler SitePages() => new(new SqliteContentDb(Open()));
+    public GetSeoOverviewQueryHandler SeoOverview() => new(new SqliteContentDb(Open()), Catalog);
+
+    public SaveSiteCompanyCommandHandler SaveCompany() => new(new SqliteContentDb(Open()), Time);
+    public GetSiteCompanyQueryHandler Company() => new(new SqliteContentDb(Open()));
+
+    public GetSiteGalleryQueryHandler Gallery() => new(new SqliteContentDb(Open()), Media);
+    public SaveSiteGalleryCommandHandler SaveGallery() => new(new SqliteContentDb(Open()), Media, Time);
+    public TransferSiteGalleryCommandHandler TransferGallery() => new(new SqliteContentDb(Open()), OldSitePhotos, Media, Time);
+
+    public PublicSiteGalleriesSource PublicGalleries(IMemoryCache? cache = null) =>
+        new(new SqliteContentDb(Open()), Media, cache ?? new MemoryCache(new MemoryCacheOptions()));
+
+    public PublicSiteCompanySource PublicCompany(IMemoryCache? cache = null) =>
+        new(new SqliteContentDb(Open()), cache ?? new MemoryCache(new MemoryCacheOptions()));
+
+    public PublicSitePagesSource PublicSitePages(IMemoryCache? cache = null) =>
+        new(new SqliteContentDb(Open()), cache ?? new MemoryCache(new MemoryCacheOptions()));
+
+    public PublicSiteSettingsSource PublicSiteSettings(IMemoryCache? cache = null) =>
+        new(new SqliteContentDb(Open()), Media, cache ?? new MemoryCache(new MemoryCacheOptions()));
+
+    /// <summary>The public redirects as one request sees them; <paramref name="cache"/> is shared to test its lifetime.</summary>
+    public PublicRedirectsSource PublicRedirects(IMemoryCache? cache = null) =>
+        new(new SqliteContentDb(Open()), cache ?? new MemoryCache(new MemoryCacheOptions()));
 
     /// <summary>The public catalog as one request sees it; <paramref name="cache"/> is shared to test its lifetime.</summary>
     public PublicCatalogSource Site(IMemoryCache? cache = null) =>

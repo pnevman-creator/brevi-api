@@ -59,6 +59,7 @@ The [module map](../architecture/overview/modules.md) describes module boundarie
 - [Clients and КП](crm/clients-and-quotes.md) — clients and contacts from KeepinCRM; КП (commercial proposals) stages 1–6: create, «Товари та ціни», reprice, give to a manager, settings, PDF, Gmail, introductions, «Виріб з нуля», history, archive, copy, old КП transfer.
 - [Embroidery price](crm/embroidery-price.md) — «Ціна вишивки»: live cost and three prices of embroidery or chevrons; settings for Director and Admin; «Збережені», «Додати в КП», «Макет» and the link to production orders.
 - [Manager tasks](crm/manager-tasks.md) — Director and Admin give tasks to managers and track workload; managers move them on the «Мої завдання» kanban.
+- [Site requests](crm/site-requests.md) — the site form «Заявка» saves a request (file to the CDN) and the bot posts it to the groups ticked on «Нагадування»; managers take and close requests on «Заявки з сайту».
 - [Leads](crm/leads.md) — companies from the AI sheet «Лиды Brevi», synced daily; managers take and call them on «Мій день», calls make «Подзвонити» tasks; statistics and references in «Адміністрування».
 
 ## Ai
@@ -73,6 +74,12 @@ The [module map](../architecture/overview/modules.md) describes module boundarie
 
 - [Product pages «Контент → Товари»](content/product-pages.md) — the site page of each Catalog product: «Показувати на сайті», address, name, SEO, short facts, description and characteristics in Ukrainian and Russian; Admin edits, Manager reads. Also the anonymous read-only catalog of the public site `/api/public/catalog`.
 - [Site categories «Контент → Розділи»](content/site-categories.md) — the two-level category tree of the public site: add, edit, move, reorder, hide and delete categories and subcategories; name, SEO and text in Ukrainian and Russian; Admin edits, Manager reads.
+- [Redirects «Контент → Переадресації»](content/redirects.md) — 301 redirects of the public site: list, add, change, delete, one-time transfer of the old-site addresses, automatic redirects when a page address changes; the anonymous list `/api/public/redirects`. Admin edits, Manager reads.
+- [SEO settings «Контент → Налаштування SEO сайту»](content/seo-settings.md) — analytics ids, search-console verification codes and the default sharing picture of the public site; the anonymous `/api/public/site-settings`. Admin edits, Manager reads.
+- [Site pages «Контент → Сторінки сайту»](content/site-pages.md) — search titles and descriptions of the fixed pages of the public site in two languages; the anonymous `/api/public/site-pages`. Admin edits, Manager reads.
+- [SEO overview «Контент → SEO-огляд»](content/seo-overview.md) — read-only list of what the public site misses for search: empty or too long texts, repeated titles, missing Russian, unfilled site settings. Admin and Manager view.
+- [Company facts «Контент → Контакти та компанія»](content/site-company.md) — company phone, email, address, hours, client managers, payment details and links of the public site; the anonymous `/api/public/company`. Admin edits, Manager reads.
+- [Site pictures «Наші роботи» and «Сертифікати»](content/site-galleries.md) — photos of works and certificate documents of the public site as whole lists, their transfer into the «Фото» library; the anonymous `/api/public/galleries`. Admin and SEO edit, Manager reads.
 - [Articles «Контент → Статті»](content/articles.md) — articles of the public site: address, date, «Показувати на сайті», cover, title, SEO and text with pictures from «Фото» in Ukrainian and Russian; Admin edits, Manager reads.
 
 ## Media
