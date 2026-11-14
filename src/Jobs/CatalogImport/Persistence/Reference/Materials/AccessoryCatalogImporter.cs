@@ -1,10 +1,9 @@
-using BuildingBlocks.Domain.ValueObjects;
 using CatalogImport.Execution;
 using CatalogImport.Source;
 using Microsoft.EntityFrameworkCore;
-using Reference.Domain.GarmentAccessories.Entities;
-using Reference.Domain.GarmentAccessories.ValueObjects;
-using Reference.Infrastructure.DataBase;
+using Reference.Domain.GarmentAccessories;
+using Reference.Infrastructure.Persistence;
+using BuildingBlocks.Domain;
 
 namespace CatalogImport.Persistence;
 
@@ -29,7 +28,8 @@ public sealed class AccessoryCatalogImporter(
             var cost = row.Decimal(3)!.Value;
             if (entity is null)
             {
-                entity = GarmentAccessory.Create(GarmentAccessoryId.From(++nextId), row.Text(1), MoneyAmount.From(cost), supplierId);
+                entity = GarmentAccessory.Create(GarmentAccessoryId.From(++nextId), row.Text(1), MoneyAmount.From(cost), supplierId)
+                    .Require(row.Key);
                 accessories.Add(entity);
                 db.GarmentAccessories.Add(entity);
                 report.ReferenceChanges.Add($"Accessory created: {row.Text(0)} -> {entity.Id.Value}.");
@@ -37,7 +37,7 @@ public sealed class AccessoryCatalogImporter(
             else if (entity.Price.Value != cost || entity.SupplierId.Value != supplierId)
             {
                 report.ReferenceChanges.Add($"Accessory {row.Text(0)} ID {entity.Id.Value}: cost {entity.Price.Value} -> {cost}; supplier {entity.SupplierId.Value} -> {supplierId}.");
-                entity.Update(entity.Name, MoneyAmount.From(cost), supplierId);
+                entity.Update(entity.Name, MoneyAmount.From(cost), supplierId).Require(row.Key);
             }
             result.Add(row.Text(0), entity.Id.Value);
             mappings.Add("Accessory", row.Text(0), "Accessory", entity.Id.Value);

@@ -1,6 +1,6 @@
-using Reference.Application.Features.Fabric.Shared.DTOs;
-using Reference.Domain.GarmentAccessories.ValueObjects;
-using Reference.Domain.Suppliers.ValueObjects;
+using Reference.Domain.GarmentAccessories;
+using Reference.Domain.Suppliers;
+using Reference.Domain.Fabrics;
 
 namespace Reference.Application.Features.Fabric.Shared;
 

@@ -2,6 +2,7 @@ using Crm.Domain.Quotes;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
+
 namespace Crm.Infrastructure.Persistence.Configurations.Quotes;
 
 public sealed class QuoteConfiguration : IEntityTypeConfiguration<Quote>

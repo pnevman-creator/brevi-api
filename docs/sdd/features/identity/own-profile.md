@@ -17,18 +17,18 @@
 ```text
 src/Modules/Identity/
 ├── Identity.Api/Identity.Api/
-│   ├── Controllers/ProfileController.cs            # /api/profile
-│   ├── Contracts/Profile/                          # request and response records
+│   ├── Endpoints/Profile/                          # /api/profile: one <UseCase>/ folder each with its request
+│   ├── Profile/ProfileResponse.cs                  # ProfileResponse, AvatarResponse
 │   └── Avatars/AvatarUploadResults.cs              # multipart limit, 503 mapping
 ├── Identity.Application/Identity.Application/
-│   ├── Features/Profile/                           # GetProfile, ChangeOwnName, ChangeOwnPhone, ChangeOwnEmail,
+│   ├── Features/Profile/{Commands,Queries}/        # GetProfile, ChangeOwnName, ChangeOwnPhone, ChangeOwnEmail,
 │   │                                               # ChangeOwnPassword, UploadOwnAvatar, RemoveOwnAvatar
-│   ├── Features/Avatars/AvatarRules.cs             # size limits
-│   └── Services/IProfileService.cs, IAvatarStorage.cs
+│   ├── Features/Avatars/Shared/AvatarRules.cs      # size limits
+│   └── Abstractions/Profile/IProfileService.cs, IAvatarStorage.cs
 └── Identity.Infrastructure/Identity.Infrastructure/
-    ├── Services/Profile/ProfileService.cs
-    └── Avatars/                                    # SkiaSharp processing, replace/remove
-src/Bootstrapper/Host.Api/DependencyInjection/ServiceRegistration/IdentityAvatarStorage.cs  # Media CDN bridge
+    ├── Integrations/AspNetIdentity/Profile/ProfileService.cs
+    └── Integrations/Avatars/                       # SkiaSharp processing, replace/remove
+src/Modules/Identity/Identity.Infrastructure/Identity.Infrastructure/Adapters/Media/CdnAvatarStorage.cs  # Media.Contracts ICdnStorage
 ```
 
 ## Tests

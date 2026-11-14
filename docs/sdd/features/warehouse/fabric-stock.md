@@ -19,58 +19,61 @@ src/Modules/Warehouse/
     StockColor.cs                # colour text and NFC key
   Warehouse.Application/Warehouse.Application/
     Abstractions/                # IWarehouseDbContext; ports IWarehouseProductionReader, IWarehouseReferenceReader, IWarehouseStaffReader
-    Access/WarehouseActor.cs     # CanMoveStock, SeesStockValue, CanImport, CanIssueFabric(item)
-    Colors/WarehouseColors.cs    # a new line takes a colour of «Кольори» (REF-006)
-    Contracts/FabricStockContracts.cs, StockReportContracts.cs
-    Stock/
-      StockReservations.cs       # plans of «Нове» items (from Production) minus what issues covered
-      StockChanges.cs            # actor, offer check, line lookup or creation, save with 409
-      StockPairs.cs              # load a pair, restate touched ledgers, save with the operation
-      StockOperations.cs         # request hash and replay
-      StockRules.cs, StockList.cs
-      Opening, Receipts, OneOff, Adjustments  # the pair commands
-      Revisions                  # MovementRevisions, edit, void, restore, «Історія правок»
-      GetStock («Залишки»), GetChoices, Movements («Рух тканини» page, «Сторно»),
-      Issues (ItemPlans, ItemFabricCards, items search, card, issue by cutting, «Оновити план», reversal), Consumption (period summary), Transfer (TransferStockCommand, V133Source reads and checks the export, V133Writer writes and replays it)
-      Facts/StockFacts.cs        # issues of a period and balances at a date for «Звіти цеху»
-      Reports/                   # «План і факт», «Бронь і що замовити», «Вартість складу», «Фурнітура до замовлення»
-      StockMessages.cs
-  Warehouse.Infrastructure/…/Persistence/  WarehouseDbContext (schema warehouse), FabricStockConfiguration, migrations
-  Warehouse.Api/Warehouse.Api/Stock/
-    FabricStockController.cs     # /api/warehouse/fabric-stock (policy access:fabric-stock)
-    OrderItemFabricController.cs # /api/warehouse/orders/{id}/items/{itemId}/fabric… (policy access:production-orders)
-    StockReportsController.cs    # /api/warehouse/reports/… (a policy per report: access:fabric-plan-fact, access:fabric-booking, access:fabric-valuation, access:hardware-order)
-src/Modules/Production/…/FabricPlans/      # FabricPlanParts, PlanColor; ProductionFabricPlans and ProductionAssemblies for the stock
-src/Bootstrapper/Host.Api/
-  Warehouse/WarehouseProductionReader.cs   # ProductionFabricPlans, ProductionAssemblies
-  Warehouse/WarehouseReferenceReader.cs    # Reference fabrics with price, suppliers, colours
-  Warehouse/WarehouseStaffReader.cs        # Identity users
-  Production/ProductionStockReader.cs      # StockFacts for «Звіти цеху»
+    Features/Stock/
+      Commands/                  # OpenFabricStock, ReceiveFabric, IssueFabric, AdjustFabricStock (the pair commands);
+                                 # EditFabricMovement, VoidFabricMovement, RestoreFabricMovement; ReverseFabricMovement («Сторно»);
+                                 # CreateFabricIssue (issue by cutting), RefreshItemFabricPlan («Оновити план»), ReverseFabricIssue;
+                                 # TransferStock (V133Source reads and checks the export, V133Writer writes and replays it)
+      Queries/                   # GetFabricStock («Залишки»), GetFabricStockChoices, GetFabricMovements («Рух тканини»),
+                                 # GetFabricMovementHistory («Історія правок»), GetFabricIssueItems, GetProductionItemFabric,
+                                 # GetFabricConsumption (period summary), GetFabricPlanFact, GetFabricBooking, GetFabricValuation, GetHardwareOrder
+      Shared/
+        WarehouseActor.cs        # CanMoveStock, SeesStockValue, CanImport, CanIssueFabric(item)
+        WarehouseColors.cs       # a new line takes a colour of «Кольори» (REF-006)
+        StockReservations.cs     # plans of «Нове» items (from Production) minus what issues covered
+        StockChanges.cs          # actor, offer check, line lookup or creation, save with 409
+        StockPairs.cs            # load a pair, restate touched ledgers, save with the operation
+        StockOperations.cs       # request hash and replay
+        StockRules.cs, StockList.cs, StockMessages.cs, MovementRevisions.cs, ItemPlans.cs, ItemFabricCards.cs, FabricBookingCalculator.cs
+        Facts/StockFacts.cs      # issues of a period and balances at a date for «Звіти цеху»
+  Warehouse.Infrastructure/Warehouse.Infrastructure/Persistence/  WarehouseDbContext (schema warehouse), FabricStockConfiguration, migrations
+  Warehouse.Api/Warehouse.Api/Endpoints/   # one <UseCase>/ folder per operation, mapped by its group
+    FabricStock/      # /api/warehouse/fabric-stock (policy access:fabric-stock)
+    OrderItemFabric/  # /api/warehouse/orders/{id}/items/{itemId}/fabric… (policy access:production-orders)
+    Reports/          # /api/warehouse/reports/… (a policy per report: access:fabric-plan-fact, access:fabric-booking, access:fabric-valuation, access:hardware-order)
+src/Modules/Production/Production.Domain/Production.Domain/FabricPlans/  # FabricPlanParts, PlanColor
+src/Modules/Production/Production.Application/Production.Application/Features/FabricPlans/Shared/  # ProductionFabricPlans and ProductionAssemblies for the stock
+src/Modules/Warehouse/Warehouse.Contracts/Warehouse.Contracts/Stock/IStockFacts.cs  # issues and balances for other modules
+src/Modules/Warehouse/Warehouse.Infrastructure/Warehouse.Infrastructure/Adapters/
+  Reference/WarehouseReferenceReader.cs    # Reference.Contracts fabrics with price, suppliers, colours
+  Identity/WarehouseStaffReader.cs         # Identity.Contracts IStaffDirectory
+src/Modules/Production/Production.Infrastructure/Production.Infrastructure/Adapters/Warehouse/ProductionStockReader.cs  # Warehouse.Contracts IStockFacts for «Звіти цеху»
+src/Modules/Warehouse/Warehouse.Infrastructure/Warehouse.Infrastructure/Adapters/Production/WarehouseProductionReader.cs  # Production.Contracts IOrderFabricPlans (ProductionFabricPlans, ProductionAssemblies)
 ```
 
 ## Structure diagram
 
 ```mermaid
 flowchart LR
-  Admin[Brevi Admin «Склад тканин» and tab «Тканина»] --> Controllers[FabricStockController, OrderItemFabricController, StockReportsController]
-  Controllers --> UseCases[Stock use cases]
+  Admin[Brevi Admin «Склад тканин» and tab «Тканина»] --> Endpoints[Warehouse endpoints]
+  Endpoints --> UseCases[Stock use cases]
   UseCases --> Db[(warehouse.FabricStocks / FabricMovements / FabricIssues / FabricIssueLines / FabricItemPlans)]
   UseCases --> Plan[IWarehouseProductionReader] -.host.-> Production[Production plans, orders, history]
-  UseCases --> Reference[IWarehouseReferenceReader] -.host.-> Ref[Reference fabrics, suppliers, colours]
-  Reports[Production «Звіти цеху»] --> Port[IProductionStockReader] -.host.-> Facts[StockFacts]
+  UseCases --> Reference[IWarehouseReferenceReader] -.Reference.Contracts.-> Ref[Reference fabrics, suppliers, colours]
+  Reports[Production «Звіти цеху»] --> Port[IProductionStockReader] -.Warehouse.Contracts.-> Facts[IStockFacts]
 ```
 
 ## Tests
 
-- `tests/UnitTests/Warehouse/WarehouseLedgerTests.cs` — WH-002: opening once per pair, receipt by offer, issue order and shortage, «Уточнити» limits, operation id repeat, chain by date, paging and filters, alias identity, colour key.
-- `tests/UnitTests/Warehouse/WarehouseMovementJournalTests.cs` — WH-007: pair balance across alias codes, kind counts under search and period, period order.
-- `tests/UnitTests/Warehouse/WarehouseRevisionTests.cs` — WH-003: edit and restatement, date and pair change, void, restore one change at a time, revision guard, signs, access.
+- `tests/UnitTests/Warehouse/Stock/WarehouseLedgerTests.cs` — WH-002: opening once per pair, receipt by offer, issue order and shortage, «Уточнити» limits, operation id repeat, chain by date, paging and filters, alias identity, colour key.
+- `tests/UnitTests/Warehouse/Stock/WarehouseMovementJournalTests.cs` — WH-007: pair balance across alias codes, kind counts under search and period, period order.
+- `tests/UnitTests/Warehouse/Stock/WarehouseRevisionTests.cs` — WH-003: edit and restatement, date and pair change, void, restore one change at a time, revision guard, signs, access.
 - `tests/UnitTests/Warehouse/WarehouseIssueByCuttingTests.cs` — WH-004: plan of a cut once per part, coverage over lines, saved plan and refresh, operation repeat, products limit, edit and void of order-issue movements, split lines keep their pair.
 - `tests/UnitTests/Warehouse/WarehouseReportTests.cs` — WH-005: plan and fact (full issue, comparability, weighted totals), booking allocation and queue, valuation by group price with shortages, accessory need by code class, «На 1 виріб».
-- `tests/UnitTests/Warehouse/WarehouseStockHandlerTests.cs` — receipt and reversal, access and prices, plan by colour, issue purposes, reversal of an issue, colours of a new line, stock facts.
-- `tests/UnitTests/Warehouse/WarehouseTransferTests.cs` — WH-006: dry run, apply and repeat, refused export (broken, truncated, order missing in Brevi), confirmation of own records, Admin only.
+- `tests/UnitTests/Warehouse/Stock/WarehouseStockHandlerTests.cs` — receipt and reversal, access and prices, plan by colour, issue purposes, reversal of an issue, colours of a new line, stock facts.
+- `tests/UnitTests/Warehouse/Stock/WarehouseTransferTests.cs` — WH-006: dry run, apply and repeat, refused export (broken, truncated, order missing in Brevi), confirmation of own records, Admin only.
 - `tests/UnitTests/Warehouse/FabricStockContractTests.cs` — DTOs and operations against the contract.
-- `tests/ArchitectureTests/WarehouseDependencyTests.cs` — layers and schema.
+- `tests/ArchitectureTests/Modules/Workshop/WarehouseDependencyTests.cs` — layers and schema.
 
 Focused run: `dotnet test tests/UnitTests/UnitTests.csproj --filter FullyQualifiedName~UnitTests.Warehouse`.
 

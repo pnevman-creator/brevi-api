@@ -1,7 +1,8 @@
-using Catalog.Domain.Products.Entities;
-using Catalog.Domain.Products.ValueObjects;
+using Catalog.Domain.Products;
 using CatalogImport.Planning;
 using CatalogImport.Source;
+using Catalog.Domain.Products.Ppe;
+using Catalog.Domain.Products.ValueObjects;
 
 namespace CatalogImport.Persistence;
 

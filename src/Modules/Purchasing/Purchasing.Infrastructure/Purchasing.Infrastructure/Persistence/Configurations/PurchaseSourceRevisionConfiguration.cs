@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Purchasing.Domain.Sources;
 
+
 namespace Purchasing.Infrastructure.Persistence.Configurations;
 
 public sealed class PurchaseSourceRevisionConfiguration : IEntityTypeConfiguration<PurchaseSourceRevision>

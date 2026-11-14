@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Purchasing.Domain.Sync;
 
+
 namespace Purchasing.Infrastructure.Persistence.Configurations;
 
 public sealed class PurchaseSyncStateConfiguration : IEntityTypeConfiguration<PurchaseSyncState>

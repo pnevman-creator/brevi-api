@@ -1,0 +1,13 @@
+using Catalog.Application.Features.Product.Shared.Sewing.Views;
+
+namespace Catalog.Application.Features.Product.Shared.Sewing;
+
+public sealed record SewingComposition(
+    int ProductId,
+    long? ArticleId,
+    string? ModelCode,
+    long Version,
+    IReadOnlyList<SewingMaterialView> Materials,
+    IReadOnlyList<SewingOperationView> Operations,
+    IReadOnlyList<string> Blockers);
+

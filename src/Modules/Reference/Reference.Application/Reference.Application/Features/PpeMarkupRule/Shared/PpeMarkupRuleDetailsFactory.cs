@@ -1,5 +1,4 @@
-using Reference.Application.Features.PpeMarkupRule.Shared.DTOs;
-using Reference.Domain.PpeMarkupRules.ValueObjects;
+using Reference.Domain.PpeMarkupRules;
 
 namespace Reference.Application.Features.PpeMarkupRule.Shared;
 

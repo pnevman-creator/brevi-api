@@ -4,6 +4,7 @@ using Reminders.Domain.Identifiers;
 using Reminders.Domain.Occurrences;
 using Reminders.Domain.Tasks;
 
+
 namespace Reminders.Infrastructure.Persistence.Configurations;
 
 public sealed class ReminderOccurrenceConfiguration : IEntityTypeConfiguration<ReminderOccurrence>
@@ -25,7 +26,6 @@ public sealed class ReminderOccurrenceConfiguration : IEntityTypeConfiguration<R
         b.HasIndex(x => new { x.TaskId, x.PeriodStart }).IsUnique();
         b.HasIndex(x => new { x.Status, x.DueDate });
         b.Ignore(x => x.Period);
-        b.Ignore(x => x.DomainEvents);
     }
 
     internal static void ConfigureActor<T>(OwnedNavigationBuilder<T, ReminderActor> actor, string prefix) where T : class

@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Purchasing.Domain.Messages;
 using Purchasing.Domain.Sources;
 
+
 namespace Purchasing.Infrastructure.Persistence.Configurations;
 
 public sealed class PurchaseSourceRowConfiguration : IEntityTypeConfiguration<PurchaseSourceRow>

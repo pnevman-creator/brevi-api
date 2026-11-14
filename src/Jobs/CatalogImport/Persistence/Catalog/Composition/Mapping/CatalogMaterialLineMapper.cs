@@ -1,7 +1,8 @@
-using Catalog.Domain.Products.Entities;
-using Catalog.Domain.Products.Enums;
-using Catalog.Domain.Products.ValueObjects;
+using Catalog.Domain.Products;
 using CatalogImport.Source;
+using Catalog.Domain.Products.Sewing.Composition;
+using Catalog.Domain.Products.Sewing.Enums;
+using Catalog.Domain.Products.Sewing.ValueObjects;
 
 namespace CatalogImport.Persistence;
 
@@ -19,7 +20,7 @@ public static class CatalogMaterialLineMapper
             !isFabric && !isService ? AccessoryReferenceId.Create(references.Accessories[row.Text(6)]) : null,
             isService ? row.Text(6) : null, row.Decimal(8)!.Value,
             row.Text(9) == "м" ? SewingMaterialUnit.Metre : isService ? SewingMaterialUnit.Service : SewingMaterialUnit.Piece,
-            index);
+            index).Require($"Material line {index + 1} of {product.Name}");
     }
 }
 

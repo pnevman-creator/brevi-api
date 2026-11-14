@@ -16,29 +16,30 @@ src/Modules/Content/
                        # ProductTextBlocks (block cleaner, shared with site categories)
   Content.Application/Content.Application/
     Abstractions/      # IContentDbContext, IContentCatalogReader (products of other modules)
-    Contracts/         # responses of the admin API and of the public catalog
-    ProductPages/GetList/        # every Catalog product joined with its page; search and filters
-    ProductPages/GetOne/         # editor; offered slug for a product without a page
-    ProductPages/Save/           # create or replace as a whole; revision and slug conflicts
-    ProductPages/SetVisibility/  # «Показувати на сайті» from the list
-    ProductPages/Delete/
-    ProductPages/ImportOldSite/  # one-time transfer: link matching, dry run, overwrite
-    ProductPages/Shared/         # mapping, free slug, messages
-    PublicCatalog/     # snapshot of what the site shows (kept for a minute), tree, site categories, cards, product, addresses
+    Features/ProductPages/
+      Queries/GetContentProducts/          # every Catalog product joined with its page; search and filters
+      Queries/GetContentProduct/           # editor; offered slug for a product without a page
+      Commands/SaveContentProduct/         # create or replace as a whole; revision and slug conflicts
+      Commands/SetContentProductVisibility/  # «Показувати на сайті» from the list
+      Commands/DeleteContentProduct/
+      Commands/ImportOldSiteProductPages/  # one-time transfer: link matching, dry run, overwrite
+      Shared/                              # responses, mapping, free slug, messages
+    Features/Catalog/                      # public catalog: Queries/GetPublicCatalog{Tree,Categories,Category,CategorySlugs,Products,Product,ProductSlugs};
+                                           # Shared/ snapshot of what the site shows (kept for a minute), cards, addresses
   Content.Infrastructure/Content.Infrastructure/
     Persistence/       # ContentDbContext (schema content), configurations (jsonb lists), migrations
     DependencyInjection/
   Content.Api/Content.Api/
-    ProductPages/ContentProductsController.cs   # /api/content/products, policy access:content-products
-    PublicCatalog/PublicCatalogController.cs    # /api/public/catalog, anonymous, read-only
-src/Bootstrapper/Host.Api/Content/ContentCatalogReader.cs   # Catalog overview and photos + Reference sections and fabrics
+    Endpoints/ProductPages/ContentProductsEndpoints.cs   # /api/content/products, policy access:content-products
+    Endpoints/PublicCatalog/PublicCatalogEndpoints.cs    # /api/public/catalog, anonymous, read-only
+src/Modules/Content/Content.Infrastructure/Content.Infrastructure/Adapters/Catalog/ContentCatalogReader.cs  # Catalog.Contracts products and photos + Reference.Contracts sections and fabrics
 ```
 
 ## Tests
 
 ```text
 tests/UnitTests/Content/                          # dotnet test tests/UnitTests/UnitTests.csproj --filter "FullyQualifiedName~UnitTests.Content"
-tests/ArchitectureTests/ContentDependencyTests.cs
+tests/ArchitectureTests/Modules/Site/ContentDependencyTests.cs
 ```
 
 ## Data

@@ -8,43 +8,43 @@ One Sewing Product owns its fabric variants (Articles) and shared material/opera
 
 ```text
 src/Modules/Catalog/
-├── Catalog.Api/Catalog.Api/Controllers/
-│   ├── SewingArticlesController.cs                                # protected variant list/create/update/delete boundary
-│   └── SewingCompositionController.cs                             # protected composition read/replace boundary
+├── Catalog.Api/Catalog.Api/Endpoints/Sewing/
+│   ├── SewingArticlesEndpoints.cs                                # protected variant list/create/update/delete boundary
+│   └── SewingCompositionEndpoints.cs                             # protected composition read/replace boundary
 ├── Catalog.Application/Catalog.Application/
-│   ├── Features/Product/Sewing/
-│   │   ├── CreateArticle/                                         # variant with its fabric in one transaction
-│   │   ├── UpdateArticle/                                         # variant SKU, activity and fabric
-│   │   ├── DeleteArticle/                                         # variant without price history
-│   │   ├── ListArticles/                                          # list query, result and handler
-│   │   ├── GetComposition/                                        # effective composition query and handler
-│   │   ├── ListCompositions/                                      # every model's lines with codes and names, for the workshop (PRD-009)
-│   │   ├── ReplaceComposition/                                    # shared norms replacement
-│   │   └── Shared/{DTOs,Validators,Mapping}/                       # genuinely shared line contracts, validation and assembly
-│   └── Contracts/Persistence/Sewing/                              # separate read/write contracts and projection snapshot
+│   ├── Features/Product/
+│   │   ├── Commands/CreateSewingArticle/                          # variant with its fabric in one transaction
+│   │   ├── Commands/UpdateSewingArticle/                          # variant SKU, activity and fabric
+│   │   ├── Commands/DeleteSewingArticle/                          # variant without price history
+│   │   ├── Queries/ListSewingArticles/                            # list query, result and handler
+│   │   ├── Queries/GetSewingComposition/                          # effective composition query and handler
+│   │   ├── Queries/ListSewingCompositions/                        # every model's lines with codes and names, for the workshop (PRD-009)
+│   │   ├── Commands/ReplaceSewingComposition/                     # shared norms replacement
+│   │   └── Shared/Sewing/, Shared/Validation/Sewing/              # shared line contracts, validation and assembly
+│   └── Abstractions/                                              # ISewingCompositionStore, ISewingCompositionReadStore, ISewingCompositionListReader and snapshots
 ├── Catalog.Domain/Catalog.Domain/Products/
-│   ├── Entities/Product.cs                                          # aggregate root
-│   ├── Entities/Product.SewingIdentity.cs                           # model code and Article identity
-│   ├── Entities/Product.SewingComposition.cs                        # aggregate-owned composition writes
-│   ├── Entities/Product.SewingReadiness.cs                          # effective materials and readiness delegation
-│   ├── Entities/Product.CatalogProfile.cs                           # source profile attachment
-│   ├── Entities/Sewing/SewingArticle.cs                              # fabric variant: sale SKU, activity, order
-│   ├── Entities/Sewing/SewingMaterialLine.cs                         # shared material or the variant's fabric
-│   ├── Entities/Sewing/SewingOperationLine.cs                        # shared operation quantity/manual time
+│   ├── Product.cs                                          # aggregate root
+│   ├── Product.SewingIdentity.cs                           # model code and Article identity
+│   ├── Product.SewingComposition.cs                        # aggregate-owned composition writes
+│   ├── Product.SewingReadiness.cs                          # effective materials and readiness delegation
+│   ├── Product.CatalogProfile.cs                           # source profile attachment
+│   ├── Sewing/SewingArticle.cs                              # fabric variant: sale SKU, activity, order
+│   ├── Sewing/SewingMaterialLine.cs                         # shared material or the variant's fabric
+│   ├── Sewing/SewingOperationLine.cs                        # shared operation quantity/manual time
 │   ├── Readiness/                                                 # one policy and separate typed material/operation facts
-│   └── ValueObjects/                                               # typed child and Reference IDs
+│   └── ArticleId.cs, CompositionLineId.cs, *ReferenceId.cs              # typed child and Reference IDs
 └── Catalog.Infrastructure/Catalog.Infrastructure/
-    ├── Repositories/SewingCompositionStore.cs                       # tracked writes and conflict mapping
-    ├── Repositories/SewingCompositionReadStore.cs                   # no-tracking read projections; ReadAllAsync for all models
-    ├── Congigurations/Sewing*Configuration.cs                       # integrity and typed ID mappings
-    └── Migrations/20261024215605_AddSewingComposition.cs              # additive rollout
+    ├── Persistence/Repositories/Sewing/SewingCompositionStore.cs                       # tracked writes and conflict mapping
+    ├── Persistence/Repositories/Sewing/SewingCompositionReadStore.cs                   # no-tracking read projections; ReadAllAsync for all models
+    ├── Persistence/Configurations/Sewing/**/*.cs                     # integrity and typed ID mappings
+    └── Persistence/Migrations/20261024215605_AddSewingComposition.cs              # additive rollout
 ```
 
 ## Structure diagram
 
 ```mermaid
 flowchart LR
-    API[SewingCompositionController] --> Policies[CatalogRead / access:products]
+    API[SewingCompositionEndpoints] --> Policies[CatalogRead / access:products]
     API --> Handlers[Article and composition handlers]
     Handlers --> Reference[Existing Reference read contract]
     Handlers --> Product[Product aggregate and scoped lines]
@@ -73,8 +73,8 @@ Legacy Product editing preserves these records and rejects changes to legacy nor
 
 ## Tests
 
-- `tests/UnitTests/SewingArticleTests.cs`, `tests/UnitTests/SewingComposition*Tests.cs`
-- `tests/IntegrationTests/SewingComposition*Tests.cs`, `tests/IntegrationTests/SewingVariantPersistenceTests.cs`
+- `tests/UnitTests/Catalog/Composition/SewingArticleTests.cs`, `tests/UnitTests/Catalog/Composition/SewingComposition*Tests.cs`
+- `tests/IntegrationTests/Catalog/Composition/SewingComposition*Tests.cs`, `tests/IntegrationTests/Catalog/Composition/SewingVariantPersistenceTests.cs`
 
 Focused run: `dotnet test tests/UnitTests/UnitTests.csproj --filter SewingComposition`; `dotnet test tests/IntegrationTests/IntegrationTests.csproj --filter SewingComposition` (slow; needs `BREVIERP_CATALOG_TEST_CONNECTION`).
 

@@ -19,18 +19,20 @@
 src/Modules/Identity/
 ├── Identity.Domain/Identity.Domain/Authorization/AccessCatalog.cs   # pages, actions, defaults, role helpers
 ├── Identity.Application/Identity.Application/
-│   ├── Features/Access/                         # GetAccessRights, SaveRoleAccess, CreateRole, DeleteRole,
+│   ├── Features/Access/{Commands,Queries}/      # GetAccessRights, SaveRoleAccess, CreateRole, DeleteRole,
 │   │                                            # GetMyAccess + validators, Shared DTOs
-│   ├── Security/Access/                         # AccessPolicies (policy names), IAccessGrantSource, AccessClaims
-│   └── Services/IAccessRightsService.cs
+│   ├── Security/Access/                         # AccessPolicies, IAccessGrantSource, AccessClaims, AccessCheck,
+│   │                                            # AccessRoles, DefaultAccessGrantSource (catalogue defaults)
+│   └── Abstractions/IAccessRightsService.cs
 ├── Identity.Infrastructure/Identity.Infrastructure/
-│   ├── Entities/RoleAccess.cs, Configuration/RoleAccessConfiguration.cs
-│   └── Services/Access/                         # AccessRightsService, AccessGrantSource (cached)
+│   ├── Persistence/Configurations/RoleAccess.cs, Persistence/Configurations/RoleAccessConfiguration.cs
+│   └── Integrations/AspNetIdentity/Access/      # AccessRightsService, AccessGrantSource (cached)
 └── Identity.Api/Identity.Api/
-    ├── Controllers/AccessRightsController.cs    # /api/admin/access
-    ├── Controllers/AuthSessionController.cs     # GET /api/auth/session/access
-    └── Contracts/Access/AccessContracts.cs
-src/Bootstrapper/Host.Api/Security/Access/       # AccessPolicyProvider, AccessRequirementHandler, DefaultAccessGrantSource
+    ├── Endpoints/AccessRights/                  # /api/admin/access, one <UseCase>/ folder each
+    ├── Endpoints/Session/GetSessionAccess/ # GET /api/auth/session/access
+    ├── Access/AccessContracts.cs
+    ├── Access/                                  # AccessPolicyProvider, AccessRequirementHandler (asks AccessCheck)
+    └── DependencyInjection/IdentityAuthorizationExtensions.cs # named policies, AddAccessPolicies
 src/BuildingBlocks/BuildingBlocks.Api/Authorization/AccessActionAttribute.cs
 ```
 

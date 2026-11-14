@@ -2,6 +2,7 @@ using Ai.Domain.Usage;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
+
 namespace Ai.Infrastructure.Persistence.Configurations;
 
 public sealed class AiUsageMonthConfiguration : IEntityTypeConfiguration<AiUsageMonth>

@@ -1,6 +1,7 @@
 using Media.Domain.Files;
 using Media.Domain.Folders;
 
+
 namespace Media.Infrastructure.Persistence.Configurations;
 
 internal sealed class MediaFileConfiguration : IEntityTypeConfiguration<MediaFile>

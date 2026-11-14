@@ -17,58 +17,63 @@ src/Modules/Accounting/
     Attachments/       # FinanceAttachment (file of an operation, soft delete), FinanceAttachmentKind (PDF/JPEG/PNG by first bytes), id
     Statements/        # BankStatement (preview → booked), BankStatementLine (bank data, recognition, director's edit, state), BankLineData, BankLineState, BankDuplicate, ids
     Audit/             # AuditEntry, AuditEntity, AuditAction
-    Errors/            # AccountingDomainError
+    AccountingErrors.cs # typed domain errors of the module
   Accounting.Application/Accounting.Application/
     Abstractions/      # IAccountingDbContext, IAccountingCustomerReader, IAccountingSupplierReader, IAccountingFileStorage, IBankStatementFileReader
-    Accounts/          # list with balances, create, update, cutover, archive/restore, delete (409 with history); FinanceAccountChange
-    Categories/        # list by scope, create (root/child), update, delete or switch off a used branch; CategoryNames
-    Transactions/      # journal with filters (needs review, counterparty) and totals, create, update, void, review, promote one-off; fields, save
-    Counterparties/    # tabs with counts, choices, create, update, verify, archive/restore, merge; CounterpartyStates (names of linked ones), FinanceCounterpartyChange
-    Transfers/         # journal with filters and totals, create, update, void; fields, save
-    Attachments/       # upload (storage first, removed if the row fails), list, content, delete; messages
-    Import/            # ImportLegacyFinanceCommand (check or move in parts inside one transaction), LegacyFinanceReader (gzip, 200 MiB limit), LegacyFinanceFile (export rows), LegacyFinancePlan (ids, conflicts, links, totals, balances), LegacyFinanceValues, messages
-    Statements/        # upload (hash, parse, recognise), list, details with totals and rollback numbers, edit a line, book, rollback; BankLineRecognition, BankDuplicates, BankParties; messages
-      Reading/         # BankHeaders (column names), BankStatementParser (header, rows, own IBAN, errors), BankFingerprint (old Calculator formula)
-    Balances/          # FinanceBalances: legacy, current, total, history, earliest date
-    Overview/          # GetFinanceOverviewQuery (per currency: counts, top expense roots, review reasons)
-    Reports/           # GetFinanceReportQuery (six kinds, totals per currency, operations limit), FinanceReportCsv (Excel-ready CSV)
-    Payments/          # operations by id and expense candidates for the payment links of «Рахунки на закупку» (host only)
-    Export/            # GetFinanceExportQuery: every stored field of every record as one JSON file
-    Journal/           # sort keys, page size, ValidBy
-    Lookup/            # FinanceNames: account and category names for rows and snapshots
-    History/           # GetFinanceHistoryQuery
-    Settings/          # GetAccountingSettingsQuery (cutover date, today in Kyiv)
-    Audit/             # AuditTrail (JSON snapshots), GetFinanceAuditQuery («Журнал змін» of all records, titles from snapshots)
-    Contracts/         # responses
+    Features/          # Commands/<UseCase>, Queries/<UseCase>, Shared/ per feature; responses sit with their use case or in Shared/
+      Accounts/          # list with balances, create, update, cutover, archive/restore, delete (409 with history); FinanceAccountChange
+      Categories/        # list by scope, create (root/child), update, delete or switch off a used branch; CategoryNames
+      Transactions/      # journal with filters (needs review, counterparty) and totals, create, update, void, review, promote one-off; fields, save
+      Counterparties/    # tabs with counts, choices, create, update, verify, archive/restore, merge; CounterpartyStates (names of linked ones), FinanceCounterpartyChange
+      Transfers/         # journal with filters and totals, create, update, void; fields, save
+      Attachments/       # upload (storage first, removed if the row fails), list, content, delete; messages
+      Import/            # ImportLegacyFinanceCommand (check or move in parts inside one transaction), LegacyFinanceReader (gzip, 200 MiB limit), LegacyFinanceFile (export rows), LegacyFinancePlan (ids, conflicts, links, totals, balances), LegacyFinanceValues, messages
+      Statements/      # upload (hash, parse, recognise), list, details with totals and rollback numbers, edit a line, book, rollback; BankLineRecognition, BankDuplicates, BankParties; messages
+        Shared/Reading/  # BankHeaders (column names), BankStatementParser (header, rows, own IBAN, errors), BankFingerprint (old Calculator formula)
+      Balances/          # FinanceBalances: legacy, current, total, history, earliest date
+      Overview/          # GetFinanceOverviewQuery (per currency: counts, top expense roots, review reasons)
+      Reports/           # GetFinanceReportQuery (six kinds, totals per currency, operations limit), FinanceReportCsv (Excel-ready CSV)
+      Payments/          # operations by id and expense candidates for the payment links of «Рахунки на закупку» (host only)
+      Export/            # GetFinanceExportQuery: every stored field of every record as one JSON file
+      Journal/           # sort keys, page size, ValidBy
+      Lookup/            # FinanceNames: account and category names for rows and snapshots
+      History/           # GetFinanceHistoryQuery
+      Settings/          # GetAccountingSettingsQuery (cutover date, today in Kyiv)
+      Audit/             # AuditTrail (JSON snapshots), GetFinanceAuditQuery («Журнал змін» of all records, titles from snapshots)
   Accounting.Infrastructure/Accounting.Infrastructure/
-    Statements/        # BankStatementFileReader: XLSX/XLS (ExcelDataReader, 64 MiB unpacked limit) and CSV (encoding and separator detection)
-    Files/             # AccountingFilesOptions (Accounting:Files), Google Cloud Storage bucket, local folder, not configured
+    Integrations/BankStatementFiles/ # BankStatementFileReader: XLSX/XLS (ExcelDataReader, 64 MiB unpacked limit) and CSV (encoding and separator detection)
+    Integrations/FileStorage/        # AccountingFilesOptions (Accounting:Files), Google Cloud Storage bucket, local folder, not configured
     Persistence/       # AccountingDbContext (schema accounting), configurations, converters, migrations, design-time factory
     DependencyInjection/
   Accounting.Api/Accounting.Api/
     Access/            # policy access:accounting (Director by default), who made the change
-    Results/           # 204 for deletes, 503 while the file storage is off
-    Accounts/          # /api/accounting/accounts
-    Categories/        # /api/accounting/categories
-    Settings/          # /api/accounting/settings
-    Transactions/      # /api/accounting/transactions
-    Transfers/         # /api/accounting/transfers
-    Overview/          # /api/accounting/overview
-    Counterparties/    # /api/accounting/counterparties
-    Attachments/       # /api/accounting/transactions/{id}/attachments, /api/accounting/attachments/{id}[/content]
-    Import/            # POST /api/accounting/legacy-import?dryRun=
-    Statements/        # /api/accounting/statements[/{id}[/lines/{lineId}|/book|/rollback]]
-    Reports/           # /api/accounting/reports[/csv], /api/accounting/audit, /api/accounting/export
-src/Bootstrapper/Host.Api/Accounting/   # AccountingCustomerReader (Crm GetCustomerLookupQuery, GetCustomersByKeepinIdsQuery, GetCustomersByTaxIdsQuery), AccountingSupplierReader (Reference, with KeepinCRM id)
-src/Modules/Crm/Crm.Application/Crm.Application/Customers/Lookup/   # client names for modules with their own access rule; clients by KeepinCRM id and by ЄДРПОУ
+    Endpoints/         # Minimal API, one <UseCase>/ folder per operation; groups under /api/accounting:
+      Accounts/        #   accounts
+      Categories/      #   categories
+      Settings/        #   settings
+      Transactions/    #   transactions
+      Transfers/       #   transfers
+      Overview/        #   overview
+      Counterparties/  #   counterparties
+      Attachments/     #   transactions/{id}/attachments, attachments/{id}[/content]
+      Import/          #   POST legacy-import?dryRun=
+      Statements/      #   statements[/{id}[/lines/{lineId}|/book|/rollback]]
+      Reports/         #   reports[/csv], audit, export
+    Accounts/ Categories/ Counterparties/ Statements/ Transactions/ Transfers/  # request bodies (*Requests.cs), AccountingQueryLink
+    Attachments/FileResults.cs  # file body, 503 while the file storage is off
+    Reports/FinanceReportFilters.cs  # the shared filter of a report and its CSV
+src/Modules/Accounting/Accounting.Contracts/Accounting.Contracts/Payments/IFinancePaymentReader.cs   # payments for other modules (impl. Accounting.Infrastructure/Contracts/Payments)
+src/Modules/Accounting/Accounting.Infrastructure/Accounting.Infrastructure/Adapters/Reference/AccountingSupplierReader.cs  # Reference.Contracts suppliers, with KeepinCRM id
+src/Modules/Accounting/Accounting.Infrastructure/Accounting.Infrastructure/Adapters/Crm/AccountingCustomerReader.cs  # Crm.Contracts ICustomerDirectory: lookup, by KeepinCRM id, by ЄДРПОУ
+src/Modules/Crm/Crm.Application/Crm.Application/Features/Customers/Queries/{GetCustomerLookup,GetCustomersByKeepinIds,GetCustomersByTaxIds}/   # client names for modules with their own access rule; clients by KeepinCRM id and by ЄДРПОУ
 ```
 
 ## Structure diagram
 
 ```mermaid
 flowchart LR
-  Admin[Brevi Admin «Бухгалтерія»] --> Controllers[Accounts / Categories / Transactions / Transfers / Counterparties / Overview / Statements / Reports / Settings]
-  Controllers --> Handlers[Application handlers]
+  Admin[Brevi Admin «Бухгалтерія»] --> Endpoints[Accounts / Categories / Transactions / Transfers / Counterparties / Overview / Statements / Reports / Settings]
+  Endpoints --> Handlers[Application handlers]
   Handlers --> Balances[FinanceBalances]
   Handlers --> Domain[FinanceAccount / FinanceCategory / FinanceTransaction / FinanceTransfer]
   Handlers --> Audit[AuditTrail]
@@ -79,4 +84,4 @@ flowchart LR
 
 ## Tests
 
-`tests/UnitTests/Accounting/`: accounts on SQLite in memory (create with cleaning, update and stale version, cutover confirm and reset, archive/restore and list order, delete with log), categories (subcategory rules, unique names per level, rename, delete with children, filter by area), settings (today in Kyiv); operations (`FinanceTransactionTests`: balances per area, area/date/category rules, archived account, update/void/history, journal filters, paging and totals, used account and category rules) and transfers with «Огляд» (`FinanceTransferTests`); counterparties (`FinanceCounterpartyTests`: review until confirmed, clients and suppliers by id, «Перевірити» with «Запамʼятати» and current turnover, one-off to permanent, merge, cleaning and auto category, tabs and choices, default category keeps a category); files (`FinanceAttachmentTests`: stored and listed, type by content and size, voided operation, storage off or down, delete keeps history) with `FakeAccountingFileStorage`; archive move (`LegacyFinanceImportTests`: check without writing, counts and balances, move with ids, sources, links and log, second run adds nothing, gzip, name conflict and broken rule stop the move, wrong file); statements (`BankStatementImportTests`: recognised lines and the old fingerprint, the same file again, booking with transfers and created counterparties, exact and probable duplicates, the director's edit, a card XLSX below title rows and another account's IBAN, refused files, windows-1251 CSV, rollback that cancels and frees the lines for booking again, keeps a confirmed counterparty and counts records changed by hand); reports (`FinanceReportTests`: six kinds count only active income and expense of the period, expense structure, accounts with transfers, operations order and limit, counterparty names, CSV format, «Журнал змін» titles, JSON export with stored fields only); payment queries (`FinancePaymentQueriesTests`: candidates of a supplier, by amount, text or typed amount, both areas, voided left out; operations by id); contract. Clients by KeepinCRM id and by ЄДРПОУ on PostgreSQL: `tests/IntegrationTests/Crm/CustomerKeepinLookupTests.cs`, `CustomerTaxIdLookupTests.cs`. Clients and suppliers: `FakeAccountingParties`. Shared data: `FinanceMovementFixture`. Command: `dotnet test tests/UnitTests/UnitTests.csproj --filter "FullyQualifiedName~UnitTests.Accounting"`. Module references and schema: `tests/ArchitectureTests/AccountingDependencyTests.cs`.
+`tests/UnitTests/Accounting/`: accounts on SQLite in memory (create with cleaning, update and stale version, cutover confirm and reset, archive/restore and list order, delete with log), categories (subcategory rules, unique names per level, rename, delete with children, filter by area), settings (today in Kyiv); operations (`FinanceTransactionTests`: balances per area, area/date/category rules, archived account, update/void/history, journal filters, paging and totals, used account and category rules) and transfers with «Огляд» (`FinanceTransferTests`); counterparties (`FinanceCounterpartyTests`: review until confirmed, clients and suppliers by id, «Перевірити» with «Запамʼятати» and current turnover, one-off to permanent, merge, cleaning and auto category, tabs and choices, default category keeps a category); files (`FinanceAttachmentTests`: stored and listed, type by content and size, voided operation, storage off or down, delete keeps history) with `FakeAccountingFileStorage`; archive move (`LegacyFinanceImportTests`: check without writing, counts and balances, move with ids, sources, links and log, second run adds nothing, gzip, name conflict and broken rule stop the move, wrong file); statements (`BankStatementImportTests`: recognised lines and the old fingerprint, the same file again, booking with transfers and created counterparties, exact and probable duplicates, the director's edit, a card XLSX below title rows and another account's IBAN, refused files, windows-1251 CSV, rollback that cancels and frees the lines for booking again, keeps a confirmed counterparty and counts records changed by hand); reports (`FinanceReportTests`: six kinds count only active income and expense of the period, expense structure, accounts with transfers, operations order and limit, counterparty names, CSV format, «Журнал змін» titles, JSON export with stored fields only); payment queries (`FinancePaymentQueriesTests`: candidates of a supplier, by amount, text or typed amount, both areas, voided left out; operations by id); contract. Clients by KeepinCRM id and by ЄДРПОУ on PostgreSQL: `tests/IntegrationTests/Crm/Customers/CustomerKeepinLookupTests.cs`, `CustomerTaxIdLookupTests.cs`. Clients and suppliers: `FakeAccountingParties`. Shared data: `FinanceMovementFixture`. Command: `dotnet test tests/UnitTests/UnitTests.csproj --filter "FullyQualifiedName~UnitTests.Accounting"`. Module references and schema: `tests/ArchitectureTests/Modules/Office/AccountingDependencyTests.cs`.

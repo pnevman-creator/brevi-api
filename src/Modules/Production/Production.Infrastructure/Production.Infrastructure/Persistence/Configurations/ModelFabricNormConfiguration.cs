@@ -1,5 +1,6 @@
 using Production.Domain.FabricNorms;
 
+
 namespace Production.Infrastructure.Persistence.Configurations;
 
 internal sealed class ModelFabricNormConfiguration : IEntityTypeConfiguration<ModelFabricNorm>

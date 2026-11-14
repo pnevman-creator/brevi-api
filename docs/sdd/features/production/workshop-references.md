@@ -12,38 +12,36 @@ src/Modules/Production/
     ProductionText.cs                  # trims spaces, name key
   Production.Application/Production.Application/
     Abstractions/                      # IProductionDbContext, IProductionModelReader (Catalog), IPayrollParameterReader (Reference)
-    Contracts/                         # request/response DTOs
-    Staff/                             # GetStaff, CreateEmployee, UpdateEmployee, SetEmployeeActive, ImportStaff
-    FabricNorms/                       # GetNorms, SaveNorm, DeleteNorm, ImportNorms, GetCompositions; shared validator and messages
-    PayrollParameters/                 # PayrollParameterCodes (read by payroll and forecast)
+    Features/Staff/                    # GetWorkshopStaff, Create/UpdateWorkshopEmployee, SetWorkshopEmployeeActive, ImportWorkshopStaff
+    Features/FabricNorms/              # GetFabricNorms, SaveFabricNorm, DeleteFabricNorm, ImportFabricNorms, GetModelCompositions; Shared/ validator, messages
+    Features/PayrollParameters/Shared/ # PayrollParameterCodes (read by payroll and forecast)
   Production.Infrastructure/Production.Infrastructure/
     Persistence/                       # ProductionDbContext (schema production), configurations, migrations
     DependencyInjection/
   Production.Api/Production.Api/
-    Staff/WorkshopStaffController.cs             # /api/production/staff
-    FabricNorms/FabricNormsController.cs         # /api/production/fabric-norms, /compositions
-src/Bootstrapper/Host.Api/Production/
-  ProductionModelReader.cs     # IProductionModelReader → Catalog GetProductOverviewPageQuery (sewing, all pages), ListSewingCompositionsQuery
-  PayrollParameterReader.cs    # IPayrollParameterReader → Reference GetPricingParametersQuery
+    Endpoints/Staff/                             # /api/production/staff
+    Endpoints/FabricNorms/                       # /api/production/fabric-norms, /compositions
+src/Modules/Production/Production.Infrastructure/Production.Infrastructure/Adapters/Catalog/ProductionModelReader.cs  # IProductionModelReader → Catalog.Contracts ICatalogProductReader, ISewingModelReader
+src/Modules/Production/Production.Infrastructure/Production.Infrastructure/Adapters/Reference/ProductionReferenceReaders.cs  # PayrollParameterReader → Reference.Contracts IPricingParameterDirectory
 ```
 
 ## Structure diagram
 
 ```mermaid
 flowchart LR
-  Admin[Brevi Admin «Швейний цех»] --> Controllers[Production controllers]
-  Controllers --> UseCases[Mediator use cases]
+  Admin[Brevi Admin «Швейний цех»] --> Endpoints[Production endpoints]
+  Endpoints --> UseCases[Mediator use cases]
   UseCases --> Db[(production schema)]
   UseCases --> Models[IProductionModelReader]
   UseCases --> Payroll[IPayrollParameterReader]
-  Models -.host adapter.-> Catalog[Catalog product overview and compositions]
-  Payroll -.host adapter.-> Reference[Reference pricing parameters]
+  Models -.Catalog.Contracts.-> Catalog[Catalog product overview and compositions]
+  Payroll -.Reference.Contracts.-> Reference[Reference pricing parameters]
 ```
 
 ## Tests
 
 - `tests/UnitTests/Production/` — staff, norm and composition handlers on SQLite in memory with fake Catalog models and pricing parameters.
-- `tests/ArchitectureTests/ProductionDependencyTests.cs` — layer references, own schema and history, no module references Production.
+- `tests/ArchitectureTests/Modules/Workshop/ProductionDependencyTests.cs` — layer references, own schema and history, no module references Production.
 
 Focused run: `dotnet test tests/UnitTests/UnitTests.csproj --filter FullyQualifiedName~UnitTests.Production`.
 

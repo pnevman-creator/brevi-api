@@ -1,0 +1,10 @@
+using System.Text.Json.Serialization;
+using Reminders.Application.Features.Telegram.Shared.Chats;
+
+namespace Reminders.Application.Features.Telegram.Shared;
+
+public sealed record TelegramCallbackQuery(
+    [property: JsonPropertyName("id")] string Id,
+    [property: JsonPropertyName("from")] TelegramUser From,
+    [property: JsonPropertyName("message")] TelegramMessage? Message,
+    [property: JsonPropertyName("data")] string? Data);

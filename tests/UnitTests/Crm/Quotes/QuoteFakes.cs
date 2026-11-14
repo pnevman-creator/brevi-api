@@ -1,7 +1,9 @@
-using Crm.Application.Quotes.Catalog;
-using Crm.Application.Quotes.CustomSewing;
-using Crm.Application.Quotes.Staff;
 using Crm.Domain.Quotes;
+using Crm.Application.Features.Quotes.Shared;
+using Crm.Application.Features.Quotes.Shared.Catalog;
+using Crm.Application.Abstractions.Quotes;
+using Crm.Domain.Quotes.Enums;
+using Crm.Application.Abstractions.Quotes.Products;
 
 namespace UnitTests.Crm.Quotes;
 

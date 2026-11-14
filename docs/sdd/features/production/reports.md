@@ -7,30 +7,29 @@
 ```text
 src/Modules/Production/
   Production.Application/Production.Application/
-    Contracts/ReportContracts.cs
-    Reports/WorkshopReports.cs              # a month from the data, a kept month, the sum of months
-    Reports/GetReport/GetWorkshopReportQuery.cs
-    Dashboard/GetWorkshopDashboardQuery.cs
-    Payroll/Close/PayrollCloseCommands.cs   # closing also keeps the report (PayrollMonth.ReportSnapshot)
-  Production.Api/Production.Api/Reports/WorkshopReportsController.cs    # /api/production/reports
-  Production.Api/Production.Api/Dashboard/WorkshopDashboardController.cs # /api/production/dashboard
+    Features/Reports/Shared/WorkshopReports.cs       # a month from the data, a kept month, the sum of months; responses
+    Features/Reports/Queries/GetWorkshopReport/
+    Features/Dashboard/Queries/GetWorkshopDashboard/
+    Features/Payroll/Commands/ClosePayrollMonth/     # closing also keeps the report (PayrollMonth.ReportSnapshot)
+  Production.Api/Production.Api/Endpoints/Reports/    # /api/production/reports
+  Production.Api/Production.Api/Endpoints/Dashboard/  # /api/production/dashboard
 ```
 
 ## Structure diagram
 
 ```mermaid
 flowchart LR
-  Admin[Brevi Admin «Звіти цеху», home] --> Controllers[WorkshopReportsController, WorkshopDashboardController]
-  Controllers --> UseCases[Reports and Dashboard use cases]
+  Admin[Brevi Admin «Звіти цеху», home] --> Endpoints[Reports and Dashboard endpoints]
+  Endpoints --> UseCases[Reports and Dashboard use cases]
   UseCases --> Sheets[PayrollSheets]
   UseCases --> Db[(production.Work / Orders / FabricMovements / FabricStocks / PayrollMonths)]
-  UseCases --> Fabrics[IProductionFabricReader] -.host.-> Reference[«Тканини»]
+  UseCases --> Fabrics[IProductionFabricReader] -.Reference.Contracts.-> Reference[«Тканини»]
 ```
 
 ## Tests
 
-- `tests/UnitTests/Production/WorkshopReportHandlerTests.cs` — values, access, future and long periods, kept month, sum of months, overview.
-- `tests/UnitTests/Production/WorkshopReportsContractTests.cs` — DTOs, operations and policies against the contract.
+- `tests/UnitTests/Production/Workshop/WorkshopReportHandlerTests.cs` — values, access, future and long periods, kept month, sum of months, overview.
+- `tests/UnitTests/Production/Workshop/WorkshopReportsContractTests.cs` — DTOs, operations and policies against the contract.
 
 Focused run: `dotnet test tests/UnitTests/UnitTests.csproj --filter FullyQualifiedName~UnitTests.Production`.
 

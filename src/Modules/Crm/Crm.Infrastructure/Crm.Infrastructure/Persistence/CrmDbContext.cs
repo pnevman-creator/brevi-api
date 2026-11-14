@@ -1,9 +1,5 @@
-using Crm.Application.Customers.KeepinCrmSync;
-using Crm.Application.Embroidery.Persistence;
-using Crm.Application.Leads.Persistence;
-using Crm.Application.Quotes.Persistence;
-using Crm.Application.SiteRequests.Abstractions;
-using Crm.Application.Tasks.Persistence;
+using BuildingBlocks.Application.Outbox;
+using BuildingBlocks.Infrastructure.Outbox;
 using Crm.Domain.Customers;
 using Crm.Domain.Customers.Contacts;
 using Crm.Domain.Embroidery.Saved;
@@ -15,8 +11,19 @@ using Crm.Domain.Quotes.Sending;
 using Crm.Domain.Quotes.Settings;
 using Crm.Domain.SiteRequests;
 using Crm.Domain.Tasks;
-using Crm.Infrastructure.Persistence.Quotes;
 using Microsoft.EntityFrameworkCore;
+using Crm.Application.Features.Customers.Commands.SyncKeepinCrmClients;
+using Crm.Application.Features.Leads.Shared.Persistence;
+using Crm.Application.Features.Quotes.Shared.Persistence;
+using Crm.Application.Features.Tasks.Shared.Persistence;
+using Crm.Application.Abstractions.Embroidery;
+using Crm.Application.Abstractions.Leads;
+using Crm.Application.Abstractions.Quotes;
+using Crm.Application.Abstractions.SiteRequests;
+using Crm.Application.Abstractions.Tasks;
+using Crm.Infrastructure.Persistence.Configurations.Customers;
+using Crm.Infrastructure.Persistence.Repositories;
+using Crm.Application.Features.Customers.Commands.SyncKeepinCrmClients.Results;
 
 namespace Crm.Infrastructure.Persistence;
 
@@ -44,6 +51,7 @@ public sealed class CrmDbContext(DbContextOptions<CrmDbContext> options) : DbCon
     public DbSet<LeadCategory> LeadCategories => Set<LeadCategory>();
     public DbSet<LeadSyncState> LeadSyncStates => Set<LeadSyncState>();
     public DbSet<SiteRequest> SiteRequests => Set<SiteRequest>();
+    public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
 
     Task<int> IQuoteStore.SaveChangesAsync(CancellationToken cancellationToken) => SaveChangesAsync(cancellationToken);
 
@@ -109,5 +117,6 @@ public sealed class CrmDbContext(DbContextOptions<CrmDbContext> options) : DbCon
     {
         builder.HasDefaultSchema("crm");
         builder.ApplyConfigurationsFromAssembly(typeof(CrmDbContext).Assembly);
+        builder.AddOutbox();
     }
 }

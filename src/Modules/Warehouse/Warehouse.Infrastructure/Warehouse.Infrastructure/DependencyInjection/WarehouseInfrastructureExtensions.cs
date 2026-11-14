@@ -1,16 +1,19 @@
-using BuildingBlocks.Infrastructure.Migrations;
+using Warehouse.Infrastructure.Adapters.Identity;
+using Warehouse.Infrastructure.Adapters.Production;
+using Warehouse.Infrastructure.Adapters.Reference;
+using Warehouse.Contracts.Stock;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Warehouse.Application.Abstractions;
-using Warehouse.Application.Colors;
-using Warehouse.Application.Stock;
-using Warehouse.Application.Stock.Facts;
-using Warehouse.Application.Stock.Issues;
-using Warehouse.Application.Stock.Reports;
-using Warehouse.Application.Stock.Revisions;
 using Warehouse.Infrastructure.Persistence;
+using Warehouse.Application.Features.Stock.Shared;
+using Warehouse.Application.Features.Stock.Shared.Facts;
+using Warehouse.Application.Features.Stock.Shared.Booking;
+using Warehouse.Application.Features.Stock.Shared.Operations;
+using Warehouse.Application.Features.Stock.Shared.Plans;
+using BuildingBlocks.Infrastructure.Database;
 
 namespace Warehouse.Infrastructure.DependencyInjection;
 
@@ -37,7 +40,15 @@ public static class WarehouseInfrastructureExtensions
         services.AddScoped<ItemFabricCards>();
         services.AddScoped<ItemPlans>();
         services.AddScoped<StockFacts>();
+
+        // Contracts other modules use (ADR-0006).
+        services.AddScoped<IStockFacts>(sp => sp.GetRequiredService<StockFacts>());
         services.TryAddSingleton(TimeProvider.System);
+
+        // Adapters from other modules' Contracts to this module's ports.
+        services.AddScoped<IWarehouseReferenceReader, WarehouseReferenceReader>();
+        services.AddScoped<IWarehouseStaffReader, WarehouseStaffReader>();
+        services.AddScoped<IWarehouseProductionReader, WarehouseProductionReader>();
         return services;
     }
 }

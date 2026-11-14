@@ -1,5 +1,6 @@
 using Accounting.Domain.Audit;
 
+
 namespace Accounting.Infrastructure.Persistence.Configurations;
 
 internal sealed class AuditEntryConfiguration : IEntityTypeConfiguration<AuditEntry>

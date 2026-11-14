@@ -1,7 +1,8 @@
-using Catalog.Application.Contracts.Pricing.Ppe;
-using Catalog.Application.Features.Pricing.Ppe.Evaluation;
 using Catalog.Domain.Pricing.Ppe;
 using CatalogImport.Source;
+using Catalog.Application.Abstractions.Pricing;
+using Catalog.Application.Features.Pricing.Shared.Ppe.Evaluation;
+using Catalog.Application.Abstractions.Pricing.Ppe;
 
 namespace CatalogImport.PpePricing.Verification;
 

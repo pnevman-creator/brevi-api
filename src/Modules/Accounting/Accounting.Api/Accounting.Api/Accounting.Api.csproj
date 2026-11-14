@@ -3,12 +3,8 @@
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\BuildingBlocks\BuildingBlocks.Api\BuildingBlocks.Api.csproj" />
     <ProjectReference Include="..\..\Accounting.Application\Accounting.Application\Accounting.Application.csproj" />
+    <ProjectReference Include="..\..\Accounting.Infrastructure\Accounting.Infrastructure\Accounting.Infrastructure.csproj" />
   </ItemGroup>
 
-  <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-  </PropertyGroup>
 
 </Project>

@@ -2,6 +2,8 @@ using Production.Domain.Forecast;
 using Production.Domain.Orders;
 using Production.Domain.Staff;
 using Production.Domain.Work;
+using Production.Infrastructure.Persistence;
+
 
 namespace Production.Infrastructure.Persistence.Configurations;
 

@@ -3,6 +3,7 @@ using Crm.Domain.Quotes.Sending;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
+
 namespace Crm.Infrastructure.Persistence.Configurations.Quotes;
 
 /// <summary>One row per staff member (Identity user id; no cross-module foreign key).</summary>

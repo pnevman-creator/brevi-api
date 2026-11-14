@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Reminders.Domain;
 using Reminders.Domain.Tasks;
+using Reminders.Infrastructure.Persistence;
 
 namespace Reminders.Infrastructure.Persistence.Seeding;
 
@@ -22,7 +23,7 @@ public sealed class DefaultReminderTaskSeeder(RemindersDbContext db, TimeProvide
         var now = time.GetUtcNow();
         var today = ReminderTime.TodayInKyiv(now);
         foreach (var (title, organization, schedule) in DefaultReminderTasks.All)
-            db.Tasks.Add(ReminderTask.Create(title, organization, schedule, null, today, true, now));
+            db.Tasks.Add(ReminderTask.Create(title, organization, schedule, null, today, true, now).Value);
         await db.SaveChangesAsync(cancellationToken);
         logger.LogInformation("Seeded reminder tasks. Added: {Count}", DefaultReminderTasks.All.Count);
     }

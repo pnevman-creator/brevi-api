@@ -2,6 +2,7 @@ using Crm.Domain.Leads;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
+
 namespace Crm.Infrastructure.Persistence.Configurations.Leads;
 
 public sealed class LeadSyncStateConfiguration : IEntityTypeConfiguration<LeadSyncState>

@@ -14,13 +14,13 @@ Versions and owning projects live only in the `.csproj` files under `src/` and `
 
 | Pattern | Source in code |
 | --- | --- |
-| Mediator and behavior ordering | [pipeline registration](../../../../src/Bootstrapper/Host.Api/DependencyInjection/ServiceRegistration/Pipeline/MediatorRegistrationExtensions.cs) |
-| FluentValidation | [validator registration](../../../../src/Bootstrapper/Host.Api/DependencyInjection/ServiceRegistration/Pipeline/FluentValidationRegistrationExtensions.cs) |
-| EF Core with PostgreSQL | [Catalog DbContext registration](../../../../src/Modules/Catalog/Catalog.Infrastructure/Catalog.Infrastructure/DependencyInjection/CatalogDbContextExtensions.cs) |
+| Mediator and behavior ordering | [pipeline registration](../../../../src/Bootstrapper/Host.Api/DependencyInjection/Modules/MediatorRegistrationExtensions.cs) |
+| FluentValidation | [validator registration](../../../../src/BuildingBlocks/BuildingBlocks.Application/BuildingBlocks.Application/Validation/ModuleValidators.cs), called from each `Add<Module>Module()` |
+| EF Core with PostgreSQL | [Catalog DbContext registration](../../../../src/Modules/Catalog/Catalog.Infrastructure/Catalog.Infrastructure/DependencyInjection/CatalogInfrastructureExtensions.cs) |
 | Serilog, Swagger, and OpenAPI | [HTTP host](../../../../src/Bootstrapper/Host.Api/Program.cs) |
-| Slugify.Core and TranslitKit | [Catalog slug generator](../../../../src/Modules/Catalog/Catalog.Infrastructure/Catalog.Infrastructure/Products/SlugGeneration/ProductSlugGenerator.cs) |
-| libphonenumber-csharp | [phone number helper service](../../../../src/BuildingBlocks/BuildingBlocks.Application/BuildingBlocks.Application/Helpers/PhoneNumberHelper.cs) |
-| Moq and NUnit | [Product unit tests](../../../../tests/UnitTests/ProductCommandHandlerTests.cs) |
-| YamlDotNet | [session OpenAPI contract validation](../../../../tests/UnitTests/SessionOpenApiContractTests.cs) |
+| Slugify.Core and TranslitKit | [Catalog slug generator](../../../../src/Modules/Catalog/Catalog.Infrastructure/Catalog.Infrastructure/Persistence/Configurations/Products/ProductSlugGenerator.cs) |
+| libphonenumber-csharp | [phone number helper service](../../../../src/BuildingBlocks/BuildingBlocks.Application/BuildingBlocks.Application/PhoneNumberHelper.cs) |
+| Moq and NUnit | [Product unit tests](../../../../tests/UnitTests/Catalog/Products/Creation/ProductCommandHandlerTests.cs) |
+| YamlDotNet | [session OpenAPI contract validation](../../../../tests/UnitTests/Identity/SessionOpenApiContractTests.cs) |
 
 For any package, find a call, type, or configuration in the code before claiming it is actually used. If a package appears unnecessary, removing it requires a separate build and test check.

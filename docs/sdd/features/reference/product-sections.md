@@ -9,16 +9,16 @@ The Calculator sheet «Типи і розділи» in Brevi: product sections (
 ```text
 src/Modules/Reference/
 ├── Reference.Api/Reference.Api/
-│   ├── Controllers/ProductSectionsController.cs     # CRUD + sheet import
-│   └── Contracts/ProductSections/
+│   └── Endpoints/ProductSections/                   # CRUD + sheet import, one <UseCase>/ folder each with its request
 ├── Reference.Application/Reference.Application/Features/ProductSection/
-│   ├── {Create,Update,Delete,GetList}/              # CRUD and list, FluentValidation
-│   ├── Import/                                      # sheet import, preview and apply
+│   ├── Commands/{Create,Update,Delete}ProductSection/  # CRUD, FluentValidation
+│   ├── Commands/ImportProductSections/              # sheet import, preview and apply
+│   ├── Queries/GetProductSections/                  # list
 │   └── Shared/                                      # fields, type names, specifications
 ├── Reference.Domain/Reference.Domain/ProductSections/  # entity, details, type, errors, id
 └── Reference.Infrastructure/Reference.Infrastructure/
-    ├── Congigurations/ProductSectionConfiguration.cs
-    └── Migrations/*_AddProductSections.cs
+    ├── Persistence/Configurations/ProductSectionConfiguration.cs
+    └── Persistence/Migrations/*_AddProductSections.cs
 ```
 
 ## Tests

@@ -1,6 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Warehouse.Domain.Stock;
+using Warehouse.Domain.Stock.Movements;
+using Warehouse.Domain.Stock.Plans;
+
 
 namespace Warehouse.Infrastructure.Persistence.Configurations;
 

@@ -1120,7 +1120,7 @@ namespace Crm.Infrastructure.Persistence.Migrations
                         });
                 });
 
-            modelBuilder.Entity("Crm.Infrastructure.Persistence.CustomerMutationRecord", b =>
+            modelBuilder.Entity("Crm.Infrastructure.Persistence.Customers.CustomerMutationRecord", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()

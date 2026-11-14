@@ -6,7 +6,7 @@ CRUD operations and list retrieval for the “Fabrics” lookup, with the fields
 
 ## Structure and Relationships
 
-[Controller](../../../../src/Modules/Reference/Reference.Api/Reference.Api/Controllers/FabricsController.cs) exposes CRUD. The [create handler](../../../../src/Modules/Reference/Reference.Application/Reference.Application/Features/Fabric/Create/CreateFabricCommandHandler.cs) and adjacent query/update/delete handlers validate the data; [Fabric](../../../../src/Modules/Reference/Reference.Domain/Reference.Domain/GarmentAccessories/Entities/Fabric.cs) is the domain entity. [ReferenceEfRepository](../../../../src/Modules/Reference/Reference.Infrastructure/Reference.Infrastructure/Repositories/ReferenceEfRepository.cs) and [ReferenceDbContext](../../../../src/Modules/Reference/Reference.Infrastructure/Reference.Infrastructure/DataBase/ReferenceDbContext.cs) persist it. Fabrics are used as part of Sewing products.
+[Endpoints](../../../../src/Modules/Reference/Reference.Api/Reference.Api/Endpoints/Fabrics/FabricsEndpoints.cs) exposes CRUD. The [create handler](../../../../src/Modules/Reference/Reference.Application/Reference.Application/Features/Fabric/Commands/CreateFabric/CreateFabricHandler.cs) and adjacent query/update/delete handlers validate the data; [Fabric](../../../../src/Modules/Reference/Reference.Domain/Reference.Domain/Fabrics/Fabric.cs) is the domain entity. [ReferenceEfRepository](../../../../src/Modules/Reference/Reference.Infrastructure/Reference.Infrastructure/Persistence/Repositories/ReferenceEfRepository.cs) and [ReferenceDbContext](../../../../src/Modules/Reference/Reference.Infrastructure/Reference.Infrastructure/Persistence/ReferenceDbContext.cs) persist it. Fabrics are used as part of Sewing products.
 
 ## Code Structure
 
@@ -15,28 +15,28 @@ Verified entry points and key feature components are shown; the tree does not li
 ```text
 src/
 └── Modules/Reference/
-    ├── Reference.Api/Reference.Api/Controllers/FabricsController.cs  # HTTP entry point
+    ├── Reference.Api/Reference.Api/Endpoints/Fabrics/  # HTTP entry points, one <UseCase>/ folder each
     ├── Reference.Application/Reference.Application/Features/Fabric/
-    │   ├── Create/CreateFabricCommandHandler.cs  # use case handler
-    │   ├── Delete/DeleteFabricCommandHandler.cs  # use case handler
-    │   ├── GetList/GetAllFabricQueryHandler.cs  # use case handler
-    │   ├── Import/ImportFabricsCommandHandler.cs  # sheet import with preview
+    │   ├── Commands/CreateFabric/CreateFabricHandler.cs  # use case handler
+    │   ├── Commands/DeleteFabric/DeleteFabricHandler.cs  # use case handler
+    │   ├── Queries/GetAllFabric/GetAllFabricHandler.cs  # use case handler
+    │   ├── Commands/ImportFabrics/ImportFabricsHandler.cs  # sheet import with preview
     │   ├── Shared/  # fields contract, validator, code spec
-    │   └── Update/UpdateFabricCommandHandler.cs  # use case handler
-    ├── Reference.Domain/Reference.Domain/GarmentAccessories/Entities/Fabric.cs  # domain model
+    │   └── Commands/UpdateFabric/UpdateFabricHandler.cs  # use case handler
+    ├── Reference.Domain/Reference.Domain/Fabrics/Fabric.cs  # domain model
     └── Reference.Infrastructure/Reference.Infrastructure/
-        ├── DataBase/ReferenceDbContext.cs  # data context
-        ├── Congigurations/FabricConfiguration.cs  # nullable bounded public metadata mapping
-        ├── Migrations/20261029153930_AddFabricPresentationMetadata.cs  # additive schema
-        ├── Migrations/*_AddFabricAccessorySheetFields.cs  # sheet fields, code index
-        └── Repositories/ReferenceEfRepository.cs  # data access
+        ├── Persistence/ReferenceDbContext.cs  # data context
+        ├── Persistence/Configurations/Materials/FabricConfiguration.cs  # nullable bounded public metadata mapping
+        ├── Persistence/Migrations/20261029153930_AddFabricPresentationMetadata.cs  # additive schema
+        ├── Persistence/Migrations/*_AddFabricAccessorySheetFields.cs  # sheet fields, code index
+        └── Persistence/Repositories/ReferenceEfRepository.cs  # data access
 ```
 
 ## Structure Diagram
 
 ```mermaid
 flowchart LR
-    A["FabricsController"] --> B["CRUD handlers"]
+    A["FabricsEndpoints"] --> B["CRUD handlers"]
     B --> C["Fabric"]
     B --> D["Reference repository contracts"]
     D -.-> E["ReferenceEfRepository and ReferenceReadEfRepository"]
@@ -47,7 +47,7 @@ flowchart LR
 
 ## Tests
 
-`tests/UnitTests/Reference/FabricPresentationMetadataTests.cs` covers metadata normalization and bounds; `tests/UnitTests/Reference/ReferenceSheetImportTests.cs` covers the sheet import. No automated tests cover this feature's CRUD operations yet. `tests/UnitTests/ReferenceProductUsageTests.cs` covers rejecting deletion of reference data used by a Product.
+`tests/UnitTests/Reference/FabricPresentationMetadataTests.cs` covers metadata normalization and bounds; `tests/UnitTests/Reference/Imports/ReferenceSheetImportTests.cs` covers the sheet import. No automated tests cover this feature's CRUD operations yet. `tests/UnitTests/Reference/ReferenceProductUsageTests.cs` covers rejecting deletion of reference data used by a Product.
 
 **Data:** [reference schema](../../architecture/data-model/reference.md)
 

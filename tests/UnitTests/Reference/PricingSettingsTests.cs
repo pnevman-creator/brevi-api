@@ -1,15 +1,12 @@
-using BuildingBlocks.Domain.Exceptions;
+﻿using BuildingBlocks.Domain.Results;
 using Moq;
-using Reference.Application.Contracts.Catalog;
-using Reference.Application.Contracts.Persistence;
-using Reference.Application.Features.PricingParameter.GetList;
-using Reference.Application.Features.PricingSettingsImport;
-using Reference.Application.Features.PricingSettingsImport.DTOs;
-using Reference.Application.Features.Shared.SheetImport;
-using Reference.Domain.PpeMarkupRules.Entities;
-using Reference.Domain.PpeMarkupRules.ValueObjects;
-using Reference.Domain.PricingParameters.Entities;
-using Reference.Domain.PricingParameters.ValueObjects;
+using Reference.Domain.PpeMarkupRules;
+using Reference.Domain.PricingParameters;
+using Reference.Application.Abstractions;
+using Reference.Application.Features.PricingParameter.Queries.GetPricingParameters;
+using Reference.Application.Features.PricingSettingsImport.Commands.ImportPricingSettings;
+using Reference.Application.Features.PricingSettingsImport.Shared;
+using Reference.Application.Features.SheetImport.Shared;
 
 namespace UnitTests.Reference;
 
@@ -28,10 +25,14 @@ public sealed class PricingSettingsTests
 
     private static PricingParameter Stored(int id, string code, decimal? value, bool calculated = false) =>
         PricingParameter.Create(PricingParameterId.From(id), code,
+            new PricingParameterDetails("Виробництво", $"Параметр {code}", value, "%", calculated, null, id), SheetDate).Value;
+
+    private static DomainResult<PricingParameter> Attempt(int id, string code, decimal? value, bool calculated = false) =>
+        PricingParameter.Create(PricingParameterId.From(id), code,
             new PricingParameterDetails("Виробництво", $"Параметр {code}", value, "%", calculated, null, id), SheetDate);
 
     private static Mock<IReferenceRepository<T>> Repository<T>(List<T> stored, List<T> added, List<T> deleted)
-        where T : class, BuildingBlocks.Domain.Abstractions.IAggregateRoot
+        where T : class, BuildingBlocks.Domain.Entity.IAggregateRoot
     {
         var repository = new Mock<IReferenceRepository<T>>();
         repository.Setup(x => x.ListAsync(It.IsAny<CancellationToken>())).ReturnsAsync(stored);
@@ -49,11 +50,11 @@ public sealed class PricingSettingsTests
     {
         Assert.Multiple(() =>
         {
-            Assert.Throws<DomainException>(() => Stored(1, "MINUTE_COST_SEAMSTRESS", 1.78m, calculated: true));
-            Assert.Throws<DomainException>(() => Stored(1, "SOMETHING_ELSE", null, calculated: true));
-            Assert.Throws<DomainException>(() => Stored(1, "ASSEMBLY_RATE", null));
-            Assert.Throws<DomainException>(() => Stored(1, "ASSEMBLY_RATE", -1m));
-            Assert.Throws<DomainException>(() => Stored(1, "bad code", 1m));
+            Assert.That(Attempt(1, "MINUTE_COST_SEAMSTRESS", 1.78m, calculated: true).IsFailure, Is.True);
+            Assert.That(Attempt(1, "SOMETHING_ELSE", null, calculated: true).IsFailure, Is.True);
+            Assert.That(Attempt(1, "ASSEMBLY_RATE", null).IsFailure, Is.True);
+            Assert.That(Attempt(1, "ASSEMBLY_RATE", -1m).IsFailure, Is.True);
+            Assert.That(Attempt(1, "bad code", 1m).IsFailure, Is.True);
             Assert.That(Stored(1, "assembly_rate", 0.25m).Code, Is.EqualTo("ASSEMBLY_RATE"));
         });
     }
@@ -70,7 +71,7 @@ public sealed class PricingSettingsTests
             Stored(3, "MINUTES_SHIFT", 480m),
         ]);
 
-        var rows = (await new GetPricingParametersQueryHandler(repository.Object)
+        var rows = (await new GetPricingParametersHandler(repository.Object)
             .Handle(new GetPricingParametersQuery(), CancellationToken.None)).Value;
 
         Assert.Multiple(() =>
@@ -86,14 +87,14 @@ public sealed class PricingSettingsTests
     {
         var assembly = Stored(5, "ASSEMBLY_RATE", 0.2m);
         var legacy = PricingParameter.Create(PricingParameterId.From(9), "WORK_DAY",
-            new PricingParameterDetails("Старі довідники", "кол-во раб дней", 20.5m, "шт.", false, null, 9), null);
+            new PricingParameterDetails("Старі довідники", "кол-во раб дней", 20.5m, "шт.", false, null, 9), null).Value;
         var oldRule = PpeMarkupRule.Create(PpeMarkupRuleId.From(1), "Взуття",
-            new PpeMarkupRuleDetails(0.45m, 0.37m, 0.3m, null, "Усе робоче взуття", 2));
+            new PpeMarkupRuleDetails(0.45m, 0.37m, 0.3m, null, "Усе робоче взуття", 2)).Value;
         var (addedParameters, deletedParameters, addedRules, deletedRules) = (new List<PricingParameter>(),
             new List<PricingParameter>(), new List<PpeMarkupRule>(), new List<PpeMarkupRule>());
         var parameters = Repository([assembly, legacy], addedParameters, deletedParameters);
         var rules = Repository([oldRule], addedRules, deletedRules);
-        var handler = new ImportPricingSettingsCommandHandler(parameters.Object, rules.Object, notifier.Object);
+        var handler = new ImportPricingSettingsHandler(parameters.Object, rules.Object, notifier.Object);
 
         var result = (await handler.Handle(new ImportPricingSettingsCommand(
             [
@@ -127,7 +128,7 @@ public sealed class PricingSettingsTests
         var assembly = Stored(5, "ASSEMBLY_RATE", 0.2m);
         var parameters = Repository([assembly], [], []);
         var rules = Repository(new List<PpeMarkupRule>(), [], []);
-        var handler = new ImportPricingSettingsCommandHandler(parameters.Object, rules.Object, notifier.Object);
+        var handler = new ImportPricingSettingsHandler(parameters.Object, rules.Object, notifier.Object);
         var rows = new[] { Parameter(7, "ASSEMBLY_RATE", 0.25m) };
 
         var preview = (await handler.Handle(new ImportPricingSettingsCommand(rows, [], DryRun: true, DeleteMissing: true),

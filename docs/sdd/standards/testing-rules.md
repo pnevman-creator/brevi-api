@@ -12,6 +12,10 @@ Every new or changed observable behavior must link to an acceptance scenario suc
 
 Do not repeat an entire scenario at every level without a separate risk. Several focused tests can support one scenario.
 
+## Test folders
+
+Tests mirror the module and feature they check: see [test structure](module-rules.md#test-structure). Architecture tests check module references, Contracts-only access, folder names, and host content for every business module ([architecture tests](module-rules.md#architecture-tests)).
+
 ## Red → Green → Refactor
 
 For new behavior:
@@ -33,7 +37,7 @@ A test written before implementation can be omitted for documentation-only chang
 | --- | --- |
 | Local change | Run `dotnet test tests/<Project>/<Project>.csproj --filter <name>` for the affected behavior; for documentation, check links and run `git diff --check`. |
 | Boundary or database change | Add the relevant `ArchitectureTests` or `IntegrationTests` project/filter; integration tests need a separate PostgreSQL instance through `BREVIERP_CATALOG_TEST_CONNECTION`. |
-| Full CI | The [workflow](../../../.github/workflows/deploy-cloudrun.yml) runs builds and tests for PRs/pushes; rerun the full suite locally only on explicit request. |
+| CI | The [workflow](../../../.github/workflows/deploy-cloudrun.yml) builds everything and always runs the architecture tests, the host tests, the `Platform` integration tests and the tests of the selection script. A pull request runs the unit and integration tests picked by [`tools/ci/affected_tests.py`](../../../tools/ci/affected_tests.py) ([module rules](module-rules.md#test-structure)): a change in `src/Modules/<Module>/` or `tests/<Project>/<Module>/` runs `UnitTests.<Module>` and `IntegrationTests.<Module>` and those of every module whose projects reference it (read from the `.csproj` files); documentation alone runs nothing more; a change in `src/Jobs/` runs `UnitTests.Jobs`, `IntegrationTests.Jobs` and the Catalog and Reference tests, and a selection with Catalog or Reference also runs the job tests; anything else (BuildingBlocks, hosts, build files, test support, CI files) runs everything. Every push to `master` runs everything before deploy. Rerun the full suite locally only on explicit request. |
 
 Check project names and available filters under `tests/` before running them.
 

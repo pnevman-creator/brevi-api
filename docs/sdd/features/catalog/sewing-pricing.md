@@ -8,7 +8,7 @@ The pure engine computes applicable material/OtherCost amounts, weighted operati
 
 Catalog settings and Reference costs/norms are immutable effective versions. Calculation identifies settings and Reference version IDs plus Product composition version and is strict about activity, approval, units and composition review. Protected HTTP operations save full immutable snapshots, read them, publish current successful calculations and read the latest published tiers. Blocked and stale calculations cannot publish. Repeated requests retain their original calculation/publication; republishing an old result does not replace the current publication.
 
-The sewing product card ([CAT-007](../../specs/catalog/007-sewing-product-card/README.md)) reads `GET /api/v1/products/{productId}/articles/pricing-summary`: a live, non-saving calculation of every fabric variant with blockers and the latest published tiers, plus the variant fabric names and the shared composition with reference names, so the card needs one request ([CAT-016](../../specs/catalog/016-sewing-card-one-request/README.md); `Features/Pricing/Sewing/ArticleSummary/`, `SewingArticleSummaryController`).
+The sewing product card ([CAT-007](../../specs/catalog/007-sewing-product-card/README.md)) reads `GET /api/v1/products/{productId}/articles/pricing-summary`: a live, non-saving calculation of every fabric variant with blockers and the latest published tiers, plus the variant fabric names and the shared composition with reference names, so the card needs one request ([CAT-016](../../specs/catalog/016-sewing-card-one-request/README.md); `Features/Pricing/Sewing/ArticleSummary/`, `SewingArticleSummaryEndpoints`).
 
 Complete settings revisions and OtherCost revisions use expected-current-version IDs and request UUIDs. Numeric edits to previously versioned fabrics, accessories and operation norms append approved input revisions atomically. Existing Reference reads remain anonymous; those writes require the page's «Права доступу» policy. See [Reference version ownership](../reference/pricing-input-versions.md).
 
@@ -22,36 +22,38 @@ src/Modules/Catalog/
     Results/                                      # breakdown, tiers and named blockers
     Settings/                                     # parameter value, version/ID and settings validation
   Catalog.Application/Catalog.Application/
-    Contracts/Pricing/{SewingComposition,SewingSettings,ReferenceInputs,SewingCalculation}/
-    Contracts/Pricing/History/{Calculations,Publications,Transactions}/ # focused storage/transaction boundaries
-    Features/Pricing/Sewing/
-      Evaluation/                                 # shared evaluator and input resolution
-      Preview/                                    # internal calculation query and handler
-      Composition/                                # price of a free composition (КП «виріб з нуля», changed model; fabrics, accessories, OtherCost by code), not saved
-      Calculations/{Save,Get}/                     # immutable saved-calculation scenarios
-      Publications/{Publish,GetCurrent}/           # publication / current published-price scenarios
-      Publications/GetProducts/                   # bounded Product-page published-price projection
-      ArticleSummary/                             # live per-Article card summary (CAT-007)
-      Settings/{CreateVersion,GetCurrent}/         # complete settings revision / current read
-  Catalog.Infrastructure/Catalog.Infrastructure/Pricing/
-    SewingSettings/{Configuration,Reading,Writing}/ # settings versions and expected-version writes
-    SewingComposition/Reading/                     # calculation input projection
-    History/Calculations/                          # calculation storage and snapshot serialization; Records/Configuration
-    History/Publications/                          # publication storage; Records/Configuration
-    History/Publications/Reading/                  # two-query Product projection; JSON tier extraction only
-    History/Transactions/                          # advisory/Product locks and commit; shared scoped DbContext
+    Abstractions/Pricing/                         # input, settings, calculation, publication and transaction ports with their records
+    Features/Pricing/
+      Shared/Sewing/Evaluation/                   # shared evaluator and input resolution
+      Shared/Sewing/AutoPublication/              # SewingPricePublisher (publish after input changes)
+      Queries/CalculateSewingArticle/             # internal calculation query and handler
+      Queries/CalculateSewingComposition/         # price of a free composition (КП «виріб з нуля», changed model; fabrics, accessories, OtherCost by code), not saved
+      Commands/SaveSewingCalculation/, Queries/GetSewingCalculation/   # immutable saved calculations
+      Commands/PublishSewingCalculation/, Queries/GetPublishedSewingPrice/  # publication / current published price
+      Queries/GetPublishedSewingProducts/         # bounded Product-page published-price projection
+      Queries/GetSewingArticleSummary/            # live per-Article card summary (CAT-007)
+      Commands/CreateSewingSettingsVersion/, Queries/GetSewingSettings/  # complete settings revision / current read
+      Commands/SyncPricingSettings/               # outbox: Reference settings changed
+  Catalog.Infrastructure/Catalog.Infrastructure/Persistence/{Configurations,Repositories}/Pricing/
+    Sewing/                                        # settings versions and expected-version writes; calculation input projection
+    Calculations/                                  # calculation storage, snapshot serialization, row and configuration
+    Publications/                                  # publication storage, row and configuration; two-query Product projection (JSON tier extraction only)
+  Catalog.Infrastructure/Catalog.Infrastructure/Persistence/
+    SewingPricingTransaction.cs                    # advisory/Product locks and commit; shared scoped DbContext
+    SewingPricingInputChangeInterceptor.cs         # marks changed inputs for automatic publication
   Catalog.Api/Catalog.Api/
-    Controllers/Pricing/Sewing/                     # Article pricing and settings HTTP controllers
-    Contracts/Pricing/Sewing/{Calculations,Settings}/ # complete settings and calculation request UUID
+    Pricing/Sewing/                                 # Article pricing and settings HTTP controllers
+    Pricing/Sewing/{Calculations,Settings}/          # complete settings and calculation request UUID
 src/Modules/Reference/
   Reference.Domain/Reference.Domain/Pricing/InputVersions/ # immutable typed versions and units
-  Reference.Application/Reference.Application/Contracts/Pricing/{InputVersions,Usage}/
-  Reference.Infrastructure/Reference.Infrastructure/Pricing/
-    InputVersions/{Configuration,Reading,Changes}/  # effective reads; tracked changes and atomic revision append
-    OtherCosts/Writing/                            # explicit service-cost revision adapter
-    Usage/                                        # retained-history use checks
-src/Bootstrapper/Host.Api/DependencyInjection/ServiceRegistration/
-  CatalogPricingReferenceReader.cs                 # Reference reads enlist in Catalog pricing transaction
+  Reference.Application/Reference.Application/Abstractions/  # IReferencePricingVersionReader, IReferencePricingUsageReader
+  Reference.Infrastructure/Reference.Infrastructure/Persistence/{Configurations,Repositories}/Pricing/
+    ReferencePricing*.cs, TrackedReferencePricingChanges.cs  # effective reads; tracked changes and atomic revision append
+    OtherCostPricingVersionWriter.cs               # explicit service-cost revision adapter
+    ReferencePricingUsageReader.cs                 # retained-history use checks
+src/Modules/Catalog/Catalog.Infrastructure/Catalog.Infrastructure/Adapters/Reference/
+  PricingReferenceVersionReader.cs                 # Reference.Contracts IPricingInputVersionReader, enlisted in the Catalog pricing transaction
+src/Modules/Reference/Reference.Infrastructure/Reference.Infrastructure/Contracts/Pricing/PricingInputVersionReader.cs  # provider side
 src/Jobs/SewingPricing/
   Bootstrap/{Source,Inputs,Reconciliation}/         # source mapping, input baseline and immutable-version comparison
   Reading/                                        # seed-job cross-module bridge
@@ -83,7 +85,7 @@ flowchart LR
     Verify --> Report[Non-publishable parity report]
 ```
 
-Every fabric, accessory and operation has input versions: Reference writes revision 1 when a row is added and the next one when its price, minutes, unit or activity changes, and removes them with the row ([CAT-011](../../specs/catalog/011-product-list-prices/README.md) R-06, `Reference.Infrastructure/Pricing/InputVersions/Changes/`). Automatic publication ([CAT-012](../../specs/catalog/012-sewing-price-auto-publication/README.md)): EF save interceptors in Reference and Catalog mark `PricingInputChanges` (BuildingBlocks.Application `Pricing/`) when a price version, a model's composition or a settings version is saved; the Host.Api filter `Pricing/SewingPriceAutoPublicationFilter.cs` then runs `SewingPricePublisher` (`Features/Pricing/Sewing/AutoPublication/`), which publishes every changed Article price, one transaction per model. The `brevierp-sync` step `sewing-prices` (Mon–Fri 09:00 Kyiv) runs it for every model.
+Every fabric, accessory and operation has input versions: Reference writes revision 1 when a row is added and the next one when its price, minutes, unit or activity changes, and removes them with the row ([CAT-011](../../specs/catalog/011-product-list-prices/README.md) R-06, `Reference.Infrastructure/Pricing/InputVersions/Changes/`). Automatic publication ([CAT-012](../../specs/catalog/012-sewing-price-auto-publication/README.md)): EF save interceptors in Reference and Catalog mark `PricingInputChanges` (BuildingBlocks.Application `Pricing/`) when a price version, a model's composition or a settings version is saved; the Catalog.Api middleware `Pricing/Sewing/SewingPriceAutoPublicationMiddleware.cs` (put around the host pipeline by a startup filter in `AddCatalogModule()`, so it runs after MVC and Minimal API endpoints alike) then runs `SewingPricePublisher` (`Features/Pricing/Sewing/AutoPublication/`), which publishes every changed Article price, one transaction per model. The `brevierp-sync` step `sewing-prices` (Mon–Fri 09:00 Kyiv) runs it for every model.
 
 Reference input versions use restrictive same-module FKs so history cannot become orphaned. The host's existing usage bridge includes pricing history, preserving a controlled conflict for attempted Reference deletion.
 
@@ -95,8 +97,8 @@ The existing composition-only readiness view remains conservative for OtherCost 
 
 ## Tests
 
-- `tests/UnitTests/SewingArticlePricingTests.cs`, `tests/UnitTests/SewingPricingContractTests.cs`, `tests/UnitTests/PublishedSewingProductsQueryTests.cs`, `tests/UnitTests/SewingArticleSummaryTests.cs`
-- `tests/IntegrationTests/Pricing/Sewing/`, `tests/IntegrationTests/SewingArticlePricingPersistenceTests.cs`
+- `tests/UnitTests/Catalog/Pricing/Sewing/SewingArticlePricingTests.cs`, `tests/UnitTests/Catalog/Pricing/Sewing/SewingPricingContractTests.cs`, `tests/UnitTests/Catalog/Pricing/Sewing/PublishedSewingProductsQueryTests.cs`, `tests/UnitTests/Catalog/Pricing/Sewing/SewingArticleSummaryTests.cs`
+- `tests/IntegrationTests/Catalog/Pricing/Sewing/`, `tests/IntegrationTests/Catalog/Pricing/Sewing/SewingArticlePricingPersistenceTests.cs`
 
 Focused run: `dotnet test tests/UnitTests/UnitTests.csproj --filter SewingPricing`; `dotnet test tests/IntegrationTests/IntegrationTests.csproj --filter SewingPricing` (slow; needs `BREVIERP_CATALOG_TEST_CONNECTION`).
 

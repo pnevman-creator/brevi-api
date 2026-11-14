@@ -16,31 +16,32 @@ src/Modules/Content/
   Content.Application/Content.Application/
     Abstractions/IContentMediaReader.cs   # photos of the «Фото» library by id
     Abstractions/IContentPhotoImporter.cs # download an old-site picture into «Фото»
-    Contracts/ArticleResponses.cs
-    Articles/GetList/        # every article, the newest first, with the cover
-    Articles/GetOne/         # editor with the photos the article uses
-    Articles/Save/           # create or replace; slug, revision and photo checks
-    Articles/SetVisibility/  # «Показувати на сайті» from the list
-    Articles/Delete/
-    Articles/ImportOldSite/  # old-site transfer: file shape, allowed picture addresses, handler
-    Articles/Shared/         # mapping, free slug, photo read, messages
-    PublicArticles/          # public list and page, language fallback, source kept for a minute
+    Features/Articles/
+      Queries/GetContentArticles/      # every article, the newest first, with the cover
+      Queries/GetContentArticle/       # editor with the photos the article uses
+      Commands/SaveContentArticle/     # create or replace; slug, revision and photo checks
+      Commands/SetContentArticleVisibility/  # «Показувати на сайті» from the list
+      Commands/DeleteContentArticle/
+      Commands/ImportOldSiteArticles/  # old-site transfer: file shape, allowed picture addresses, handler
+      Queries/GetPublicArticles/, GetPublicArticle/  # public list and page, language fallback
+      Shared/                          # responses, mapping, free slug, photo read, messages, public source kept for a minute
   Content.Infrastructure/Content.Infrastructure/
-    Persistence/Configurations/ArticleConfiguration.cs
+    Persistence/Configurations/Pages/ArticleConfiguration.cs
   Content.Api/Content.Api/
-    Articles/ContentArticlesController.cs   # /api/content/articles, policy access:content-articles
-    PublicArticles/PublicArticlesController.cs # /api/public/articles, anonymous, read-only
-src/Bootstrapper/Host.Api/Content/ContentMediaReader.cs   # IContentMediaReader over the Media module
-src/Bootstrapper/Host.Api/Content/ContentPhotoImporter.cs # IContentPhotoImporter over the Catalog photo downloader
+    Endpoints/Articles/ContentArticlesEndpoints.cs   # /api/content/articles, policy access:content-articles
+    Endpoints/PublicArticles/PublicArticlesEndpoints.cs # /api/public/articles, anonymous, read-only
+src/Modules/Content/Content.Infrastructure/Content.Infrastructure/Adapters/Media/
+  ContentMediaReader.cs   # IContentMediaReader over Media.Contracts IMediaFileReader
+  ContentPhotoImporter.cs # IContentPhotoImporter over Media.Contracts IMediaUrlImporter
 ```
 
 ## Tests
 
 ```text
-tests/UnitTests/Content/ArticlesTests.cs           # dotnet test tests/UnitTests/UnitTests.csproj --filter "FullyQualifiedName~Articles"
-tests/UnitTests/Content/ArticlesContractTests.cs
-tests/UnitTests/Content/ArticlesOldSiteImportTests.cs
-tests/UnitTests/Content/PublicArticlesTests.cs
+tests/UnitTests/Content/Articles/ArticlesTests.cs           # dotnet test tests/UnitTests/UnitTests.csproj --filter "FullyQualifiedName~Articles"
+tests/UnitTests/Content/Articles/ArticlesContractTests.cs
+tests/UnitTests/Content/Articles/ArticlesOldSiteImportTests.cs
+tests/UnitTests/Content/Articles/PublicArticlesTests.cs
 ```
 
 ## Data

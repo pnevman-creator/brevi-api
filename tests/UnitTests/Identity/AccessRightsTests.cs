@@ -1,11 +1,12 @@
 using FluentValidation.TestHelper;
-using Identity.Api.Contracts.Access;
-using Identity.Application.Features.Access.CreateRole;
-using Identity.Application.Features.Access.DeleteRole;
-using Identity.Application.Features.Access.SaveRoleAccess;
 using Identity.Application.Security.Access;
 using Identity.Domain.Authorization;
-using Identity.Infrastructure.Services.Access;
+using Identity.Application.Features.Access.Commands.CreateRole;
+using Identity.Application.Features.Access.Commands.DeleteRole;
+using Identity.Application.Features.Access.Commands.SaveRoleAccess;
+using Identity.Infrastructure.Integrations.AspNetIdentity.Access;
+using Identity.Api.Access;
+using Identity.Domain.Authorization.Roles;
 
 namespace UnitTests.Identity;
 
@@ -100,8 +101,8 @@ public sealed class AccessRightsTests
         Assert.Multiple(() =>
         {
             Assert.That(AccessCatalog.DefaultsOf(RoleNames.Accountant)[AccessCatalog.Accounting],
-                Is.EqualTo(AccessAction.View | AccessAction.Edit));
-            Assert.That(savedBefore[AccessCatalog.Accounting], Is.EqualTo(AccessAction.View | AccessAction.Edit));
+                Is.EqualTo(AccessCatalog.Find(AccessCatalog.Accounting)!.Actions));
+            Assert.That(savedBefore[AccessCatalog.Accounting], Is.EqualTo(AccessCatalog.Find(AccessCatalog.Accounting)!.Actions));
             Assert.That(savedBefore[AccessCatalog.PurchaseInvoices], Is.EqualTo(AccessAction.View | AccessAction.Edit));
             Assert.That(unticked, Does.Not.ContainKey(AccessCatalog.Accounting));
             Assert.That(AccessCatalog.DefaultsOf(RoleNames.Manager), Does.Not.ContainKey(AccessCatalog.Accounting));
@@ -149,7 +150,7 @@ public sealed class AccessRightsTests
     [TestCase("DELETE", AccessAction.Edit)]
     [TestCase("GET", AccessAction.View)]
     public void A_page_without_create_or_delete_asks_for_edit(string method, AccessAction expected) =>
-        Assert.That(AccessCatalog.Required(AccessCatalog.Find(AccessCatalog.FabricStock)!, method, null), Is.EqualTo(expected));
+        Assert.That(AccessCatalog.Required(AccessCatalog.Find(AccessCatalog.Forecast)!, method, null), Is.EqualTo(expected));
 
     [Test]
     public void A_view_only_page_asks_for_view_whatever_the_method() =>
@@ -174,7 +175,7 @@ public sealed class AccessRightsTests
     [Test]
     public void The_director_cannot_be_edited()
     {
-        var result = new SaveRoleAccessCommandValidator().TestValidate(
+        var result = new SaveRoleAccessValidator().TestValidate(
             new SaveRoleAccessCommand(RoleNames.Director, 0, new Dictionary<string, IReadOnlyList<AccessAction>>()));
 
         result.ShouldHaveValidationErrorFor(x => x.Role);
@@ -183,7 +184,7 @@ public sealed class AccessRightsTests
     [Test]
     public void A_save_needs_known_pages_their_own_actions_and_view_first()
     {
-        var validator = new SaveRoleAccessCommandValidator();
+        var validator = new SaveRoleAccessValidator();
         SaveRoleAccessCommand Save(string area, params AccessAction[] actions) =>
             new(RoleNames.Manager, 1, new Dictionary<string, IReadOnlyList<AccessAction>> { [area] = actions });
 
@@ -192,7 +193,7 @@ public sealed class AccessRightsTests
             Assert.That(validator.Validate(Save(AccessCatalog.Quotes, AccessAction.View, AccessAction.Delete)).IsValid, Is.True);
             Assert.That(validator.Validate(Save(AccessCatalog.Quotes)).IsValid, Is.True);
             Assert.That(validator.Validate(Save("nope", AccessAction.View)).IsValid, Is.False);
-            Assert.That(validator.Validate(Save(AccessCatalog.FabricStock, AccessAction.View, AccessAction.Delete)).IsValid, Is.False);
+            Assert.That(validator.Validate(Save(AccessCatalog.Forecast, AccessAction.View, AccessAction.Delete)).IsValid, Is.False);
             Assert.That(validator.Validate(Save(AccessCatalog.Quotes, AccessAction.Edit)).IsValid, Is.False);
         });
     }
@@ -202,11 +203,11 @@ public sealed class AccessRightsTests
     {
         Assert.Multiple(() =>
         {
-            Assert.That(new DeleteRoleCommandValidator().Validate(new DeleteRoleCommand(RoleNames.Manager)).IsValid, Is.False);
-            Assert.That(new DeleteRoleCommandValidator().Validate(new DeleteRoleCommand("custom-1a2b")).IsValid, Is.True);
-            Assert.That(new CreateRoleCommandValidator().Validate(new CreateRoleCommand("  ")).IsValid, Is.False);
-            Assert.That(new CreateRoleCommandValidator().Validate(new CreateRoleCommand(new string('а', 101))).IsValid, Is.False);
-            Assert.That(new CreateRoleCommandValidator().Validate(new CreateRoleCommand("Технолог")).IsValid, Is.True);
+            Assert.That(new DeleteRoleValidator().Validate(new DeleteRoleCommand(RoleNames.Manager)).IsValid, Is.False);
+            Assert.That(new DeleteRoleValidator().Validate(new DeleteRoleCommand("custom-1a2b")).IsValid, Is.True);
+            Assert.That(new CreateRoleValidator().Validate(new CreateRoleCommand("  ")).IsValid, Is.False);
+            Assert.That(new CreateRoleValidator().Validate(new CreateRoleCommand(new string('а', 101))).IsValid, Is.False);
+            Assert.That(new CreateRoleValidator().Validate(new CreateRoleCommand("Технолог")).IsValid, Is.True);
         });
     }
 

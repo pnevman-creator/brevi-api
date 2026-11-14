@@ -3,6 +3,7 @@ using Crm.Domain.Quotes.Sending;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
+
 namespace Crm.Infrastructure.Persistence.Configurations.Quotes;
 
 public sealed class QuoteSendingConfiguration : IEntityTypeConfiguration<QuoteSending>

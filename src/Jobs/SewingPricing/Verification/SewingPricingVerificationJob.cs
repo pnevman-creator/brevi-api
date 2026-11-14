@@ -1,18 +1,17 @@
 using System.Data;
 using System.Net;
 using System.Text.Json;
-using Catalog.Application.Features.Pricing.Sewing.Preview;
 using Catalog.Domain.Pricing.Sewing;
-using Catalog.Domain.Products.Entities;
-using Catalog.Infrastructure.DataBase;
-using Catalog.Infrastructure.Pricing.Reading;
+using Catalog.Domain.Products;
 using CatalogImport.Persistence;
 using SewingPricing.Jobs.Reading;
 using CatalogImport.Source;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
-using Reference.Infrastructure.DataBase;
-using Reference.Infrastructure.Pricing.Reading;
+using Catalog.Infrastructure.Persistence;
+using Reference.Infrastructure.Persistence;
+using Catalog.Infrastructure.Persistence.Repositories.Pricing.Sewing;
+using Reference.Infrastructure.Persistence.Repositories.Pricing;
 
 namespace SewingPricing.Jobs.Verification;
 

@@ -4,29 +4,51 @@
 
 ```text
 <Module>.Api/
-├── Controllers/
-│   └── <Area>Controller.cs
-├── Contracts/
+├── Endpoints/<Feature>/                 same feature names as Application (Settings, Pricing/Ppe, Users)
+│   ├── <Feature>Endpoints.cs            Map<Feature>Endpoints(): one MapGroup per audience with route prefix, policy, tags
+│   ├── <UseCase>/                       one folder per use case
+│   │   ├── <UseCase>Endpoint.cs         Map() and the handler of the use case
+│   │   └── <UseCase>Request.cs          request/response types only this use case uses (or inside the endpoint file)
+│   └── Shared/                          types several use cases of the feature share (or a named group such as Detail/)
+├── Endpoints/Shared/                    types several features of the module share
+├── Access/                              policy names of the module's pages
+├── Middleware/                          module middleware, when there is one
+├── DependencyInjection/
+│   └── <Module>ModuleExtensions.cs      Add<Module>Module() (Application, Infrastructure, Contracts implementations)
+│                                        and Map<Module>Endpoints()
 ├── GlobalUsing.cs
 └── <Module>.Api.csproj
 ```
 
-Controllers bind HTTP input, call `ISender.Send` with a `CancellationToken`, and return the established Result mapping. They do not run EF queries, create repositories, or contain domain rules.
+Endpoints bind HTTP input (`ISender` with `[FromServices]`), call `ISender.Send` with a `CancellationToken`, and return the shared Result mapping (`ToHttpResult`, `ToNoContentHttpResult` in `BuildingBlocks.Api/Errors`). The host maps every module in `MapModuleEndpoints()`. They do not run EF queries, create repositories, or contain domain rules. Only `DependencyInjection/` may use Infrastructure types. No folder is named after a kind of class (`Controllers/`, `Contracts/`, `Requests/`, `Mapping/`, `Options/`, `Results/`); The project root holds only `Access/`, `DependencyInjection/`, `Endpoints/` and `Middleware/`; `tests/ArchitectureTests/Layers/ApiLayoutTests.cs` checks these rules and one folder per use case.
 
 ## Host structure
 
+The host is the composition root and nothing more. It holds no readers, adapters, notifiers, or any class that knows two modules' data ([ADR-0006](../decisions/0006-module-contracts.md)).
+
 ```text
 Bootstrapper/Host.Api/
-├── Program.cs
-├── DependencyInjection/
-│   └── ServiceRegistration/
-│       ├── ApplicationRegistrationExtensions.cs
-│       ├── Pipeline/
-│       ├── SecurityRegistrationExtensions.cs
-│       └── Web/
+├── Program.cs                    nothing else besides DependencyInjection/ (ModuleCompositionTests)
+├── DependencyInjection/          one file per technical concern
+│   ├── ModulesRegistrationExtensions.cs   list of Add<Module>Module() calls
+│   ├── Pipeline/, Web/, Observability/
+│   └── SecurityRegistrationExtensions.cs
 ├── Properties/launchSettings.json
 └── appsettings*.json
+
+Bootstrapper/Host.Seed/
+├── Program.cs                    parses the command line and picks the job
+├── SeedHostServicesExtensions.cs registers the modules the jobs use
+└── Jobs/
+    ├── SeedJobDispatcher.cs      mutually exclusive command selection
+    ├── JobCommands.cs            SendAsync: runs a module command, a failed result fails the step
+    ├── Tasks/                    «Фонові задачі» runners (IScheduledTaskRunner, key = catalogue key), each sends one module command;
+    │                             --tasks (brevierp-tasks) and the old --sync mode run them
+    ├── Pricing/                  runners that call src/Jobs/SewingPricing and CatalogImport.PpePricing
+    └── *CommandRunner.cs         other thin runners
 ```
+
+`tests/ArchitectureTests/Modules/JobDependencyTests.cs` checks that a job uses no module Infrastructure, no DbContext and resolves only `ISender` and `ILoggerFactory`.
 
 ## HTTP request pipeline
 
@@ -40,4 +62,4 @@ HTTP
   → handler → Result-to-HTTP mapping
 ```
 
-Host is the composition root. It may register modules and middleware, but must not implement business use cases.
+The host may register modules and middleware, but must not implement business use cases or cross-module adapters.

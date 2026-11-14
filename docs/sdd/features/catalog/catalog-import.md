@@ -8,12 +8,12 @@ The operational job imports a frozen workbook into the same PostgreSQL database 
 src/Bootstrapper/Host.Seed/
   Program.cs                              # host lifecycle
   Jobs/SeedJobDispatcher.cs                # mutually exclusive command selection
-  Jobs/CatalogImport/                      # import arguments, report and console result
+  Jobs/CatalogImportCommandRunner.cs       # thin runner: calls CatalogImport.Execution.CatalogImportCommand
   SeedHostServicesExtensions.cs           # registers import provenance migrator
 src/Jobs/CatalogImport/
   Source/{Identity,References}/            # frozen workbook conventions and row parsing
   Planning/{Identity,Validation}/          # source keys and dataset-specific validation
-  Execution/                              # local default / explicit target and source pins, transaction, reconciliation, report
+  Execution/                              # CatalogImportCommand (arguments, report, console result), target and source pins, report path, transaction, reconciliation
   Persistence/
     Catalog/{Categories,Products,Composition}/ # category resolution, identity/profile translation and composition writes
     Catalog/CatalogProductWriter.cs        # coordinates identity then composition
@@ -22,10 +22,10 @@ src/Jobs/CatalogImport/
     Provenance/{Records,Configuration,Data,Writing}/ # source audit data and individual EF mappings
   Migrations/                             # imports schema, independent of Catalog schema
 deployment/{prepare-catalog-source,import-catalog}.ps1 # source preparation and operator execution
-deployment/render-catalog-import-job.py    # job configuration rendered by the deploy workflow
+tools/catalog-import/render-catalog-import-job.py    # job configuration rendered by the deploy workflow
 src/Modules/Catalog/
-  Catalog.Domain/.../Products/Entities/ProductCatalogProfile.cs
-  Catalog.Infrastructure/.../Congigurations/ProductCatalogProfileConfiguration.cs
+  Catalog.Domain/.../Products/ProductCatalogProfile.cs
+  Catalog.Infrastructure/.../Persistence/Configurations/Products/ProductCatalogProfileConfiguration.cs
 ```
 
 The [job directory guide](../../../../src/Jobs/README.md) and [structure audit](../../specs/catalog/005-import-pricing-structure/audit.md) describe the current ownership. Sewing pricing bootstrap/verification are in a separate job project.
@@ -56,12 +56,12 @@ The fabric importer also stores nullable composition/density from the frozen `Т
 
 ## Tests
 
-- `tests/UnitTests/CatalogImportSourceTests.cs`
-- `tests/UnitTests/CatalogImportTargetTests.cs`
-- `tests/IntegrationTests/CatalogImportCommandTests.cs`
-- `deployment/tests/import-catalog.Tests.ps1` (offline gcloud mocks)
-- `deployment/tests/test_render_catalog_import_job.py` (CI job isolation)
-- `tests/IntegrationTests/CatalogImportPersistenceTests.cs`
+- `tests/UnitTests/Jobs/CatalogImport/CatalogImportSourceTests.cs`
+- `tests/UnitTests/Jobs/CatalogImport/CatalogImportTargetTests.cs`
+- `tests/IntegrationTests/Jobs/CatalogImport/CatalogImportCommandTests.cs`
+- `tools/catalog-import/tests/import-catalog.Tests.ps1` (offline gcloud mocks)
+- `tools/catalog-import/tests/test_render_catalog_import_job.py` (CI job isolation)
+- `tests/IntegrationTests/Jobs/CatalogImport/CatalogImportPersistenceTests.cs`
 
 Focused run: `dotnet test tests/UnitTests/UnitTests.csproj --filter CatalogImport`; `dotnet test tests/IntegrationTests/IntegrationTests.csproj --filter CatalogImport` (slow; needs `BREVIERP_CATALOG_TEST_CONNECTION`).
 

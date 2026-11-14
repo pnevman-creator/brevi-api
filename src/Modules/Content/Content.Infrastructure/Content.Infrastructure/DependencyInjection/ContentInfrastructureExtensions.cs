@@ -1,17 +1,22 @@
-using BuildingBlocks.Infrastructure.Migrations;
+using Content.Infrastructure.Adapters.Catalog;
+using Content.Infrastructure.Adapters.Media;
 using Content.Application.Abstractions;
-using Content.Application.PublicArticles;
-using Content.Application.PublicCatalog;
-using Content.Application.PublicRedirects;
-using Content.Application.PublicSiteCompany;
-using Content.Application.PublicSiteGalleries;
-using Content.Application.PublicSitePages;
-using Content.Application.PublicSiteSettings;
 using Content.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Content.Application.Features.Articles.Shared;
+using Content.Application.Features.Catalog.Shared;
+using Content.Application.Features.Redirects.Shared;
+using Content.Application.Features.SiteCompany.Shared;
+using Content.Application.Features.SiteGalleries.Shared;
+using Content.Application.Features.SitePages.Shared;
+using Content.Application.Features.SiteSettings.Shared;
+using Content.Application.Features.Articles.Shared.Public;
+using Content.Application.Features.SiteCompany.Shared.Public;
+using Content.Application.Features.SiteGalleries.Shared.Public;
+using BuildingBlocks.Infrastructure.Database;
 
 namespace Content.Infrastructure.DependencyInjection;
 
@@ -34,6 +39,11 @@ public static class ContentInfrastructureExtensions
         services.AddScoped<IPublicSiteCompanySource, PublicSiteCompanySource>();
         services.AddScoped<IPublicSiteGalleriesSource, PublicSiteGalleriesSource>();
         services.TryAddSingleton(TimeProvider.System);
+
+        // Adapters from other modules' Contracts to this module's ports.
+        services.AddScoped<IContentMediaReader, ContentMediaReader>();
+        services.AddScoped<IContentPhotoImporter, ContentPhotoImporter>();
+        services.AddScoped<IContentCatalogReader, ContentCatalogReader>();
         return services;
     }
 }

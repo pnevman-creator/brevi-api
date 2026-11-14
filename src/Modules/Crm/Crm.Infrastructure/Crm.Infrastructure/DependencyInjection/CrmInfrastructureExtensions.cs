@@ -1,33 +1,57 @@
-using Crm.Application.SiteRequests.Abstractions;
-using BuildingBlocks.Infrastructure.Migrations;
-using Crm.Application.Customers.Persistence;
-using Crm.Application.Embroidery.Persistence;
-using Crm.Application.Leads.Persistence;
-using Crm.Application.Leads.Sheet;
-using Crm.Application.Quotes.Building;
-using Crm.Application.Quotes.Introductions.Building;
-using Crm.Application.Quotes.Pdf;
-using Crm.Application.Quotes.Pdf.Composing;
-using Crm.Application.Quotes.Sending.Gmail;
-using Crm.Application.Quotes.Persistence;
-using Crm.Application.Tasks.Persistence;
-using Crm.Infrastructure.Leads;
+using BuildingBlocks.Infrastructure.Outbox;
+using Crm.Contracts.Customers;
+using Crm.Contracts.Embroidery;
+using Crm.Contracts.Quotes;
+using Crm.Infrastructure.Adapters.Catalog;
+using Crm.Infrastructure.Adapters.Identity;
+using Crm.Infrastructure.Adapters.Production;
+using Crm.Infrastructure.Contracts.Customers;
+using Crm.Infrastructure.Contracts.Embroidery;
+using Crm.Infrastructure.Contracts.Quotes;
+using Crm.Infrastructure.Adapters.Media;
+using Crm.Infrastructure.Adapters.Reference;
+using Crm.Infrastructure.Adapters.Reminders;
 using Crm.Infrastructure.Persistence;
-using Crm.Infrastructure.Persistence.Customers.Reading;
-using Crm.Infrastructure.Persistence.Customers.Writing;
-using Crm.Infrastructure.Quotes.Pdf;
-using Crm.Infrastructure.Quotes.Sending;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
+using Crm.Application.Features.Embroidery.Shared;
+using Crm.Application.Features.Leads.Shared.Persistence;
+using Crm.Application.Features.Leads.Shared.Sheet;
+using Crm.Application.Features.Quotes.Commands.ImportQuotes;
+using Crm.Application.Features.Quotes.Commands.UploadQuotePhoto;
+using Crm.Application.Features.Quotes.Queries.GetQuoteFabricFacts;
+using Crm.Application.Features.Quotes.Shared;
+using Crm.Application.Features.Quotes.Shared.Building;
+using Crm.Application.Features.Quotes.Shared.Catalog;
+using Crm.Application.Features.Quotes.Shared.Introductions.Building;
+using Crm.Application.Features.Quotes.Shared.Pdf;
+using Crm.Application.Features.Quotes.Shared.Pdf.Composing;
+using Crm.Application.Features.Quotes.Shared.Persistence;
+using Crm.Application.Features.Quotes.Shared.Sending.Gmail;
+using Crm.Application.Features.SiteRequests.Shared.Notify;
+using Crm.Application.Features.Tasks.Shared.Persistence;
+using Crm.Application.Abstractions.Customers;
+using Crm.Application.Abstractions.Embroidery;
+using Crm.Application.Abstractions.Leads;
+using Crm.Application.Abstractions.Quotes;
+using Crm.Application.Abstractions.SiteRequests;
+using Crm.Application.Abstractions.Tasks;
+using Crm.Infrastructure.Integrations.Gmail;
+using Crm.Infrastructure.Integrations.GoogleSheets;
+using Crm.Infrastructure.Integrations.Pdf;
+using Crm.Infrastructure.Persistence.Repositories.Customers;
+using Crm.Application.Abstractions.Quotes.Products;
+using Crm.Application.Abstractions.Quotes.Sending;
+using BuildingBlocks.Infrastructure.Database;
 
 namespace Crm.Infrastructure.DependencyInjection;
 
 public static class CrmInfrastructureExtensions
 {
-    public static IServiceCollection AddCrmDbContextServices(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddCrmInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
         var connection = configuration.GetConnectionString("Default") ?? throw new InvalidOperationException("Missing ConnectionStrings:Default");
         services.AddDbContext<CrmDbContext>(options => options.UseNpgsql(connection, x => x.MigrationsHistoryTable("__EFMigrationsHistory", "crm")));
@@ -50,8 +74,31 @@ public static class CrmInfrastructureExtensions
         services.AddScoped<IQuotePdfRenderer, QuotePdfRenderer>();
         services.AddScoped<QuotePdfComposer>();
         services.AddQuoteGmail(configuration);
+        services.AddCrmKeepinCrmSync(configuration);
         services.TryAddSingleton(TimeProvider.System);
         services.AddScoped<IDatabaseMigrator, DbMigrator<CrmDbContext>>();
+        services.AddOutbox<CrmDbContext>();
+        services.AddOutboxHandler<NotifySiteRequestOutboxHandler>();
+
+        // Adapters from other modules' Contracts to this module's ports.
+        services.AddScoped<IQuoteStaffReader, QuoteStaffReader>();
+        services.AddScoped<ITaskStaffReader, TaskStaffReader>();
+        services.AddScoped<IEmbroideryStitchRateReader, EmbroideryStitchRateReader>();
+        services.AddScoped<IQuoteFabricFactsReader, QuoteFabricFactsReader>();
+        services.AddScoped<IEmbroideryMediaReader, EmbroideryMediaReader>();
+        services.AddScoped<IQuotePhotoStorage, QuotePhotoStorage>();
+        services.AddScoped<ISiteRequestFileStorage, SiteRequestFileStorage>();
+        services.AddScoped<ISiteRequestNotifier, SiteRequestNotifier>();
+        services.AddScoped<IQuoteCatalogReader, QuoteCatalogReader>();
+        services.AddScoped<IQuoteProductionOrders, QuoteProductionOrders>();
+        services.AddScoped<IQuoteSewingCalculator, QuoteSewingCalculator>();
+        services.AddScoped<IQuoteModelCompositionReader, QuoteModelCompositionReader>();
+        services.AddScoped<IQuoteImportLookup, QuoteImportLookup>();
+
+        // Crm.Contracts for other modules.
+        services.AddScoped<ICustomerDirectory, CustomerDirectory>();
+        services.AddScoped<IQuoteReader, QuoteDirectory>();
+        services.AddScoped<IEmbroideryCalculationReader, EmbroideryCalculationReader>();
         return services;
     }
 

@@ -1,14 +1,15 @@
+using Ai.Contracts.Extraction;
+using Ai.Infrastructure.Contracts.Extraction;
 using Ai.Application.Abstractions;
 using Ai.Application.DependencyInjection;
-using Ai.Infrastructure.OpenAi;
 using Ai.Infrastructure.Persistence;
-using Ai.Infrastructure.Security;
-using BuildingBlocks.Infrastructure.Migrations;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Ai.Infrastructure.Integrations.OpenAi;
+using BuildingBlocks.Infrastructure.Database;
 
 namespace Ai.Infrastructure.DependencyInjection;
 
@@ -33,6 +34,9 @@ public static class AiInfrastructureExtensions
             })
             .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false });
         services.TryAddSingleton(TimeProvider.System);
+
+        // Contracts other modules use (ADR-0006).
+        services.AddScoped<IStructuredDataExtractor, StructuredDataExtractor>();
         services.AddAiApplication();
         return services;
     }

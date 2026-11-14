@@ -2,6 +2,7 @@ using Ai.Domain.Prompts;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
+
 namespace Ai.Infrastructure.Persistence.Configurations;
 
 public sealed class AiPromptConfiguration : IEntityTypeConfiguration<AiPrompt>

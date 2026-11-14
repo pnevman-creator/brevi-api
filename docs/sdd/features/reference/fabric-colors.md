@@ -9,19 +9,19 @@ The colours of the client sheet «Тканини», column «Загальний 
 ```text
 src/Modules/Reference/
 ├── Reference.Api/Reference.Api/
-│   ├── Controllers/FabricColorsController.cs        # /api/reference/fabric-colors
-│   └── Contracts/FabricColors/FabricColorRequest.cs
+│   └── Endpoints/FabricColors/                      # /api/reference/fabric-colors, one <UseCase>/ folder each
 ├── Reference.Application/Reference.Application/Features/FabricColor/
-│   ├── {Create,Update,Delete,GetList}/              # CRUD and list, FluentValidation
+│   ├── Commands/{Create,Update,Delete}FabricColor/  # CRUD, FluentValidation
+│   ├── Queries/GetFabricColors/                     # list
 │   └── Shared/                                      # fields, validator, duplicate key, spec
 ├── Reference.Domain/Reference.Domain/FabricColors/  # entity, details, errors, id
 └── Reference.Infrastructure/Reference.Infrastructure/
-    ├── Congigurations/FabricColorConfiguration.cs
-    └── Migrations/*_AddFabricColors.cs              # table + the 61 sheet colours
+    ├── Persistence/Configurations/Materials/FabricColorConfiguration.cs
+    └── Persistence/Migrations/*_AddFabricColors.cs              # table + the 61 sheet colours
 src/Modules/Production/Production.Application/Production.Application/
-├── Abstractions/IProductionColorReader.cs
-└── Colors/                                          # ProductionColors check, GetProductionColorsQuery
-src/Bootstrapper/Host.Api/Production/ProductionColorReader.cs   # Reference GetFabricColorsQuery, active only
+├── Abstractions/Materials/IProductionColorReader.cs
+└── Features/Colors/                                 # Shared/ProductionColors check, Queries/GetProductionColors
+src/Modules/Production/Production.Infrastructure/Production.Infrastructure/Adapters/Reference/ProductionReferenceReaders.cs   # ProductionColorReader: Reference.Contracts IFabricColorDirectory, active only
 ```
 
 ## Tests

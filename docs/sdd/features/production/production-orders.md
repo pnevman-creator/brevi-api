@@ -18,57 +18,59 @@ src/Modules/Production/
   Production.Application/Production.Application/
     Abstractions/                # IProductionQuoteReader, IProductionFabricReader, IProductionStaffReader, IProductionModelReader,
                                  # IProductionFileStorage, IProductionTelegram, IProductionEmbroideryReader
-    Contracts/ProductionOrderInputs.cs, ProductionTrackingInputs.cs, ProductionOrderResponses.cs
-    Orders/
-      Access/ProductionActor.cs  # who may create, edit, delete; which prices they see
-      GetOrders/                 # list (sort, stage conveyor, attention), filters (ProductionOrderFiltering), filter options, «Зведення за моделями»
-      GetOrder, GetHistory, QuoteSources, CreateOrder, UpdateOrder, CopyOrder, DeleteOrder, ImportOrders
-      Tracking/                  # OrderTracking + stages, shipments, close/cancel/reopen
-      Files/                     # upload and delete order files
-      Telegram/                  # the message text and «Надіслати в цех»
-      ImportProgress/            # stages, file links and Telegram marks of old orders
-      ImportReportPrices/        # «Ціни КП» of old orders for «Звіти цеху»
-      Validation/                # item details and application validators, shared rules
-      Embroidery/                # «Вишивка» → saved «ВШ-…» calculation: checks, card details, picker (PRD-D41)
-      OrderCards.cs              # the card: order + files + Telegram mark
-      OrderMapping.cs, OrderNorms.cs, OrderNumbers.cs, OrderActors.cs, OrderMessages.cs
-    Settings/WorkshopSettingsCommands.cs   # get, save, test line
+    Features/Orders/
+      Queries/                   # GetProductionOrders (sort, stage conveyor, attention), GetProductionOrderFilterOptions,
+                                 # GetProductionModelSummary («Зведення за моделями»), GetProductionOrder, GetProductionOrderHistory,
+                                 # GetProductionQuoteSources, GetProductionQuoteDraft, GetQuotesWithOrders, GetProductionEmbroideries (picker, PRD-D41)
+      Commands/                  # Create/Update/Copy/DeleteProductionOrder, ImportProductionOrders;
+                                 # SetProductionItemStages, Create/CancelProductionShipment, Close/Cancel/ReopenProductionOrder;
+                                 # Upload/DeleteProductionOrderFile; SendProductionOrderTelegram («Надіслати в цех»);
+                                 # ImportProductionProgress (stages, file links and Telegram marks of old orders),
+                                 # ImportProductionReportPrices («Ціни КП» of old orders for «Звіти цеху»)
+      Shared/
+        Access/ProductionActor.cs  # who may create, edit, delete; which prices they see
+        Validation/              # item details and application validators, shared rules
+        OrderTracking.cs         # stages, shipments, status changes
+        ProductionOrderFiltering.cs, OrderCards.cs (order + files + Telegram mark), QuoteItemResolver.cs
+        OrderMapping.cs, OrderNorms.cs, OrderNumbers.cs, OrderActors.cs, OrderMessages.cs, inputs and responses
+    Features/Settings/           # GetWorkshopSettings, UpdateWorkshopSettings, SendWorkshopTelegramTest; Shared/WorkshopSettingsReading
   Production.Infrastructure/.../Persistence/Configurations/ProductionOrderConfiguration.cs, ProductionTrackingConfiguration.cs, JsonColumn.cs
-  Production.Api/Production.Api/Orders/ProductionOrdersController.cs   # /api/production/orders
-  Production.Api/Production.Api/Orders/ProductionOrderTrackingController.cs   # stages, shipments, status, files, telegram, progress-import, report-price-import
-  Production.Api/Production.Api/Settings/WorkshopSettingsController.cs        # /api/production/settings
-src/Bootstrapper/Host.Api/Production/
-  ProductionQuoteReader.cs       # Crm GetQuotesQuery / GetQuoteQuery, sewn items and «Вишивка» rows
-  ProductionEmbroideryReader.cs  # Crm saved embroidery calculations, without prices
-  ProductionFabricReader.cs      # Reference GetAllFabricQuery
-  ProductionStaffReader.cs       # Identity users by id and email
-  ProductionModelReader.cs       # + Catalog GetSewingArticleSummaryQuery for the seamstress labour
-  ProductionFileStorage.cs       # Media IMediaStorage (CDN)
-  ProductionTelegram.cs          # Reminders ITelegramGateway.SendTopicMessageAsync + the bot's groups
+  Production.Api/Production.Api/Endpoints/Orders/     # /api/production/orders: ProductionOrdersEndpoints (list, card, create…) and ProductionOrderTrackingEndpoints (stages, shipments, status, files, telegram, imports); one <UseCase>/ folder each
+  Production.Api/Production.Api/Endpoints/Settings/   # /api/production/settings
+src/Modules/Production/Production.Contracts/Production.Contracts/{Orders,FabricPlans}/  # IQuoteOrderLinks, IOrderFabricPlans for other modules
+src/Modules/Production/Production.Infrastructure/Production.Infrastructure/Adapters/
+  Crm/ProductionQuoteReader.cs       # Crm.Contracts IQuoteReader, sewn items and «Вишивка» rows
+  Crm/ProductionEmbroideryReader.cs  # Crm.Contracts IEmbroideryCalculationReader, without prices
+  Catalog/ProductionModelReader.cs   # Catalog.Contracts ISewingModelReader, with the seamstress labour
+src/Modules/Production/Production.Infrastructure/Production.Infrastructure/Adapters/
+  Reference/ProductionReferenceReaders.cs  # ProductionFabricReader over Reference.Contracts IFabricDirectory
+  Identity/ProductionStaffReader.cs        # Identity.Contracts IStaffDirectory, by id and email
+  Media/ProductionFileStorage.cs           # Media.Contracts ICdnStorage
+  Reminders/ProductionTelegram.cs          # Reminders.Contracts ITelegramBot + the bot's groups
 ```
 
 ## Structure diagram
 
 ```mermaid
 flowchart LR
-  Admin[Brevi Admin «Виробничі завдання»] --> Controller[ProductionOrdersController]
-  Controller --> UseCases[Order use cases]
+  Admin[Brevi Admin «Виробничі завдання»] --> Endpoints[Production order endpoints]
+  Endpoints --> UseCases[Order use cases]
   UseCases --> Db[(production.Orders / Items / OrderChanges)]
   UseCases --> Quotes[IProductionQuoteReader] -.host.-> Crm[Crm quotes]
   UseCases --> Models[IProductionModelReader] -.host.-> Catalog[Catalog sewing card]
-  UseCases --> Fabrics[IProductionFabricReader] -.host.-> Reference[Reference fabrics]
-  UseCases --> Staff[IProductionStaffReader] -.host.-> Identity[Identity users]
-  UseCases --> Files[IProductionFileStorage] -.host.-> Media[Media CDN storage]
-  UseCases --> Bot[IProductionTelegram] -.host.-> Reminders[Reminders bot and groups]
+  UseCases --> Fabrics[IProductionFabricReader] -.Reference.Contracts.-> Reference[Reference fabrics]
+  UseCases --> Staff[IProductionStaffReader] -.Identity.Contracts.-> Identity[Identity users]
+  UseCases --> Files[IProductionFileStorage] -.Media.Contracts.-> Media[Media CDN storage]
+  UseCases --> Bot[IProductionTelegram] -.Reminders.Contracts.-> Reminders[Reminders bot and groups]
   UseCases --> Embroidery[IProductionEmbroideryReader] -.host.-> CrmEmb[Crm «Ціна вишивки»]
 ```
 
 ## Tests
 
-- `tests/UnitTests/Production/ProductionOrderHandlerTests.cs` — create, idempotency, access, hidden prices, history, copy, delete, list filters, import (SQLite in memory, fake ports).
-- `tests/UnitTests/Production/ProductionOrderFilterTests.cs` — filters, sort, stage conveyor and attention, model summary, filter options, category from the name.
-- `tests/UnitTests/Production/ProductionTrackingHandlerTests.cs` — stages, shipments, close/cancel/reopen, files, Telegram once, settings, progress import, КП prices of old orders.
-- `tests/UnitTests/Production/ProductionOrdersContractTests.cs` — DTOs and operations against the contract.
+- `tests/UnitTests/Production/Orders/ProductionOrderHandlerTests.cs` — create, idempotency, access, hidden prices, history, copy, delete, list filters, import (SQLite in memory, fake ports).
+- `tests/UnitTests/Production/Orders/ProductionOrderFilterTests.cs` — filters, sort, stage conveyor and attention, model summary, filter options, category from the name.
+- `tests/UnitTests/Production/Orders/ProductionTrackingHandlerTests.cs` — stages, shipments, close/cancel/reopen, files, Telegram once, settings, progress import, КП prices of old orders.
+- `tests/UnitTests/Production/Orders/ProductionOrdersContractTests.cs` — DTOs and operations against the contract.
 
 Focused run: `dotnet test tests/UnitTests/UnitTests.csproj --filter FullyQualifiedName~UnitTests.Production`.
 

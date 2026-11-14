@@ -10,21 +10,22 @@ The public site reads both lists without sign-in from `/api/public/galleries` ([
 src/Modules/Content/
   Content.Domain/Content.Domain/SiteGalleries/                         # entity, item records, limits, site-file path
   Content.Application/Content.Application/
-    Contracts/SiteGalleryResponses.cs
-    SiteGalleries/Get/, Save/, Transfer/, Shared/                       # admin read, save, transfer, messages, addresses
-    PublicSiteGalleries/                                                # public read kept a minute
-  Content.Infrastructure/.../Configurations/SiteGalleryConfiguration.cs # jsonb list
+    Features/SiteGalleries/
+      Queries/GetSiteGallery/, Commands/SaveSiteGallery/, Commands/TransferSiteGallery/  # admin read, save, transfer
+      Queries/GetPublicSiteGalleries/                                   # public read kept a minute
+      Shared/                                                           # responses, messages, addresses
+  Content.Infrastructure/.../Persistence/Configurations/Site/SiteGalleryConfiguration.cs # jsonb list
   Content.Infrastructure/.../Migrations/*_AddSiteGalleries.cs           # table and the seed of the site lists
   Content.Api/Content.Api/
     SiteGalleries/                                                      # /api/content/works, /api/content/certificates
-    PublicSiteGalleries/PublicSiteGalleriesController.cs                # /api/public/galleries, anonymous
+    Endpoints/PublicSiteGalleries/PublicSiteGalleriesEndpoints.cs                # /api/public/galleries, anonymous
 ```
 
 ## Tests
 
 ```text
-tests/UnitTests/Content/SiteGalleriesTests.cs     # dotnet test tests/UnitTests/UnitTests.csproj --filter "FullyQualifiedName~SiteGalleries"
-tests/UnitTests/Content/SiteGalleriesContractTests.cs
+tests/UnitTests/Content/Site/SiteGalleriesTests.cs     # dotnet test tests/UnitTests/UnitTests.csproj --filter "FullyQualifiedName~SiteGalleries"
+tests/UnitTests/Content/Site/SiteGalleriesContractTests.cs
 ```
 
 ## Data

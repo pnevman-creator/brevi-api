@@ -15,21 +15,19 @@ src/Modules/Reference/
   Reference.Domain/Reference.Domain/Pricing/InputVersions/
     ReferencePricingInputVersion.cs                 # immutable owner/value/unit/effective provenance
   Reference.Application/Reference.Application/
-    Contracts/Pricing/InputVersions/                 # read/revision boundaries and expected conflicts
-    Features/Pricing/ReviseOtherCost/                 # one command and handler
-    Features/{Fabric,GarmentAccessory,GarmentPartOperation}/Update/ # controlled 409 mapping
+    Abstractions/                                    # IReferencePricingVersionReader, IOtherCostPricingVersionWriter, ReferencePricingConflictException
+    Features/Pricing/Commands/ReviseOtherCost/       # one command and handler
+    Features/{Fabric,GarmentAccessory,GarmentPartOperation}/Commands/Update…/ # controlled 409 mapping
   Reference.Infrastructure/Reference.Infrastructure/
-    DataBase/ReferenceDbContext.PricingWrites.cs       # atomic SaveChanges transaction hook
-    Pricing/InputVersions/Changes/
+    Persistence/ReferenceDbContext.PricingWrites.cs       # atomic SaveChanges transaction hook
+    Persistence/Repositories/Pricing/
       TrackedReferencePricingChanges.cs              # EF tracked-value detection and extraction
       ReferencePricingTrackedChange.cs               # original/current values and typed SQL owner predicate
       ReferencePricingChangeAppender.cs              # reads current version; stages retained revision
-    Pricing/OtherCosts/Writing/
-      OtherCostPricingVersionWriter.cs               # explicit service revision / retry storage
-    Pricing/InputVersions/{Reading,Configuration}/    # approved effective read and constraints
+      ReferencePricingVersionReader.cs, *Configuration.cs # approved effective read and constraints
+    Persistence/Repositories/Pricing/OtherCostPricingVersionWriter.cs  # explicit service revision / retry storage
   Reference.Api/Reference.Api/
-    Controllers/OtherCostPricingController.cs
-    Contracts/Pricing/ReviseOtherCostRequest.cs
+    Endpoints/OtherCostPricing/ReviseOtherCost/  # endpoint with ReviseOtherCostRequest
 ```
 
 ## Structure diagram
@@ -54,8 +52,8 @@ The [publication structure audit](../../specs/catalog/003-sheet-pricing-parity/s
 
 ## Tests
 
-- `tests/UnitTests/PricingReferenceQueryHandlerTests.cs`
-- `tests/IntegrationTests/Pricing/Sewing/ReferencePricingRevisionTests.cs`, `tests/IntegrationTests/Pricing/Sewing/OtherCostPricingRevisionTests.cs`, `tests/IntegrationTests/PricingReferenceQueryIntegrationTests.cs`
+- `tests/UnitTests/Reference/Pricing/PricingReferenceQueryHandlerTests.cs`
+- `tests/IntegrationTests/Reference/ReferencePricingRevisionTests.cs`, `tests/IntegrationTests/Reference/OtherCostPricingRevisionTests.cs`, `tests/IntegrationTests/Reference/PricingReferenceQueryIntegrationTests.cs`
 
 Focused run: `dotnet test tests/UnitTests/UnitTests.csproj --filter PricingReference`; `dotnet test tests/IntegrationTests/IntegrationTests.csproj --filter PricingReference` (slow; needs `BREVIERP_CATALOG_TEST_CONNECTION`).
 

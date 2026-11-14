@@ -1,5 +1,7 @@
 using Accounting.Domain.Attachments;
 using Accounting.Domain.Transactions;
+using Accounting.Infrastructure.Persistence;
+
 
 namespace Accounting.Infrastructure.Persistence.Configurations;
 

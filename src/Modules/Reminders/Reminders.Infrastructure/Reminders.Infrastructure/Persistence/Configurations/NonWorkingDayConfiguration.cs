@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Reminders.Domain.Calendar;
 
+
 namespace Reminders.Infrastructure.Persistence.Configurations;
 
 public sealed class NonWorkingDayConfiguration : IEntityTypeConfiguration<NonWorkingDay>

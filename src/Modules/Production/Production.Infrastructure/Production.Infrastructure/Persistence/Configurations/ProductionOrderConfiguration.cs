@@ -1,4 +1,8 @@
 using Production.Domain.Orders;
+using Production.Infrastructure.Persistence;
+using Production.Domain.Orders.Enums;
+using Production.Domain.Orders.ValueObjects;
+
 
 namespace Production.Infrastructure.Persistence.Configurations;
 

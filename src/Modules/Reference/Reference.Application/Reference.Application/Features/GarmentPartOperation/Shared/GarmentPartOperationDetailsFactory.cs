@@ -1,5 +1,5 @@
-using Reference.Application.Features.GarmentPartOperation.Shared.DTOs;
-using Reference.Domain.GarmentPartOperations.ValueObjects;
+using Reference.Domain.GarmentPartOperations;
+using Reference.Domain.GarmentParts;
 
 namespace Reference.Application.Features.GarmentPartOperation.Shared;
 

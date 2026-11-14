@@ -1,12 +1,11 @@
-using Crm.Application.Embroidery.Access;
-using Crm.Application.Embroidery.Calculate;
-using Crm.Application.Embroidery.Contracts;
-using Crm.Application.Embroidery.Mapping;
-using Crm.Application.Embroidery.Persistence;
-using Crm.Application.Embroidery.StitchRate;
-using Crm.Application.Embroidery.SaveSettings;
 using Crm.Domain.Embroidery.Calculation;
 using Crm.Domain.Embroidery.Settings;
+using Crm.Application.Features.Embroidery.Commands.SaveEmbroiderySettings;
+using Crm.Application.Features.Embroidery.Queries.CalculateEmbroidery;
+using Crm.Application.Features.Embroidery.Shared;
+using Crm.Application.Features.Embroidery.Shared.Access;
+using Crm.Application.Features.Embroidery.Shared.Mapping;
+using Crm.Application.Abstractions.Embroidery;
 
 namespace UnitTests.Crm.Embroidery;
 
@@ -20,13 +19,13 @@ public sealed class EmbroideryContractTests
             response.Fabric, response.FabricIncreasePercent, response.Hoops, response.Expenses);
     }
 
-    private static bool Valid(SaveEmbroiderySettingsInput input) => new SaveEmbroiderySettingsCommandValidator()
+    private static bool Valid(SaveEmbroiderySettingsInput input) => new SaveEmbroiderySettingsValidator()
         .Validate(new SaveEmbroiderySettingsCommand(new EmbroideryActor(1, true), input)).IsValid;
 
     private static CalculateEmbroideryInput Calculation() =>
         new("Garment", 50, 10_000, "18", 1, 1, 1, "New", 60, null, "UsedBlanks", null);
 
-    private static bool Valid(CalculateEmbroideryInput input) => new CalculateEmbroideryQueryValidator()
+    private static bool Valid(CalculateEmbroideryInput input) => new CalculateEmbroideryValidator()
         .Validate(new CalculateEmbroideryQuery(new EmbroideryActor(1, false), input)).IsValid;
 
     [Test]
@@ -38,7 +37,7 @@ public sealed class EmbroideryContractTests
         Assert.That(input.Version, Is.Zero);
         Assert.That(input.Markups.Select(x => x.Name), Is.EqualTo(new[] { "Категорія 1", "Категорія 2" }));
         Assert.That(input.ToContent(), Is.Not.Null);
-        Assert.DoesNotThrow(() => EmbroiderySettingsRules.EnsureValid(input.ToContent()));
+        Assert.That(EmbroiderySettingsRules.Check(input.ToContent()).IsSuccess, Is.True);
     }
 
     [Test]

@@ -10,22 +10,23 @@ The public site reads them without sign-in from `/api/public/site-pages` ([contr
 src/Modules/Content/
   Content.Domain/Content.Domain/SitePages/                          # SitePage (texts, limits), SiteFaqItem, SitePageCatalog (fixed pages)
   Content.Application/Content.Application/
-    Contracts/SitePageResponses.cs
-    SitePages/GetList/, SitePages/Save/, SitePages/Shared/          # admin list and save, mapping, messages
-    PublicSitePages/                                                # public read kept a minute
-  Content.Infrastructure/.../Configurations/SitePageConfiguration.cs
+    Features/SitePages/
+      Queries/GetSitePages/, Commands/SaveSitePage/                 # admin list and save
+      Queries/GetPublicSitePages/                                   # public read kept a minute
+      Shared/                                                       # responses, mapping, messages
+  Content.Infrastructure/.../Persistence/Configurations/Pages/SitePageConfiguration.cs
   Content.Infrastructure/.../Migrations/*_AddSitePages.cs           # table and the seed of the current texts
   Content.Infrastructure/.../Migrations/*_AddSitePageTextAndFaq.cs  # main text and questions, seed of home and industries
   Content.Api/Content.Api/
-    SitePages/SitePagesController.cs                                # /api/content/site-pages, policy access:content-site-pages
-    PublicSitePages/PublicSitePagesController.cs                    # /api/public/site-pages, anonymous
+    Endpoints/SitePages/SitePagesEndpoints.cs                                # /api/content/site-pages, policy access:content-site-pages
+    Endpoints/PublicSitePages/PublicSitePagesEndpoints.cs                    # /api/public/site-pages, anonymous
 ```
 
 ## Tests
 
 ```text
-tests/UnitTests/Content/SitePagesTests.cs     # dotnet test tests/UnitTests/UnitTests.csproj --filter "FullyQualifiedName~SitePages"
-tests/UnitTests/Content/SitePagesContractTests.cs
+tests/UnitTests/Content/Site/SitePagesTests.cs     # dotnet test tests/UnitTests/UnitTests.csproj --filter "FullyQualifiedName~SitePages"
+tests/UnitTests/Content/Site/SitePagesContractTests.cs
 ```
 
 ## Data

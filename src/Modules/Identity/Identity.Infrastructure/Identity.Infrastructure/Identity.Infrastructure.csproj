@@ -1,10 +1,5 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-    <PropertyGroup>
-        <TargetFramework>net10.0</TargetFramework>
-        <ImplicitUsings>enable</ImplicitUsings>
-        <Nullable>enable</Nullable>
-    </PropertyGroup>
 
     <ItemGroup>
       <FrameworkReference Include="Microsoft.AspNetCore.App" />
@@ -14,10 +9,8 @@
       <ProjectReference Include="..\..\..\..\BuildingBlocks\BuildingBlocks.Infrastructure\BuildingBlocks.Infrastructure\BuildingBlocks.Infrastructure.csproj" />
       <ProjectReference Include="..\..\Identity.Application\Identity.Application\Identity.Application.csproj" />
       <ProjectReference Include="..\..\Identity.Domain\Identity.Domain\Identity.Domain.csproj" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <Folder Include="Migrations\" />
+      <ProjectReference Include="..\..\Identity.Contracts\Identity.Contracts\Identity.Contracts.csproj" />
+      <ProjectReference Include="..\..\..\Media\Media.Contracts\Media.Contracts\Media.Contracts.csproj" />
     </ItemGroup>
 
     <ItemGroup>
@@ -25,9 +18,9 @@
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="Microsoft.AspNetCore.DataProtection.EntityFrameworkCore" Version="10.0.14" />
-      <PackageReference Include="SkiaSharp" Version="4.154.0" />
-      <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="4.154.0" />
+      <PackageReference Include="Microsoft.AspNetCore.DataProtection.EntityFrameworkCore" />
+      <PackageReference Include="SkiaSharp" />
+      <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" />
     </ItemGroup>
 
 </Project>

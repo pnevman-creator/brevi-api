@@ -1,15 +1,16 @@
 using System.Data;
-using Catalog.Application.Features.Pricing.Sewing.Preview;
-using Catalog.Domain.Products.Entities;
-using Catalog.Infrastructure.DataBase;
-using Catalog.Infrastructure.Pricing.History.Publications.Reading;
-using Catalog.Infrastructure.Pricing.Reading;
+using Catalog.Domain.Products;
 using CatalogImport.Source;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
-using Reference.Infrastructure.DataBase;
-using Reference.Infrastructure.Pricing.Reading;
 using SewingPricing.Jobs.Reading;
+using Catalog.Application.Features.Pricing.Queries.CalculateSewingArticle;
+using Catalog.Infrastructure.Persistence;
+using Reference.Infrastructure.Persistence;
+using Catalog.Domain.Products.ValueObjects;
+using Catalog.Infrastructure.Persistence.Repositories.Pricing.Publications;
+using Catalog.Infrastructure.Persistence.Repositories.Pricing.Sewing;
+using Reference.Infrastructure.Persistence.Repositories.Pricing;
 
 namespace SewingPricing.Jobs.Readiness;
 
@@ -35,7 +36,7 @@ internal static class SewingReadinessReader
             foreach (var product in await publicationReader.ReadAsync(chunk, cancellationToken))
                 foreach (var publication in product.Articles)
                     publications.Add(publication.ArticleId, publication.PublicationId);
-        var evaluator = new CalculateSewingArticleQueryHandler(new SewingPricingInputReader(catalog), new SewingPricingSettingsReader(catalog),
+        var evaluator = new CalculateSewingArticleHandler(new SewingPricingInputReader(catalog), new SewingPricingSettingsReader(catalog),
             new JobPricingReferenceReader(new ReferencePricingVersionReader(reference)));
         var items = new List<PricingReadinessItem>();
         foreach (var row in rows)

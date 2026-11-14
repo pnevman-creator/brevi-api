@@ -2,6 +2,7 @@ using Crm.Domain.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
+
 namespace Crm.Infrastructure.Persistence.Configurations.Tasks;
 
 public sealed class ManagerTaskEventConfiguration : IEntityTypeConfiguration<ManagerTaskEvent>

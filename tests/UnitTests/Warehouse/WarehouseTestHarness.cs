@@ -1,14 +1,15 @@
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
-using Production.Application.FabricPlans;
 using UnitTests.Production;
 using Warehouse.Application.Abstractions;
-using Warehouse.Application.Colors;
-using Warehouse.Application.Stock;
-using Warehouse.Application.Stock.Reports;
-using Warehouse.Application.Stock.Facts;
-using Warehouse.Application.Stock.Issues;
+using Warehouse.Infrastructure.Adapters.Production;
 using Warehouse.Infrastructure.Persistence;
+using Warehouse.Application.Features.Stock.Shared;
+using Warehouse.Application.Features.Stock.Shared.Facts;
+using Production.Application.Features.FabricPlans.Shared;
+using Warehouse.Application.Features.Stock.Shared.Booking;
+using Warehouse.Application.Features.Stock.Shared.Operations;
+using Warehouse.Application.Features.Stock.Shared.Plans;
 
 namespace UnitTests.Warehouse;
 
@@ -43,57 +44,19 @@ internal sealed class HarnessWarehouseStaffReader(ProductionTestHarness workshop
         await workshop.Staff.FindByEmailAsync(email, cancellationToken) is { } x ? new(x.UserId, x.Name, x.Email) : null;
 }
 
-/// <summary>The real Production plans over the Production harness, mapped the way the host maps them.</summary>
-internal sealed class HarnessWarehouseProductionReader(ProductionFabricPlans plans,
-    ProductionAssemblies assemblies) : IWarehouseProductionReader
-{
-    public async Task<IReadOnlyList<WarehousePlanItem>> OpenItemsAsync(string? fabricCode,
-        CancellationToken cancellationToken) =>
-        (await plans.OpenAsync(fabricCode, cancellationToken)).Select(Map).ToArray();
-
-    public async Task<WarehousePlanItem?> ItemAsync(int orderId, int itemId, CancellationToken cancellationToken) =>
-        await plans.ItemAsync(orderId, itemId, cancellationToken) is { } item ? Map(item) : null;
-
-    public async Task<IReadOnlyList<WarehousePlanItem>> ItemsAsync(IReadOnlyCollection<int> itemIds,
-        CancellationToken cancellationToken) =>
-        (await plans.ItemsAsync(itemIds, cancellationToken)).Select(Map).ToArray();
-
-    public async Task<IReadOnlyList<WarehouseAssemblyItem>> OpenAssembliesAsync(CancellationToken cancellationToken) =>
-        (await assemblies.OpenAsync(cancellationToken)).Select(x => new WarehouseAssemblyItem(x.OrderId, x.OrderNumber,
-            x.ClientName, x.OrderCreatedAt, x.ItemId, x.ModelName, x.ModelCode, x.Quantity,
-            x.Lines?.Select(l => new WarehouseAssemblyLine(l.Kind, l.Code, l.Name, l.Quantity, l.Unit, l.Comment))
-                .ToArray(), x.DueDate)).ToArray();
-
-    public async Task<IReadOnlyList<WarehouseLegacyOrder>> LegacyOrdersAsync(IReadOnlyCollection<string> legacyIds,
-        CancellationToken cancellationToken) =>
-        (await plans.LegacyAsync(legacyIds, cancellationToken))
-        .Select(x => new WarehouseLegacyOrder(x.LegacyId, x.OrderId, x.Number,
-            x.Items.Select(i => new WarehouseLegacyItem(i.Position, i.ItemId, i.ModelName, i.ModelCode, i.Quantity)).ToArray()))
-        .ToArray();
-
-    public Task RecordFabricAsync(int orderId, int itemId, string text, string actorName,
-        CancellationToken cancellationToken) =>
-        plans.RecordFabricAsync(orderId, itemId, text, actorName, cancellationToken);
-
-    private static WarehousePlanItem Map(ProductionPlanItem x) => new(x.OrderId, x.OrderNumber, x.OrderVersion,
-        x.IsOpen, x.ClientName, x.ItemId, x.ModelName, x.FabricCode, x.FabricName, x.Quantity, x.HasNorm,
-        x.Parts.Select(p => new WarehousePlanPart(p.FabricCode, p.Color, p.ColorKey, p.Meters)).ToArray(), x.ModelCode,
-        x.OrderCreatedAt, x.DueDate);
-}
-
 /// <summary>The stock facts for «Звіти цеху», mapped the way the host maps them.</summary>
-internal sealed class HarnessProductionStockReader(StockFacts facts) : global::Production.Application.Abstractions.IProductionStockReader
+internal sealed class HarnessProductionStockReader(StockFacts facts) : global::Production.Application.Abstractions.Materials.IProductionStockReader
 {
-    public async Task<IReadOnlyList<global::Production.Application.Abstractions.ProductionStockIssue>> IssuesAsync(
+    public async Task<IReadOnlyList<global::Production.Application.Abstractions.Materials.ProductionStockIssue>> IssuesAsync(
         DateOnly from, DateOnly to, CancellationToken cancellationToken) =>
         (await facts.IssuesAsync(from, to, cancellationToken)).Select(x =>
-            new global::Production.Application.Abstractions.ProductionStockIssue(x.MovementId, x.OperationDate,
+            new global::Production.Application.Abstractions.Materials.ProductionStockIssue(x.MovementId, x.OperationDate,
                 x.FabricCode, x.FabricName, x.Color, x.OrderId, x.OrderNumber, x.ModelName, x.Meters)).ToArray();
 
-    public async Task<IReadOnlyList<global::Production.Application.Abstractions.ProductionStockBalance>> BalancesAsync(
+    public async Task<IReadOnlyList<global::Production.Application.Abstractions.Materials.ProductionStockBalance>> BalancesAsync(
         DateOnly before, CancellationToken cancellationToken) =>
         (await facts.BalancesAsync(before, cancellationToken)).Select(x =>
-            new global::Production.Application.Abstractions.ProductionStockBalance(x.StockId, x.FabricCode,
+            new global::Production.Application.Abstractions.Materials.ProductionStockBalance(x.StockId, x.FabricCode,
                 x.FabricName, x.Color, x.Meters)).ToArray();
 }
 
@@ -113,8 +76,8 @@ internal sealed class WarehouseTestHarness : IDisposable
         Db = new WarehouseDbContext(new DbContextOptionsBuilder<WarehouseDbContext>().UseSqlite(_connection).Options);
         Db.Database.EnsureCreated();
         Staff = new HarnessWarehouseStaffReader(workshop);
-        Production = new HarnessWarehouseProductionReader(new ProductionFabricPlans(workshop.Db, workshop.Time),
-            new ProductionAssemblies(workshop.Db, workshop.Models));
+        Production = new WarehouseProductionReader(new ProductionFabricPlans(workshop.Db, workshop.Time,
+            new ProductionAssemblies(workshop.Db, workshop.Models)));
     }
 
     public ProductionTestHarness Workshop { get; }

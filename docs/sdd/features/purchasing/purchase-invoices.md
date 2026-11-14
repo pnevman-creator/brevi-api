@@ -21,46 +21,51 @@ src/Modules/Purchasing/
     Abstractions/      # IPurchasingDbContext (+ write lock scope), IPurchaseSheetReader, IPurchasingSupplierReader,
                        # IPurchasingPaymentReader (Accounting expenses),
                        # IPurchaseFileDownloader, IPurchaseDocumentRecognizer
-    Documents/Recognize/   # PurchaseRecognitionPrompt (fixed instruction + schema), PurchaseFileRecognition, one file, new batch
-    Documents/Save/        # SaveCheckedPurchaseDocumentCommand (manual JSON, replace)
-    Documents/Template/    # GetPurchaseDocumentTemplateQuery
-    Register/Sync/     # PurchaseRegisterSync (read → check → one transaction), SyncPurchaseRegisterCommand
-    Register/GetInvoices/   # page of cards: representative row, links, search, filter, one supplier (supplier card tab),
-                            # invoice date range and VAT of the checked facts
-    Register/GetSyncState/
-    Register/Review/   # ReviewPurchaseInvoiceCommand (version check under the write lock), GetPurchaseSuppliersQuery
-    Register/Payments/ # Link/UnlinkPurchasePaymentCommand, GetPurchasePaymentCandidatesQuery, PurchasePayments (total, issues)
-    Contracts/         # responses and enums
+    Features/Documents/
+      Commands/RecognizePurchaseFile, RecognizeNewPurchaseFiles   # one file, new batch
+      Commands/SaveCheckedPurchaseDocument   # manual JSON, replace
+      Queries/GetPurchaseDocumentTemplate
+      Shared/          # PurchaseRecognitionPrompt (fixed instruction + schema), PurchaseFileRecognition, document responses
+    Features/Register/
+      Commands/SyncPurchaseRegister   # PurchaseRegisterSync (read → check → one transaction)
+      Commands/ReviewPurchaseInvoice  # version check under the write lock
+      Commands/LinkPurchasePayment, UnlinkPurchasePayment
+      Queries/GetPurchaseInvoices     # page of cards: representative row, links, search, filter, one supplier (supplier card tab),
+                                      # invoice date range and VAT of the checked facts
+      Queries/GetPurchaseSyncState, GetPurchaseSuppliers, GetPurchasePaymentCandidates
+      Shared/          # PurchasePayments (total, issues, payments block), shared responses
   Purchasing.Infrastructure/Purchasing.Infrastructure/
     Persistence/       # PurchasingDbContext (schema purchasing, advisory lock), configurations, migrations
-    GoogleSheets/      # options, Application Default Credentials token, Sheets API v4 reader
-    Dropbox/           # DropboxFileDownloader (dl=1, 20 MB, PDF and pictures)
+    Integrations/GoogleSheets/ # options, Application Default Credentials token, Sheets API v4 reader
+    Integrations/Dropbox/ # DropboxFileDownloader (dl=1, 20 MB, PDF and pictures)
     DependencyInjection/
   Purchasing.Api/Purchasing.Api/
-    Register/PurchaseInvoicesController.cs   # /api/purchasing/invoices, policy access:purchase-invoices
-src/Bootstrapper/Host.Seed/Jobs/Sync/PurchaseInvoicesSyncTask.cs   # daily step purchase-invoices
-src/Bootstrapper/Host.Api/Purchasing/PurchasingSupplierReader.cs     # Reference suppliers for the link
-src/Bootstrapper/Host.Api/Purchasing/PurchasingPaymentReader.cs      # Accounting expenses for the payment links
-src/Bootstrapper/Host.Api/Purchasing/PurchaseDocumentRecognizer.cs   # reading originals through the Ai module
+    Endpoints/Register/   # RegisterEndpoints (/api/purchasing/invoices, policy access:purchase-invoices) + one <UseCase>Endpoint per operation
+    Endpoints/Documents/  # DocumentsEndpoints: recognize, save checked document, template
+src/Bootstrapper/Host.Seed/Jobs/Tasks/Office/PurchaseInvoicesTaskRunner.cs   # task purchase-invoices
+src/Modules/Purchasing/Purchasing.Infrastructure/Purchasing.Infrastructure/Adapters/
+  Reference/PurchasingSupplierReader.cs     # Reference.Contracts suppliers for the link
+  Accounting/PurchasingPaymentReader.cs     # Accounting.Contracts expenses for the payment links
+  Ai/PurchaseDocumentRecognizer.cs          # reading originals through Ai.Contracts
 ```
 
 ## Structure diagram
 
 ```mermaid
 flowchart LR
-  Admin[Brevi Admin «Оновити зараз»] --> Controller[PurchaseInvoicesController]
+  Admin[Brevi Admin «Оновити зараз»] --> Endpoints[Purchasing endpoints]
   Job[brevierp-sync step purchase-invoices] --> Sync
-  Controller --> Sync[PurchaseRegisterSync]
-  Controller --> Query[GetPurchaseInvoices]
+  Endpoints --> Sync[PurchaseRegisterSync]
+  Endpoints --> Query[GetPurchaseInvoices]
   Sync --> Reader[Google Sheets reader]
   Reader --> Sheet[(Sheet «финансы», read-only)]
   Sync --> Rules[Ingestion rules]
   Sync --> Db[(purchasing schema)]
   Query --> Db
-  Controller --> Review[ReviewPurchaseInvoice]
+  Endpoints --> Review[ReviewPurchaseInvoice]
   Review --> Suppliers[Reference suppliers via host]
   Review --> Db
-  Controller --> Recognize[PurchaseFileRecognition]
+  Endpoints --> Recognize[PurchaseFileRecognition]
   Recognize --> Dropbox[(Dropbox original)]
   Recognize --> Ai[Ai module via host: OpenAI]
   Recognize --> Db
@@ -68,4 +73,4 @@ flowchart LR
 
 ## Tests
 
-`tests/UnitTests/Purchasing/`: source rules (ids, raw JSON, links, problems, payment mark, dates, whole-sheet checks), sync on SQLite in memory with a fake sheet (first run, repeat, moved rows, missing rows, manual fields kept, UID moved, Google unavailable, parallel run), list query, supplier link and note (version, history, lock, inactive supplier), facts rules (kopecks, VAT modes, misread lines, line discounts), recognition (fast, strong retry, needs review, AI off, Excel, again, batch), manual JSON (same, replace, foreign UID), template, payment links (`PurchasePaymentTests`: link with version, another amount and voided payment as problems, income/stale/twice refused, unlink kept as history, candidates), contract. Command: `dotnet test tests/UnitTests/UnitTests.csproj --filter "FullyQualifiedName~UnitTests.Purchasing"`. Module references and schema: `tests/ArchitectureTests/PurchasingDependencyTests.cs`.
+`tests/UnitTests/Purchasing/`: source rules (ids, raw JSON, links, problems, payment mark, dates, whole-sheet checks), sync on SQLite in memory with a fake sheet (first run, repeat, moved rows, missing rows, manual fields kept, UID moved, Google unavailable, parallel run), list query, supplier link and note (version, history, lock, inactive supplier), facts rules (kopecks, VAT modes, misread lines, line discounts), recognition (fast, strong retry, needs review, AI off, Excel, again, batch), manual JSON (same, replace, foreign UID), template, payment links (`PurchasePaymentTests`: link with version, another amount and voided payment as problems, income/stale/twice refused, unlink kept as history, candidates), contract. Command: `dotnet test tests/UnitTests/UnitTests.csproj --filter "FullyQualifiedName~UnitTests.Purchasing"`. Module references and schema: `tests/ArchitectureTests/Modules/Workshop/PurchasingDependencyTests.cs`.

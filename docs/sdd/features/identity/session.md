@@ -6,36 +6,35 @@ Browser sign-in for Admin with the Identity session cookie: login, logout and `m
 
 ## Structure and relationships
 
-[CookieAuthController](../../../../src/Modules/Identity/Identity.Api/Identity.Api/Controllers/CookieAuthController.cs) and [AuthSessionController](../../../../src/Modules/Identity/Identity.Api/Identity.Api/Controllers/AuthSessionController.cs) send commands to handlers in `Features/Auth`, which call [CookieSessionService](../../../../src/Modules/Identity/Identity.Infrastructure/Identity.Infrastructure/Services/Sessions/CookieSessionService.cs) (`SignInManager`). [SessionCookieWriter](../../../../src/Modules/Identity/Identity.Api/Identity.Api/Cookies/SessionCookieWriter.cs) writes the CSRF cookie, and Host.Api's [CookieCsrfMiddleware](../../../../src/Bootstrapper/Host.Api/Security/Csrf/CookieCsrfMiddleware.cs) checks it. [IdentityAuthenticationExtensions](../../../../src/Modules/Identity/Identity.Infrastructure/Identity.Infrastructure/DependencyInjection/IdentityAuthenticationExtensions.cs) configures the cookie; Data Protection keys live in [AppIdentityDbContext](../../../../src/Modules/Identity/Identity.Infrastructure/Identity.Infrastructure/DataBase/AppIdentityDbContext.cs).
+[CookieAuth endpoints](../../../../src/Modules/Identity/Identity.Api/Identity.Api/Endpoints/CookieAuth/CookieAuthEndpoints.cs) and [Session endpoints](../../../../src/Modules/Identity/Identity.Api/Identity.Api/Endpoints/Session/SessionEndpoints.cs) send commands to handlers in `Features/Auth`, which call [CookieSessionService](../../../../src/Modules/Identity/Identity.Infrastructure/Identity.Infrastructure/Integrations/AspNetIdentity/Sessions/CookieSessionService.cs) (`SignInManager`). [SessionCookieWriter](../../../../src/Modules/Identity/Identity.Api/Identity.Api/Endpoints/CookieAuth/Shared/SessionCookieWriter.cs) writes the CSRF cookie, and [CookieCsrfMiddleware](../../../../src/Modules/Identity/Identity.Api/Identity.Api/Middleware/CookieCsrfMiddleware.cs) checks it. [IdentityAuthenticationExtensions](../../../../src/Modules/Identity/Identity.Infrastructure/Identity.Infrastructure/DependencyInjection/IdentityAuthenticationExtensions.cs) configures the cookie; Data Protection keys live in [AppIdentityDbContext](../../../../src/Modules/Identity/Identity.Infrastructure/Identity.Infrastructure/Persistence/AppIdentityDbContext.cs).
 
 ## Code structure
 
 ```text
 src/
-├── Bootstrapper/Host.Api/Security/
-│   ├── Csrf/CookieCsrfMiddleware.cs                 # CSRF header check for cookie sessions
-│   └── TrustedProxy/TrustedProxyClientIpMiddleware.cs # client IP from the Cloudflare Worker
+├── BuildingBlocks/BuildingBlocks.Api/TrustedProxy/TrustedProxyClientIpMiddleware.cs # client IP from the Cloudflare Worker
 └── Modules/Identity/
     ├── Identity.Api/Identity.Api/
-    │   ├── Controllers/CookieAuthController.cs      # login, logout
-    │   ├── Controllers/AuthSessionController.cs     # me
-    │   └── Cookies/SessionCookieWriter.cs           # CSRF cookie
+    │   ├── Endpoints/CookieAuth/                    # LoginCookieSession/, LogoutCookieSession/: one folder per use case
+    │   ├── Endpoints/CookieAuth/Shared/             # SessionCookieWriter (CSRF cookie), SessionCookieOptions
+    │   ├── Endpoints/Session/                       # GetSessionMe/, access
+    │   └── Middleware/CookieCsrfMiddleware.cs       # CSRF header check for cookie sessions
     ├── Identity.Application/Identity.Application/Features/Auth/
-    │   ├── CookieLogin/                             # command, handler, validator
-    │   ├── CookieLogout/
-    │   └── SessionMe/
+    │   ├── Commands/CookieLogin/                    # command, handler, validator
+    │   ├── Commands/CookieLogout/
+    │   └── Queries/SessionMe/
     └── Identity.Infrastructure/Identity.Infrastructure/
-        ├── DependencyInjection/IdentityAuthenticationExtensions.cs # cookie scheme, 401/403
-        ├── DependencyInjection/IdentityDbContextExtensions.cs      # lockout, password, Data Protection
-        ├── Services/Sessions/CookieSessionService.cs
-        └── Seeders/IdentitySeeder.cs                # first administrator
+        ├── DependencyInjection/IdentityAuthenticationExtensions.cs # cookie scheme, 401/403 (part of AddIdentityInfrastructure)
+        ├── DependencyInjection/IdentityDbContextExtensions.cs      # lockout, password, Data Protection (part of AddIdentityInfrastructure)
+        ├── Integrations/AspNetIdentity/Sessions/CookieSessionService.cs
+        └── Persistence/Seeding/IdentitySeeder.cs                # first administrator
 ```
 
 ## Tests
 
 - `tests/IntegrationTests/Identity/CookieAuthApiTests.cs`: login sets both cookies, `me`, wrong password, `401` without session, CSRF check on logout, old token endpoints gone. Real Identity on PostgreSQL (`BREVIERP_CATALOG_TEST_CONNECTION`).
-- `tests/HostApiTests/TrustedProxyClientIpMiddlewareTests.cs`, `tests/HostApiTests/ApiAccessTests.cs`.
-- `tests/UnitTests/SessionOpenApiContractTests.cs`: contract shape.
+- `tests/HostApiTests/Http/TrustedProxyClientIpMiddlewareTests.cs`, `tests/HostApiTests/Access/ApiAccessTests.cs`.
+- `tests/UnitTests/Identity/SessionOpenApiContractTests.cs`: contract shape.
 
 Focused runs: `dotnet test tests/IntegrationTests/IntegrationTests.csproj --filter FullyQualifiedName~IntegrationTests.Identity`, `dotnet test tests/HostApiTests/HostApiTests.csproj`.
 

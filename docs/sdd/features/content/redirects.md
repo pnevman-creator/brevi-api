@@ -11,18 +11,18 @@ src/Modules/Content/
   Content.Domain/Content.Domain/
     Redirects/         # SiteRedirect (+ source), SiteRedirectRules (normalizing, limits)
   Content.Application/Content.Application/
-    Contracts/RedirectResponses.cs
-    Redirects/GetList/       # every redirect by the old address
-    Redirects/Save/          # add or change; taken address and loop checks
-    Redirects/Delete/
-    Redirects/ImportOldSite/ # file shape, OldSiteRedirectResolver, transfer handler
-    Redirects/Shared/        # mapping, messages, SiteRedirectWriter (address changes)
-    PublicRedirects/         # public list, chains followed, source kept for a minute
+    Features/Redirects/
+      Queries/GetSiteRedirects/          # every redirect by the old address
+      Commands/SaveSiteRedirect/         # add or change; taken address and loop checks
+      Commands/DeleteSiteRedirect/
+      Commands/ImportOldSiteRedirects/   # file shape, OldSiteRedirectResolver, transfer handler
+      Queries/GetPublicRedirects/        # public list, chains followed
+      Shared/                            # responses, mapping, messages, SiteRedirectWriter (address changes), public source kept for a minute
   Content.Infrastructure/Content.Infrastructure/
-    Persistence/Configurations/SiteRedirectConfiguration.cs
+    Persistence/Configurations/Site/SiteRedirectConfiguration.cs
   Content.Api/Content.Api/
-    Redirects/ContentRedirectsController.cs        # /api/content/redirects, policy access:content-redirects
-    PublicRedirects/PublicRedirectsController.cs   # /api/public/redirects, anonymous, read-only
+    Endpoints/Redirects/ContentRedirectsEndpoints.cs        # /api/content/redirects, policy access:content-redirects
+    Endpoints/PublicRedirects/PublicRedirectsEndpoints.cs   # /api/public/redirects, anonymous, read-only
 ```
 
 The save handlers of product pages, site categories and articles call `SiteRedirectWriter` when the address changed.
@@ -30,8 +30,8 @@ The save handlers of product pages, site categories and articles call `SiteRedir
 ## Tests
 
 ```text
-tests/UnitTests/Content/SiteRedirectsTests.cs           # dotnet test tests/UnitTests/UnitTests.csproj --filter "FullyQualifiedName~SiteRedirects"
-tests/UnitTests/Content/SiteRedirectsContractTests.cs
+tests/UnitTests/Content/Seo/SiteRedirectsTests.cs           # dotnet test tests/UnitTests/UnitTests.csproj --filter "FullyQualifiedName~SiteRedirects"
+tests/UnitTests/Content/Seo/SiteRedirectsContractTests.cs
 ```
 
 ## Data

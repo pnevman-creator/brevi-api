@@ -1,4 +1,5 @@
-using BuildingBlocks.Infrastructure.Migrations;
+using Reminders.Contracts.Telegram;
+using Reminders.Infrastructure.Contracts.Telegram;
 using BuildingBlocks.Infrastructure.Seeding;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -9,13 +10,15 @@ using Reminders.Application.Abstractions;
 using Reminders.Application.DependencyInjection;
 using Reminders.Infrastructure.Persistence;
 using Reminders.Infrastructure.Persistence.Seeding;
-using Reminders.Infrastructure.Telegram;
+using Reminders.Infrastructure.Integrations.Telegram;
+using Reminders.Application.Abstractions.Telegram;
+using BuildingBlocks.Infrastructure.Database;
 
 namespace Reminders.Infrastructure.DependencyInjection;
 
 public static class RemindersInfrastructureExtensions
 {
-    /// <summary>DbContext, migrator, Telegram client and shared application services.</summary>
+    /// <summary>DbContext, migrator, Telegram client, seeder and shared application services.</summary>
     public static IServiceCollection AddRemindersInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
         var connection = configuration.GetConnectionString("Default") ?? throw new InvalidOperationException("Missing ConnectionStrings:Default");
@@ -29,12 +32,11 @@ public static class RemindersInfrastructureExtensions
         services.AddHttpClient<ITelegramGateway, TelegramBotApiGateway>(client => client.Timeout = TimeSpan.FromSeconds(30));
         services.TryAddSingleton(TimeProvider.System);
         services.AddRemindersApplication();
-        return services;
-    }
 
-    /// <summary>Only Host.Seed runs seeders.</summary>
-    public static IServiceCollection AddRemindersSeeders(this IServiceCollection services)
-    {
+        // Contracts other modules use (ADR-0006).
+        services.AddScoped<ITelegramBot, TelegramBot>();
+
+        // Seeders run only in Host.Seed.
         services.AddScoped<ISeeder, DefaultReminderTaskSeeder>();
         return services;
     }

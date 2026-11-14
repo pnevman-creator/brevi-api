@@ -8,17 +8,17 @@ Read-only lines of the old «Цех»: the Google sheet «ГРАФИК рабо�
 src/Modules/Production/
   Production.Domain/Production.Domain/Archive/WorkshopArchiveRecord.cs
   Production.Application/Production.Application/
-    Contracts/ArchiveContracts.cs
-    Archive/GetArchive/GetWorkshopArchiveQuery.cs
-    Archive/ImportArchive/ImportWorkshopArchiveCommand.cs
-  Production.Infrastructure/.../Configurations/WorkshopArchiveConfiguration.cs
-  Production.Api/Production.Api/Archive/WorkshopArchiveController.cs   # /api/production/archive
+    Features/Archive/Queries/GetWorkshopArchive/
+    Features/Archive/Commands/ImportWorkshopArchive/
+    Features/Archive/Shared/ArchiveMessages.cs
+  Production.Infrastructure/.../Persistence/Configurations/Workshop/WorkshopArchiveConfiguration.cs
+  Production.Api/Production.Api/Endpoints/Archive/   # /api/production/archive
 ```
 
 ## Tests
 
-- `tests/UnitTests/Production/WorkshopArchiveHandlerTests.cs` — access, preview, repeat, search, dates, validation.
-- `tests/UnitTests/Production/WorkshopArchiveContractTests.cs` — DTOs, operations and policy against the contract.
+- `tests/UnitTests/Production/Workshop/WorkshopArchiveHandlerTests.cs` — access, preview, repeat, search, dates, validation.
+- `tests/UnitTests/Production/Workshop/WorkshopArchiveContractTests.cs` — DTOs, operations and policy against the contract.
 
 Focused run: `dotnet test tests/UnitTests/UnitTests.csproj --filter FullyQualifiedName~UnitTests.Production`.
 

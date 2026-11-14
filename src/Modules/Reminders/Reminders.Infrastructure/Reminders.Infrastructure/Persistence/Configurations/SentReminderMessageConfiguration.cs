@@ -5,6 +5,7 @@ using Reminders.Domain.Dispatching;
 using Reminders.Domain.Identifiers;
 using Reminders.Domain.Occurrences;
 
+
 namespace Reminders.Infrastructure.Persistence.Configurations;
 
 public sealed class SentReminderMessageConfiguration : IEntityTypeConfiguration<SentReminderMessage>

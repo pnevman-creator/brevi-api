@@ -1,8 +1,12 @@
+using BuildingBlocks.Api.Outbox;
 using System.Globalization;
-using Host.Api.DependencyInjection.ServiceRegistration.Web;
+using BuildingBlocks.Api.TrustedProxy;
+using Identity.Api.DependencyInjection;
 using Microsoft.AspNetCore.Localization;
+using Host.Api.DependencyInjection.Modules;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Host.UseDefaultServiceProvider(ServiceProviderValidation.Apply);
 
 builder.AddSerilog();
 builder.Services.AddHostServices(builder.Configuration);
@@ -16,16 +20,17 @@ builder.Services.Configure<RequestLocalizationOptions>(options =>
 
 var app = builder.Build();
 
+// One global exception handler in every environment: Ukrainian ProblemDetails with traceId, no stack trace to the client.
+app.UseExceptionHandler();
+
 if (app.Environment.IsDevelopment())
 {
-    app.UseDeveloperExceptionPage();
     app.UseSwagger();
     app.UseSwaggerUI();
     app.MapOpenApi().AllowAnonymous();
 }
 else
 {
-    app.UseExceptionHandler(opt => { });
     app.UseStatusCodePages();
     app.UseHsts();
 }
@@ -53,7 +58,8 @@ app.UseCookieCsrfProtection();
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapControllers();
+app.MapModuleEndpoints();
 app.MapHealthChecks("/health").AllowAnonymous();
+app.MapOutboxDispatch();
 
 app.Run();

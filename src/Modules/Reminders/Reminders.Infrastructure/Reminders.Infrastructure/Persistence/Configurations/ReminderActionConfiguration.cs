@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Reminders.Domain.Occurrences;
 
+
 namespace Reminders.Infrastructure.Persistence.Configurations;
 
 public sealed class ReminderActionConfiguration : IEntityTypeConfiguration<ReminderAction>

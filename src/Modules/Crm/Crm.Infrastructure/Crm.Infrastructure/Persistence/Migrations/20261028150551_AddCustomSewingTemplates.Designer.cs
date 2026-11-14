@@ -879,7 +879,7 @@ namespace Crm.Infrastructure.Persistence.Migrations
                     b.ToTable("CustomSewingMutationRequests", "crm");
                 });
 
-            modelBuilder.Entity("Crm.Infrastructure.Persistence.CustomerMutationRecord", b =>
+            modelBuilder.Entity("Crm.Infrastructure.Persistence.Customers.CustomerMutationRecord", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()

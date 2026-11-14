@@ -13,34 +13,35 @@ src/Modules/Production/
     Payroll/PayrollMoney.cs          # payment, adjustment, «Видано»
     Payroll/PayrollCalculation.cs    # the pay of a month and its warnings
   Production.Application/Production.Application/
-    Contracts/TimesheetContracts.cs, PayrollContracts.cs
-    Timesheet/TimesheetQueries.cs    # day, save, TimesheetDays
-    Payroll/
-      PayrollSheets.cs               # builds a month or reads the kept one
-      PayrollChanges.cs              # access, open month, change, fresh month
-      PayrollMonths.cs               # «РРРР-ММ», closed-month lock (also used by Work/RecordWork)
-      GetMonth (month, worker, year), Setup (roles, embroidery), Payments (payments, adjustments, «Видано»),
-      Close (close, reopen)
-  Production.Infrastructure/.../Persistence/Configurations/PayrollConfiguration.cs
-  Production.Api/Production.Api/Timesheet/TimesheetController.cs  # /api/production/timesheet
-  Production.Api/Production.Api/Payroll/PayrollController.cs      # /api/production/payroll…
+    Features/Timesheet/              # Queries/GetTimesheetDay, Commands/SaveTimesheetDay; Shared/ responses, TimesheetDays
+    Features/Payroll/
+      Queries/                       # GetPayrollMonth, GetPayrollEmployee, GetPayrollYear
+      Commands/                      # SetPayrollRoles, SetPayrollEmbroidery; Create/VoidPayrollPayment, Create/VoidPayrollAdjustment,
+                                     # SetPayrollIssued («Видано»); ClosePayrollMonth, ReopenPayrollMonth
+      Shared/PayrollSheets.cs        # builds a month or reads the kept one
+      Shared/PayrollChanges.cs       # access, open month, change, fresh month
+      Shared/PayrollMonths.cs        # «РРРР-ММ», closed-month lock (also used by Work/CreateProductionWork)
+      Shared/                        # responses, PayrollInputRules, messages
+  Production.Infrastructure/.../Persistence/Configurations/Workshop/PayrollConfiguration.cs
+  Production.Api/Production.Api/Endpoints/Timesheet/  # /api/production/timesheet
+  Production.Api/Production.Api/Endpoints/Payroll/    # /api/production/payroll…
 ```
 
 ## Structure diagram
 
 ```mermaid
 flowchart LR
-  Admin[Brevi Admin «Робочий час», «Зарплата»] --> Controllers[TimesheetController, PayrollController]
-  Controllers --> UseCases[Timesheet and Payroll use cases]
+  Admin[Brevi Admin «Робочий час», «Зарплата»] --> Endpoints[Timesheet and Payroll endpoints]
+  Endpoints --> UseCases[Timesheet and Payroll use cases]
   UseCases --> Db[(production.TimeEntries / Payroll*)]
   UseCases --> Work[(production.Work / Items / Employees)]
-  UseCases --> Params[IPayrollParameterReader] -.host.-> Reference[«Параметри ціноутворення»]
+  UseCases --> Params[IPayrollParameterReader] -.Reference.Contracts.-> Reference[«Параметри ціноутворення»]
 ```
 
 ## Tests
 
-- `tests/UnitTests/Production/ProductionPayrollHandlerTests.cs` — calculation, warnings, access, payments, closing lock, reopen, timesheet history and versions.
-- `tests/UnitTests/Production/ProductionPayrollContractTests.cs` — DTOs and operations against the contract.
+- `tests/UnitTests/Production/Payroll/ProductionPayrollHandlerTests.cs` — calculation, warnings, access, payments, closing lock, reopen, timesheet history and versions.
+- `tests/UnitTests/Production/Payroll/ProductionPayrollContractTests.cs` — DTOs and operations against the contract.
 
 Focused run: `dotnet test tests/UnitTests/UnitTests.csproj --filter FullyQualifiedName~UnitTests.Production`.
 

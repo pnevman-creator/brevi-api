@@ -9,30 +9,30 @@ The Calculator sheet «Налаштування цін» in Brevi. Two tables:
 
 Editing a value sets «Дата оновлення» to today (Kyiv). The sheet is moved once through `POST /api/reference/pricing-parameters/import` (preview by default, `deleteMissing` removes rows not in the sheet). The rows are prepared by `brevi-calculator-references/transfer/price_settings_rows.py` in the project files.
 
-Old PPE products may still refer to a parameter `Id` for their retail/wholesale percent (`AdditionalReferenceItem` in Catalog); the Catalog reader maps parameters to that shape. Every saved change is handed to Catalog (`IPricingSettingsChangeNotifier` → Host.Api `CatalogPricingSettingsSync` → Catalog `SyncPricingSettingsCommand`): a changed value appends a new sewing settings version or PPE rule version, so prices and the «Операції» minute cost follow this page (REF-004 TS-04).
+Old PPE products may still refer to a parameter `Id` for their retail/wholesale percent (`AdditionalReferenceItem` in Catalog); the Catalog reader maps parameters to that shape. Every saved change is handed to Catalog (`IPricingSettingsChangeNotifier` → Catalog.Contracts `IPricingSettingsSync` → Catalog `SyncPricingSettingsCommand`): a changed value appends a new sewing settings version or PPE rule version, so prices and the «Операції» minute cost follow this page (REF-004 TS-04).
 
 ## Code Structure
 
 ```text
 src/Modules/Reference/
 ├── Reference.Api/Reference.Api/
-│   ├── Controllers/PricingParametersController.cs   # parameters CRUD + sheet import
-│   ├── Controllers/PpeMarkupRulesController.cs      # PPE markup rules CRUD
-│   └── Contracts/{PricingParameters,PpeMarkupRules}/
+│   ├── Endpoints/PricingParameters/                 # CRUD + sheet import, one <UseCase>/ folder each with its request
+│   └── Endpoints/PpeMarkupRules/                    # CRUD, one <UseCase>/ folder each with its request
 ├── Reference.Application/Reference.Application/Features/
-│   ├── PricingParameter/{Create,Update,Delete,GetList,Shared}/
-│   ├── PpeMarkupRule/{Create,Update,Delete,GetList,Shared}/
-│   └── PricingSettingsImport/                       # import of both tables, preview and apply
+│   ├── PricingParameter/{Commands,Queries,Shared}/   # Create/Update/DeletePricingParameter, GetPricingParameters
+│   ├── PpeMarkupRule/{Commands,Queries,Shared}/      # Create/Update/DeletePpeMarkupRule, GetPpeMarkupRules
+│   └── PricingSettingsImport/                       # Commands/ImportPricingSettings: both tables, preview and apply
 ├── Reference.Domain/Reference.Domain/
 │   ├── PricingParameters/                           # entity, details, formulas, errors, id
 │   └── PpeMarkupRules/                              # entity, details, errors, id
 └── Reference.Infrastructure/Reference.Infrastructure/
-    ├── Congigurations/{PricingParameter,PpeMarkupRule}Configuration.cs
-    └── Migrations/*_PricingSettingsFromSheet.cs     # renames AdditionalReferences, keeps old rows
+    ├── Persistence/{PricingParameters,PpeMarkupRules}/*Configuration.cs
+    └── Persistence/Migrations/*_PricingSettingsFromSheet.cs     # renames AdditionalReferences, keeps old rows
 
-src/Modules/Reference/.../Contracts/Catalog/IPricingSettingsChangeNotifier.cs   # port called after each save
-src/Bootstrapper/Host.Api/.../CatalogPricingSettingsSync.cs                     # reads both lists, sends Catalog sync
-src/Modules/Catalog/.../Features/Pricing/SettingsSync/                          # sheet codes → sewing settings, PPE rule versions
+src/Modules/Reference/.../Abstractions/IPricingSettingsChangeNotifier.cs        # port called after each save
+src/Modules/Reference/.../Adapters/Catalog/PricingSettingsChangeNotifier.cs  # port → Catalog.Contracts IPricingSettingsSync
+src/Modules/Catalog/.../Contracts/Pricing/PricingSettingsSync.cs               # reads both Reference.Contracts lists, sends Catalog sync
+src/Modules/Catalog/.../Features/Pricing/Commands/SyncPricingSettings/           # sheet codes → sewing settings, PPE rule versions
 ```
 
 ## Tests

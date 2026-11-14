@@ -6,7 +6,7 @@ CRUD operations, list retrieval and the import of the Calculator sheet «Опе�
 
 ## Structure and Relationships
 
-[Controller](../../../../src/Modules/Reference/Reference.Api/Reference.Api/Controllers/GarmentPartOperationsController.cs) exposes CRUD. The [create handler](../../../../src/Modules/Reference/Reference.Application/Reference.Application/Features/GarmentPartOperation/Create/CreateGarmentPartOperationCommandHandler.cs) and adjacent query/update/delete handlers validate the data; [GarmentPartOperation](../../../../src/Modules/Reference/Reference.Domain/Reference.Domain/GarmentPartOperations/Entities/GarmentPartOperation.cs) is the domain entity. [ReferenceEfRepository](../../../../src/Modules/Reference/Reference.Infrastructure/Reference.Infrastructure/Repositories/ReferenceEfRepository.cs) and [ReferenceDbContext](../../../../src/Modules/Reference/Reference.Infrastructure/Reference.Infrastructure/DataBase/ReferenceDbContext.cs) persist it. An operation belongs to a garment part («Група деталей») and has a sheet code (OP-…), element, variant, norm in minutes, a «time per product» flag (no fixed norm), the norm check date, an active flag and notes; Product stores references to the selected operations. Labour cost is not stored: clients compute it from the norm and the sewing pricing settings. A group with operations cannot be deleted.
+[Endpoints](../../../../src/Modules/Reference/Reference.Api/Reference.Api/Endpoints/GarmentPartOperations/GarmentPartOperationsEndpoints.cs) exposes CRUD. The [create handler](../../../../src/Modules/Reference/Reference.Application/Reference.Application/Features/GarmentPartOperation/Commands/CreateGarmentPartOperation/CreateGarmentPartOperationHandler.cs) and adjacent query/update/delete handlers validate the data; [GarmentPartOperation](../../../../src/Modules/Reference/Reference.Domain/Reference.Domain/GarmentPartOperations/GarmentPartOperation.cs) is the domain entity. [ReferenceEfRepository](../../../../src/Modules/Reference/Reference.Infrastructure/Reference.Infrastructure/Persistence/Repositories/ReferenceEfRepository.cs) and [ReferenceDbContext](../../../../src/Modules/Reference/Reference.Infrastructure/Reference.Infrastructure/Persistence/ReferenceDbContext.cs) persist it. An operation belongs to a garment part («Група деталей») and has a sheet code (OP-…), element, variant, norm in minutes, a «time per product» flag (no fixed norm), the norm check date, an active flag and notes; Product stores references to the selected operations. Labour cost is not stored: clients compute it from the norm and the sewing pricing settings. A group with operations cannot be deleted.
 
 ## Code Structure
 
@@ -15,25 +15,25 @@ Verified entry points and key feature components are shown; the tree does not li
 ```text
 src/
 └── Modules/Reference/
-    ├── Reference.Api/Reference.Api/Controllers/GarmentPartOperationsController.cs  # HTTP entry point
+    ├── Reference.Api/Reference.Api/Endpoints/GarmentPartOperations/  # HTTP entry points, one <UseCase>/ folder each
     ├── Reference.Application/Reference.Application/Features/GarmentPartOperation/
-    │   ├── Create/CreateGarmentPartOperationCommandHandler.cs  # use case handler
-    │   ├── Delete/DeleteGarmentPartOperationCommandHandler.cs  # use case handler
-    │   ├── GetList/GetGarmentPartOperationsQueryHandler.cs  # use case handler
-    │   ├── Import/ImportGarmentPartOperationsCommandHandler.cs  # sheet import with preview
+    │   ├── Commands/CreateGarmentPartOperation/CreateGarmentPartOperationHandler.cs  # use case handler
+    │   ├── Commands/DeleteGarmentPartOperation/DeleteGarmentPartOperationHandler.cs  # use case handler
+    │   ├── Queries/GetGarmentPartOperations/GetGarmentPartOperationsHandler.cs  # use case handler
+    │   ├── Commands/ImportGarmentPartOperations/ImportGarmentPartOperationsHandler.cs  # sheet import with preview
     │   ├── Shared/  # common fields, validator, details factory, code spec
-    │   └── Update/UpdateGarmentPartOperationCommandHandler.cs  # use case handler
-    ├── Reference.Domain/Reference.Domain/GarmentPartOperations/Entities/GarmentPartOperation.cs  # domain model
+    │   └── Commands/UpdateGarmentPartOperation/UpdateGarmentPartOperationHandler.cs  # use case handler
+    ├── Reference.Domain/Reference.Domain/GarmentPartOperations/GarmentPartOperation.cs  # domain model
     └── Reference.Infrastructure/Reference.Infrastructure/
-        ├── DataBase/ReferenceDbContext.cs  # data context
-        └── Repositories/ReferenceEfRepository.cs  # data access
+        ├── Persistence/ReferenceDbContext.cs  # data context
+        └── Persistence/Repositories/ReferenceEfRepository.cs  # data access
 ```
 
 ## Structure Diagram
 
 ```mermaid
 flowchart LR
-    A["GarmentPartOperationsController"] --> B["CRUD handlers"]
+    A["GarmentPartOperationsEndpoints"] --> B["CRUD handlers"]
     B --> C["GarmentPartOperation"]
     B --> D["Reference repository contracts"]
     D -.-> E["ReferenceEfRepository and ReferenceReadEfRepository"]
@@ -46,7 +46,7 @@ flowchart LR
 
 ## Tests
 
-`tests/UnitTests/Reference/GarmentPartOperationImportTests.cs` covers the sheet import (`--filter FullyQualifiedName~GarmentPartOperationImport`). `tests/UnitTests/ReferenceProductUsageTests.cs` covers rejecting deletion of reference data used by a Product.
+`tests/UnitTests/Reference/Imports/GarmentPartOperationImportTests.cs` covers the sheet import (`--filter FullyQualifiedName~GarmentPartOperationImport`). `tests/UnitTests/Reference/ReferenceProductUsageTests.cs` covers rejecting deletion of reference data used by a Product.
 
 **Data:** [reference schema](../../architecture/data-model/reference.md)
 

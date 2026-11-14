@@ -11,21 +11,21 @@ src/Modules/Crm/
     ManagerTaskStep.cs, ManagerTaskEvent.cs, ManagerTaskDraft.cs, ManagerTaskPerson.cs
     ManagerTaskStatus.cs, ManagerTaskLane.cs, ManagerTaskEventKind.cs
     ManagerTaskLimits.cs
-  Crm.Application/Crm.Application/Tasks/
-    Access/                        TaskActor (Admin sees all), Ukrainian messages
-    Staff/ITaskStaffReader.cs      assignees (Manager role) and names, implemented in Host.Api
-    Persistence/                   ITaskStore port, load/visible/save helpers
-    Building/TaskDraftResolver.cs  side panel → domain draft (assignee, client)
-    Contracts/, Mapping/, Validation/
-    CreateTask/ EditTask/ ChangeTaskStatus/ SetTaskUrgent/ MarkTaskStep/ DeleteTask/
-    GetTasks/ GetTaskBoard/ GetTaskOverview/ GetTask/ GetTaskAssignees/
+  Crm.Application/Crm.Application/Abstractions/Tasks/   ITaskStore, ITaskStaffReader (assignees, Manager role; Crm.Infrastructure/Adapters/Identity)
+  Crm.Application/Crm.Application/Features/Tasks/
+    Commands/                      CreateTask EditTask ChangeTaskStatus SetTaskUrgent MarkTaskStep DeleteTask
+    Queries/                       GetTasks GetTaskBoard GetTaskOverview GetTask GetTaskAssignees
+    Shared/Access/                 TaskActor (Admin sees all), Ukrainian messages
+    Shared/Persistence/            load/visible/save helpers
+    Shared/Building/TaskDraftResolver.cs  side panel → domain draft (assignee, client)
+    Shared/                        responses, Mapping/, Validation/
   Crm.Infrastructure/Crm.Infrastructure/Persistence/
-    Configurations/Tasks/          three tables, cascade steps and events
+    Tasks/                         three tables, cascade steps and events
     CrmDbContext.cs                implements ITaskStore
-  Crm.Api/Crm.Api/Tasks/
-    ManagerTasksController.cs      /api/crm/tasks
-    Requests/                      status, urgent and step requests
-src/Bootstrapper/Host.Api/Crm/TaskStaffReader.cs   Identity adapter
+  Crm.Api/Crm.Api/Endpoints/Tasks/
+    ManagerTasksEndpoints.cs       /api/crm/tasks
+    <UseCase>/                     endpoint and its request (status, urgent, step)
+src/Modules/Crm/Crm.Infrastructure/Crm.Infrastructure/Adapters/Identity/TaskStaffReader.cs   Identity.Contracts adapter
 ```
 
 [API contract](../../contracts/crm/tasks.openapi.yaml), [database ownership](../../architecture/data-model/crm.md).

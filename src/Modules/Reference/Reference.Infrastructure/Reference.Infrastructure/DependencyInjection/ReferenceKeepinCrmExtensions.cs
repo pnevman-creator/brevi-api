@@ -1,14 +1,15 @@
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using Reference.Application.Contracts.KeepinCrm;
-using Reference.Application.Features.Supplier.KeepinCrmSync;
-using Reference.Infrastructure.KeepinCrm;
+using Reference.Application.Abstractions;
+using Reference.Application.Features.Supplier.Commands.SyncKeepinCrmSuppliers;
+using Reference.Infrastructure.Integrations.KeepinCrm;
+using Reference.Application.Abstractions.KeepinCrm;
 
 namespace Reference.Infrastructure.DependencyInjection;
 
-public static class ReferenceKeepinCrmExtensions
+internal static class ReferenceKeepinCrmExtensions
 {
-    /// <summary>KeepinCRM supplier client and the sync service; used by Host.Api and the Host.Seed sync job.</summary>
-    public static IServiceCollection AddReferenceKeepinCrmSync(this IServiceCollection services, IConfiguration configuration)
+    /// <summary>KeepinCRM supplier client and the sync service; part of AddReferenceInfrastructure.</summary>
+    internal static IServiceCollection AddReferenceKeepinCrmSync(this IServiceCollection services, IConfiguration configuration)
     {
         services.Configure<KeepinCrmOptions>(configuration.GetSection(KeepinCrmOptions.Section));
         services.AddHttpClient<IKeepinCrmSupplierSource, KeepinCrmSupplierClient>(client => client.Timeout = TimeSpan.FromSeconds(30));

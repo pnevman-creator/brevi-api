@@ -1,10 +1,7 @@
-using Host.Api.DependencyInjection.ServiceRegistration.Options;
-using Host.Api.DependencyInjection.ServiceRegistration.Pipeline;
-using Host.Api.DependencyInjection.ServiceRegistration.Web;
-using BuildingBlocks.Infrastructure.DependencyInjection;
-using Identity.Infrastructure.DataBase;
+using Crm.Api.DependencyInjection;
+using Production.Api.DependencyInjection;
+using Identity.Api.DependencyInjection;
 using Identity.Infrastructure.DependencyInjection;
-using Identity.Infrastructure.Contracts;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
@@ -12,6 +9,10 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
+using Identity.Infrastructure.Persistence;
+using Identity.Infrastructure.Persistence.Seeding;
+using BuildingBlocks.Application.Validation;
+using Host.Api.DependencyInjection.Modules;
 
 namespace IntegrationTests.Identity;
 
@@ -61,19 +62,20 @@ internal sealed class IdentityApiHost : IAsyncDisposable
         });
         builder.Services.AddIdentityConfiguration(builder.Configuration);
         var avatars = new InMemoryAvatarStorage();
-        builder.Services.AddSingleton<global::Identity.Application.Services.IAvatarStorage>(avatars);
-        builder.Services.AddIdentityInfrastructureServices(builder.Configuration);
-        builder.Services.AddInfrastructureServices(builder.Configuration);
+        builder.Services.AddSingleton<global::Identity.Application.Abstractions.Profile.IAvatarStorage>(avatars);
+        builder.Services.AddIdentityInfrastructure(builder.Configuration);
         builder.Services.AddMediatorPipeline();
-        builder.Services.AddFluentValidation();
+        builder.Services.AddModuleValidators(typeof(global::Identity.Application.IdentityApplicationAssemblyMarker).Assembly);
         builder.Services.AddAuthorizationPolicies();
-        builder.Services.AddModuleControllers();
 
         var app = builder.Build();
         app.UseCookieCsrfProtection();
         app.UseAuthentication();
         app.UseAuthorization();
-        app.MapControllers();
+        app.MapIdentityEndpoints();
+        // Crm and Production too: the access tests check that a role without the right gets 403 there.
+        app.MapCrmEndpoints();
+        app.MapProductionEndpoints();
 
         await using (var scope = app.Services.CreateAsyncScope())
         {
@@ -106,7 +108,7 @@ internal sealed class IdentityApiHost : IAsyncDisposable
     }
 }
 
-internal sealed class InMemoryAvatarStorage : global::Identity.Application.Services.IAvatarStorage
+internal sealed class InMemoryAvatarStorage : global::Identity.Application.Abstractions.Profile.IAvatarStorage
 {
     public System.Collections.Concurrent.ConcurrentDictionary<string, byte[]> Files { get; } = new();
 

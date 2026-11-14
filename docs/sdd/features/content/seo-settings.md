@@ -10,20 +10,21 @@ The public site reads them without sign-in from `/api/public/site-settings` ([co
 src/Modules/Content/
   Content.Domain/Content.Domain/SiteSettings/SiteSeoSettings.cs      # entity, formats of the codes
   Content.Application/Content.Application/
-    Contracts/SiteSettingsResponses.cs
-    SiteSettings/Get/, SiteSettings/Save/, SiteSettings/Shared/     # admin read and save, picture, messages
-    PublicSiteSettings/                                             # public read kept a minute
-  Content.Infrastructure/.../Configurations/SiteSeoSettingsConfiguration.cs
+    Features/SiteSettings/
+      Queries/GetSiteSeoSettings/, Commands/SaveSiteSeoSettings/    # admin read and save
+      Queries/GetPublicSiteSettings/                                # public read kept a minute
+      Shared/                                                       # responses, picture, messages
+  Content.Infrastructure/.../Persistence/Configurations/Site/SiteSeoSettingsConfiguration.cs
   Content.Api/Content.Api/
-    SiteSettings/SiteSeoSettingsController.cs                       # /api/content/seo-settings, policy access:content-seo-settings
-    PublicSiteSettings/PublicSiteSettingsController.cs              # /api/public/site-settings, anonymous
+    Endpoints/SiteSettings/SiteSeoSettingsEndpoints.cs                       # /api/content/seo-settings, policy access:content-seo-settings
+    Endpoints/PublicSiteSettings/PublicSiteSettingsEndpoints.cs              # /api/public/site-settings, anonymous
 ```
 
 ## Tests
 
 ```text
-tests/UnitTests/Content/SiteSeoSettingsTests.cs     # dotnet test tests/UnitTests/UnitTests.csproj --filter "FullyQualifiedName~SiteSeoSettings"
-tests/UnitTests/Content/SiteSeoSettingsContractTests.cs
+tests/UnitTests/Content/Seo/SiteSeoSettingsTests.cs     # dotnet test tests/UnitTests/UnitTests.csproj --filter "FullyQualifiedName~SiteSeoSettings"
+tests/UnitTests/Content/Seo/SiteSeoSettingsContractTests.cs
 ```
 
 ## Data

@@ -1,5 +1,6 @@
 using Media.Domain.Folders;
 
+
 namespace Media.Infrastructure.Persistence.Configurations;
 
 internal sealed class MediaFolderConfiguration : IEntityTypeConfiguration<MediaFolder>

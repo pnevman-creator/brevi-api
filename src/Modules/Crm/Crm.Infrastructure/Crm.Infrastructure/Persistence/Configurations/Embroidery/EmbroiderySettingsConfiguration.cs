@@ -1,7 +1,7 @@
 using Crm.Domain.Embroidery.Settings;
-using Crm.Infrastructure.Persistence.Configurations.Quotes;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
 
 namespace Crm.Infrastructure.Persistence.Configurations.Embroidery;
 

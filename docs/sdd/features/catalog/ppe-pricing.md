@@ -2,9 +2,9 @@
 
 Versioned three-tier PPE calculation from Brevi-owned rule/offer snapshots. Domain arithmetic reproduces approved workbook precedence and rounding; no live workbook or XML access occurs at runtime. Imported source review remains evidence; only an explicit manager write creates a Brevi-approved version. Missing required data returns blockers and no prices.
 
-The PPE product card ([CAT-008](../../specs/catalog/008-ppe-product-card/README.md)) reads and saves the sheet «ЗІЗ» supplier fields through `GET`/`PUT /api/v1/products/{productId}/ppe-offer` (`Features/Pricing/Ppe/SupplierOffer/`, `PpeSupplierOfferController`). A changed supplier price or rule appends an approved offer version in the same transaction.
+The PPE product card ([CAT-008](../../specs/catalog/008-ppe-product-card/README.md)) reads and saves the sheet «ЗІЗ» supplier fields through `GET`/`PUT /api/v1/products/{productId}/ppe-offer` (`Features/Pricing/Ppe/SupplierOffer/`, `PpeSupplierOfferEndpoints`). A changed supplier price or rule appends an approved offer version in the same transaction.
 
-The page «Новий ЗІЗ» ([CAT-009](../../specs/catalog/009-product-create-pages/README.md)) shows the three prices before saving through `GET /api/v1/pricing/ppe/rules/preview` (`Features/Pricing/Ppe/Preview/`, `PpePricingRulesController`); nothing is saved.
+The page «Новий ЗІЗ» ([CAT-009](../../specs/catalog/009-product-create-pages/README.md)) shows the three prices before saving through `GET /api/v1/pricing/ppe/rules/preview` (`Features/Pricing/Ppe/Preview/`, `PpePricingRulesEndpoints`); nothing is saved.
 
 ## Structure diagram
 
@@ -26,26 +26,22 @@ Catalog.Domain/Pricing/Ppe/
   Calculation/             # tier precedence, rounding and typed blockers
   Results/                 # independent prices and readiness
 Catalog.Application/
-  Contracts/Pricing/Ppe/
-    Rules/                 # rule values/version and writer port
-    Offers/                # offer values/version and writer port
-    Products/              # Product read inputs/results and reader port
-  Features/Pricing/Ppe/
-    Products/              # bounded Product pricing query
-    Evaluation/            # active/enrolled input selection
-    Rules/                 # exact rule lookup and approved version creation
-    Offers/                # Product offer version creation
-    Validation/            # request/precision/provenance checks
-    SupplierOffer/         # PPE card: Get / Update / Shared view and reader
-    Preview/               # three prices for a supplier price and rule, not saved
-Catalog.Infrastructure/Pricing/Ppe/
-  Records/                 # private append-only persistence rows
-  Configuration/           # identity/UUID/scope indexes, Product FK, jsonb
-  Reading/                 # fixed-query batch in one repeatable-read snapshot
-  Writing/                 # expected-version, actor-bound replay and transactions
+  Abstractions/Pricing/    # rule, offer and Product input ports with their values/version records
+  Features/Pricing/
+    Queries/GetPpeProductPrices/    # bounded Product pricing query
+    Queries/GetPpeRule/, Commands/CreatePpeRuleVersion/  # exact rule lookup and approved version creation
+    Commands/CreatePpeOfferVersion/ # Product offer version creation
+    Queries/GetPpeSupplierOffer/, Commands/UpdatePpeSupplierOffer/  # PPE card
+    Queries/PreviewPpePrices/       # three prices for a supplier price and rule, not saved
+    Shared/Ppe/Evaluation/          # active/enrolled input selection
+    Shared/Ppe/Validation/          # request/precision/provenance checks
+    Shared/Ppe/SupplierOffer/       # card view and reader
+Catalog.Infrastructure/Persistence/{Configurations,Repositories}/Pricing/Ppe/
+                           # private append-only rows and their configurations (identity/UUID/scope indexes, Product FK, jsonb);
+                           # PpePricingInputReader: fixed-query batch in one repeatable-read snapshot;
+                           # version writers: expected-version, actor-bound replay and transactions
 Catalog.Api/
-  Controllers/Pricing/Ppe/  # read/manage policies and claim actor
-  Contracts/Pricing/Ppe/    # write request boundary
+  Pricing/Ppe/              # controllers (read/manage policies, claim actor) and write requests
 Jobs/CatalogImport/PpePricing/
   Source/                  # bounded frozen source parsing
   Planning/                # source column map, no price formulas
@@ -67,8 +63,8 @@ Legacy Product pricing fields are compatibility outputs; new enrolled consumers 
 
 ## Tests
 
-- `tests/UnitTests/PpePricing*Tests.cs`, `tests/UnitTests/PpeSupplierOfferTests.cs`, `tests/UnitTests/CatalogProductCreationInputTests.cs` (preview)
-- `tests/IntegrationTests/Pricing/Ppe/`
+- `tests/UnitTests/Catalog/Pricing/Ppe/PpePricing*Tests.cs`, `tests/UnitTests/Catalog/Pricing/Ppe/PpeSupplierOfferTests.cs`, `tests/UnitTests/Catalog/Products/Creation/CatalogProductCreationInputTests.cs` (preview)
+- `tests/IntegrationTests/Catalog/Pricing/Ppe/`
 
 Focused run: `dotnet test tests/UnitTests/UnitTests.csproj --filter "FullyQualifiedName~PpePricing|FullyQualifiedName~PpeSupplierOffer"`; `dotnet test tests/IntegrationTests/IntegrationTests.csproj --filter PpePricing` (slow; needs `BREVIERP_CATALOG_TEST_CONNECTION`).
 

@@ -1,11 +1,14 @@
 using System.Reflection;
 using System.Text.Json.Nodes;
-using Crm.Application.Customers.KeepinCrmSync;
 using Crm.Domain.Customers;
 using Crm.Domain.Customers.Identifiers;
-using Crm.Infrastructure.KeepinCrm;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
+using Crm.Application.Features.Customers.Commands.SyncKeepinCrmClients;
+using Crm.Application.Abstractions.Customers;
+using Crm.Infrastructure.Integrations.KeepinCrm;
+using Crm.Application.Abstractions.Customers.KeepinCrm;
+using Crm.Application.Features.Customers.Commands.SyncKeepinCrmClients.Results;
 
 namespace UnitTests.Crm.Customers;
 
@@ -22,13 +25,13 @@ public sealed class KeepinCrmClientSyncTests
     private static Customer Linked(long id, string keepinId, string name)
     {
         var customer = Unlinked(id, name);
-        customer.AddExternalIdentity(KeepinCrmClientIdentity.Create(keepinId));
+        customer.AddExternalIdentity(KeepinCrmClientIdentity.Create(keepinId).Value);
         return customer;
     }
 
     private static Customer Unlinked(long id, string name)
     {
-        var customer = Customer.Create("organization", name, null, null, Owner);
+        var customer = Customer.Create("organization", name, null, null, Owner).Value;
         typeof(Customer).GetProperty(nameof(Customer.Id))!.SetValue(customer, new CustomerId(id));
         return customer;
     }

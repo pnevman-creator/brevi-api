@@ -1,18 +1,21 @@
-using Crm.Application.Customers.KeepinCrmSync;
 using Crm.Domain.Customers.Identifiers;
-using Crm.Infrastructure.KeepinCrm;
-using Crm.Infrastructure.Persistence.Customers.KeepinCrmSync;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
+using Crm.Application.Features.Customers.Commands.SyncKeepinCrmClients;
+using Crm.Application.Abstractions.Customers;
+using Crm.Infrastructure.Integrations.KeepinCrm;
+using Crm.Infrastructure.Persistence.Repositories.Customers;
+using Crm.Application.Abstractions.Customers.KeepinCrm;
+using Crm.Application.Features.Customers.Commands.SyncKeepinCrmClients.Results;
 
 namespace Crm.Infrastructure.DependencyInjection;
 
-public static class CrmKeepinCrmExtensions
+internal static class CrmKeepinCrmExtensions
 {
-    /// <summary>KeepinCRM client source, store and sync service; used by Host.Api and the Host.Seed sync job.</summary>
-    public static IServiceCollection AddCrmKeepinCrmSync(this IServiceCollection services, IConfiguration configuration)
+    /// <summary>KeepinCRM client source, store and sync service; part of AddCrmInfrastructure.</summary>
+    internal static IServiceCollection AddCrmKeepinCrmSync(this IServiceCollection services, IConfiguration configuration)
     {
         services.Configure<KeepinCrmClientOptions>(configuration.GetSection(KeepinCrmClientOptions.Section));
         services.AddHttpClient<IKeepinCrmClientSource, KeepinCrmClientHttpSource>(client => client.Timeout = TimeSpan.FromSeconds(30));

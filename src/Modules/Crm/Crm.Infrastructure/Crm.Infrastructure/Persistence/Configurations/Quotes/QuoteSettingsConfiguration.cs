@@ -2,6 +2,7 @@ using Crm.Domain.Quotes.Settings;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
+
 namespace Crm.Infrastructure.Persistence.Configurations.Quotes;
 
 /// <summary>One row; each settings section is a jsonb document read and written whole.</summary>

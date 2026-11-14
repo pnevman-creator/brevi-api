@@ -1,14 +1,10 @@
-using BuildingBlocks.Domain.Exceptions;
+﻿using BuildingBlocks.Domain.Results;
 using Moq;
-using Reference.Application.Contracts.Persistence;
-using Reference.Application.Features.ProductSection.GetList;
-using Reference.Application.Features.ProductSection.Import;
-using Reference.Application.Features.ProductSection.Import.DTOs;
-using Reference.Application.Features.ProductSection.Import.Validators;
-using Reference.Application.Features.Shared.SheetImport;
-using Reference.Domain.ProductSections.Entities;
-using Reference.Domain.ProductSections.Enums;
-using Reference.Domain.ProductSections.ValueObjects;
+using Reference.Domain.ProductSections;
+using Reference.Application.Abstractions;
+using Reference.Application.Features.ProductSection.Commands.ImportProductSections;
+using Reference.Application.Features.ProductSection.Queries.GetProductSections;
+using Reference.Application.Features.SheetImport.Shared;
 
 namespace UnitTests.Reference;
 
@@ -16,6 +12,10 @@ namespace UnitTests.Reference;
 public sealed class ProductSectionTests
 {
     private static ProductSection Stored(int id, ProductSectionType type, string name, bool active = true,
+        string? comment = null, int order = 0) =>
+        ProductSection.Create(ProductSectionId.From(id), new ProductSectionDetails(type, name, active, comment, order)).Value;
+
+    private static DomainResult<ProductSection> Attempt(int id, ProductSectionType type, string name, bool active = true,
         string? comment = null, int order = 0) =>
         ProductSection.Create(ProductSectionId.From(id), new ProductSectionDetails(type, name, active, comment, order));
 
@@ -40,7 +40,7 @@ public sealed class ProductSectionTests
 
     private static async Task<ProductSectionImportResult> Import(Mock<IReferenceRepository<ProductSection>> repository,
         IReadOnlyList<ProductSectionImportRow> rows, bool dryRun = false, bool deleteMissing = false) =>
-        (await new ImportProductSectionsCommandHandler(repository.Object)
+        (await new ImportProductSectionsHandler(repository.Object)
             .Handle(new ImportProductSectionsCommand(rows, dryRun, deleteMissing), CancellationToken.None)).Value;
 
     [Test]
@@ -48,9 +48,9 @@ public sealed class ProductSectionTests
     {
         Assert.Multiple(() =>
         {
-            Assert.Throws<DomainException>(() => Stored(1, (ProductSectionType)7, "Одяг ЛІТО"));
-            Assert.Throws<DomainException>(() => Stored(1, ProductSectionType.Sewing, "  "));
-            Assert.Throws<DomainException>(() => Stored(1, ProductSectionType.Sewing, new string('я', 201)));
+            Assert.That(Attempt(1, (ProductSectionType)7, "Одяг ЛІТО").IsFailure, Is.True);
+            Assert.That(Attempt(1, ProductSectionType.Sewing, "  ").IsFailure, Is.True);
+            Assert.That(Attempt(1, ProductSectionType.Sewing, new string('я', 201)).IsFailure, Is.True);
             var section = Stored(1, ProductSectionType.Ppe, "  Захист рук ", comment: " ");
             Assert.That(section.Name, Is.EqualTo("Захист рук"));
             Assert.That(section.Comment, Is.Null);
@@ -119,7 +119,7 @@ public sealed class ProductSectionTests
     [Test]
     public void File_with_repeated_names_is_rejected()
     {
-        var validation = new ImportProductSectionsCommandValidator().Validate(new ImportProductSectionsCommand(
+        var validation = new ImportProductSectionsValidator().Validate(new ImportProductSectionsCommand(
             [Row(2, "Sewing", "Одяг ЛІТО"), Row(3, "Sewing", "одяг літо")], true, false));
 
         Assert.That(validation.IsValid, Is.False);
@@ -136,7 +136,7 @@ public sealed class ProductSectionTests
             Stored(3, ProductSectionType.Sewing, "Одяг ЛІТО", order: 2),
         ]);
 
-        var rows = (await new GetProductSectionsQueryHandler(repository.Object)
+        var rows = (await new GetProductSectionsHandler(repository.Object)
             .Handle(new GetProductSectionsQuery(), CancellationToken.None)).Value;
 
         Assert.Multiple(() =>

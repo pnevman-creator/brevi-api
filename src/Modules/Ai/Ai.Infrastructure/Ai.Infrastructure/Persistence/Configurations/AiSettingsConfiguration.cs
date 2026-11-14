@@ -2,6 +2,7 @@ using Ai.Domain.Settings;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
+
 namespace Ai.Infrastructure.Persistence.Configurations;
 
 public sealed class AiSettingsConfiguration : IEntityTypeConfiguration<AiSettings>

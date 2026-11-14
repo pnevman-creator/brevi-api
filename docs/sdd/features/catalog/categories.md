@@ -6,7 +6,7 @@ Admin CRUD and list for Storefront.
 
 ## Structure and relationships
 
-[ProductCategoriesController](../../../../src/Modules/Catalog/Catalog.Api/Catalog.Api/Controllers/ProductCategoriesController.cs) routes requests to the [admin query](../../../../src/Modules/Catalog/Catalog.Application/Catalog.Application/Features/ProductCategory/GetAdminList/GetAdminProductCategoriesQueryHandler.cs), store query, and command handlers. [ProductCategory](../../../../src/Modules/Catalog/Catalog.Domain/Catalog.Domain/ProductCategories/Entities/ProductCategory.cs) is persisted through [CatalogEfRepository](../../../../src/Modules/Catalog/Catalog.Infrastructure/Catalog.Infrastructure/Repositories/CatalogEfRepository.cs). The category belongs to Catalog even though the API route starts with `/api/reference/`.
+[ProductCategoriesEndpoints](../../../../src/Modules/Catalog/Catalog.Api/Catalog.Api/Endpoints/ProductCategory/ProductCategoriesEndpoints.cs) routes requests to the [admin query](../../../../src/Modules/Catalog/Catalog.Application/Catalog.Application/Features/ProductCategory/Queries/GetAdminProductCategories/GetAdminProductCategoriesHandler.cs), store query, and command handlers. [ProductCategory](../../../../src/Modules/Catalog/Catalog.Domain/Catalog.Domain/ProductCategories/ProductCategory.cs) is persisted through [CatalogEfRepository](../../../../src/Modules/Catalog/Catalog.Infrastructure/Catalog.Infrastructure/Persistence/Repositories/CatalogEfRepository.cs). The category belongs to Catalog even though the API route starts with `/api/reference/`.
 
 ## Code structure
 
@@ -15,22 +15,22 @@ The following are verified entry points and key feature components; the tree doe
 ```text
 src/
 └── Modules/Catalog/
-    ├── Catalog.Api/Catalog.Api/Controllers/ProductCategoriesController.cs  # HTTP entry point
+    ├── Catalog.Api/Catalog.Api/Endpoints/ProductCategory/ProductCategoriesEndpoints.cs  # HTTP entry point (Minimal API group, one <UseCase>/ folder per use case)
     ├── Catalog.Application/Catalog.Application/Features/ProductCategory/
-    │   ├── Create/CreateProductCategoryCommandHandler.cs  # use-case handler
-    │   ├── Delete/DeleteProductCategoryCommandHandler.cs  # use-case handler
-    │   ├── GetAdminList/GetAdminProductCategoriesQueryHandler.cs  # use-case handler
-    │   ├── GetStoreList/GetStoreProductCategoriesQueryHandler.cs  # use-case handler
-    │   └── Update/UpdateProductCategoryCommandHandler.cs  # use-case handler
-    ├── Catalog.Domain/Catalog.Domain/ProductCategories/Entities/ProductCategory.cs  # domain model
-    └── Catalog.Infrastructure/Catalog.Infrastructure/Repositories/CatalogEfRepository.cs  # data access
+    │   ├── Commands/CreateProductCategory/CreateProductCategoryHandler.cs  # use-case handler
+    │   ├── Commands/DeleteProductCategory/DeleteProductCategoryHandler.cs  # use-case handler
+    │   ├── Queries/GetAdminProductCategories/GetAdminProductCategoriesHandler.cs  # use-case handler
+    │   ├── Queries/GetStoreProductCategories/GetStoreProductCategoriesHandler.cs  # use-case handler
+    │   └── Commands/UpdateProductCategory/UpdateProductCategoryHandler.cs  # use-case handler
+    ├── Catalog.Domain/Catalog.Domain/ProductCategories/ProductCategory.cs  # domain model
+    └── Catalog.Infrastructure/Catalog.Infrastructure/Persistence/Repositories/CatalogEfRepository.cs  # data access
 ```
 
 ## Structure diagram
 
 ```mermaid
 flowchart LR
-    A["ProductCategoriesController"] --> B["Admin and store query handlers"]
+    A["ProductCategoriesEndpoints"] --> B["Admin and store query handlers"]
     A --> C["Command handlers"]
     B --> D["ProductCategory"]
     C --> D

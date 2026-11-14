@@ -11,35 +11,34 @@ src/Modules/Production/
     Forecast/ForecastQueue.cs    # saved order of the queue, version
     Forecast/SewingForecast.cs   # work left → working days
   Production.Application/Production.Application/
-    Contracts/WorkContracts.cs, ForecastContracts.cs
-    Work/
-      WorkCards.cs               # done counts per item, «Робота» of an item, row mapping
-      GetWorkLog (month, worker, order), GetChoices (workers, items, reasons), GetItemWork,
-      RecordWork (create with plan limit, «Сторно»), ImportWork (old «Цех»)
-      WorkMessages.cs            # also WorkshopDay (today in Kyiv)
-    Forecast/
-      ForecastQueueReader.cs     # «Нове» orders in queue order
-      GetForecast, SaveQueue
+    Features/Work/
+      Queries/                   # GetWorkLog (month, worker, order), GetWorkChoices (workers, items, reasons), GetProductionItemWork
+      Commands/                  # CreateProductionWork (plan limit), VoidProductionWork («Сторно»), ImportProductionWork (old «Цех»)
+      Shared/WorkCards.cs        # done counts per item, «Робота» of an item, row mapping
+      Shared/WorkMessages.cs     # also WorkshopDay (today in Kyiv)
+    Features/Forecast/
+      Shared/ForecastQueueReader.cs  # «Нове» orders in queue order
+      Queries/GetForecast, Commands/SaveForecastQueue
   Production.Infrastructure/.../Persistence/Configurations/ProductionWorkConfiguration.cs
-  Production.Api/Production.Api/Work/ProductionWorkController.cs          # /api/production/work…, items/{itemId}/work
-  Production.Api/Production.Api/Forecast/ProductionForecastController.cs  # /api/production/forecast
+  Production.Api/Production.Api/Endpoints/Work/      # /api/production/work…, items/{itemId}/work
+  Production.Api/Production.Api/Endpoints/Forecast/  # /api/production/forecast
 ```
 
 ## Structure diagram
 
 ```mermaid
 flowchart LR
-  Admin[Brevi Admin «Журнал робіт», «Робота», «Прогноз пошиття»] --> Controllers[ProductionWorkController, ProductionForecastController]
-  Controllers --> UseCases[Work and Forecast use cases]
+  Admin[Brevi Admin «Журнал робіт», «Робота», «Прогноз пошиття»] --> Endpoints[Work and Forecast endpoints]
+  Endpoints --> UseCases[Work and Forecast use cases]
   UseCases --> Db[(production.Work / ForecastQueues)]
   UseCases --> Orders[(production.Orders / Items / Employees)]
-  UseCases --> Params[IPayrollParameterReader] -.host.-> Reference[«Параметри ціноутворення»]
+  UseCases --> Params[IPayrollParameterReader] -.Reference.Contracts.-> Reference[«Параметри ціноутворення»]
 ```
 
 ## Tests
 
-- `tests/UnitTests/Production/ProductionWorkHandlerTests.cs` — plan limit and over-plan, «Сторно», access, import, forecast calculation, forecast access and queue.
-- `tests/UnitTests/Production/ProductionWorkContractTests.cs` — DTOs and operations against the contract.
+- `tests/UnitTests/Production/Payroll/ProductionWorkHandlerTests.cs` — plan limit and over-plan, «Сторно», access, import, forecast calculation, forecast access and queue.
+- `tests/UnitTests/Production/Payroll/ProductionWorkContractTests.cs` — DTOs and operations against the contract.
 
 Focused run: `dotnet test tests/UnitTests/UnitTests.csproj --filter FullyQualifiedName~UnitTests.Production`.
 

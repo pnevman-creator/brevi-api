@@ -19,15 +19,15 @@ The Admin «Користувачі» page: an administrator or the director list
 ```text
 src/Modules/Identity/
 ├── Identity.Api/Identity.Api/
-│   ├── Controllers/AdminUsersController.cs          # /api/admin/users
-│   └── Contracts/Users/                             # request and response records
+│   ├── Endpoints/Users/                             # /api/admin/users: one <UseCase>/ folder each with its request
+│   └── Users/StaffAccountResponse.cs
 ├── Identity.Application/Identity.Application/
-│   ├── Features/Users/                              # GetStaffList, CreateStaff, ChangeStaffRole,
+│   ├── Features/Users/{Commands,Queries}/           # GetStaffList, CreateStaff, ChangeStaffRole,
 │   │                                                # SetStaffBlocked, SetStaffPassword, DeleteStaff,
 │   │                                                # UpdateStaffDetails
 │   │                                                # + validators
-│   └── Services/IStaffAccountService.cs
-└── Identity.Infrastructure/Identity.Infrastructure/Services/Users/StaffAccountService.cs
+│   └── Abstractions/IStaffAccountService.cs
+└── Identity.Infrastructure/Identity.Infrastructure/Integrations/AspNetIdentity/Users/StaffAccountService.cs
 ```
 
 ## Tests

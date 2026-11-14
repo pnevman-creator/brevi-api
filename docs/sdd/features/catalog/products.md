@@ -20,7 +20,7 @@ The [Sewing Article/composition extension](sewing-composition.md) adds fabric va
 
 ## Structure and Relationships
 
-[ProductsController](../../../../src/Modules/Catalog/Catalog.Api/Catalog.Api/Controllers/ProductsController.cs) invokes the [create handler](../../../../src/Modules/Catalog/Catalog.Application/Catalog.Application/Features/Product/Create/CreateProductCommandHandler.cs) and the replace/delete/read handlers. [Product](../../../../src/Modules/Catalog/Catalog.Domain/Catalog.Domain/Products/Entities/Product.cs) owns categories, photos, description, and either [Sewing](../../../../src/Modules/Catalog/Catalog.Domain/Catalog.Domain/Products/Entities/Sewing/SewingProductDetails.cs) or [PPE](../../../../src/Modules/Catalog/Catalog.Domain/Catalog.Domain/Products/Entities/Ppe/PpeProductDetails.cs) details. The handler validates IDs in Reference through the read boundary, and [CatalogDbContext](../../../../src/Modules/Catalog/Catalog.Infrastructure/Catalog.Infrastructure/DataBase/CatalogDbContext.cs) persists the aggregate.
+[ProductsEndpoints](../../../../src/Modules/Catalog/Catalog.Api/Catalog.Api/Endpoints/Product/ProductsEndpoints.cs) invokes the [create handler](../../../../src/Modules/Catalog/Catalog.Application/Catalog.Application/Features/Product/Commands/CreateProduct/CreateProductHandler.cs) and the replace/delete/read handlers. [Product](../../../../src/Modules/Catalog/Catalog.Domain/Catalog.Domain/Products/Product.cs) owns categories, photos, description, and either [Sewing](../../../../src/Modules/Catalog/Catalog.Domain/Catalog.Domain/Products/Sewing/SewingProductDetails.cs) or [PPE](../../../../src/Modules/Catalog/Catalog.Domain/Catalog.Domain/Products/Ppe/PpeProductDetails.cs) details. The handler validates IDs in Reference through the read boundary, and [CatalogDbContext](../../../../src/Modules/Catalog/Catalog.Infrastructure/Catalog.Infrastructure/Persistence/CatalogDbContext.cs) persists the aggregate.
 
 ## Code Structure
 
@@ -29,45 +29,45 @@ Verified entry points and key feature components are shown; the tree does not li
 ```text
 src/
 └── Modules/Catalog/
-    ├── Catalog.Api/Catalog.Api/Controllers/ProductsController.cs  # HTTP entry point
-    ├── Catalog.Api/Catalog.Api/Controllers/ProductOverviewController.cs  # «Товари» page API
+    ├── Catalog.Api/Catalog.Api/Endpoints/Product/ProductsEndpoints.cs  # HTTP entry point (Minimal API group, one <UseCase>/ folder per use case)
+    ├── Catalog.Api/Catalog.Api/Endpoints/Overview/ProductOverviewEndpoints.cs  # «Товари» page API
     ├── Catalog.Application/Catalog.Application/Features/Product/
-    │   ├── Create/CreateProductCommandHandler.cs  # use case handler
-    │   ├── Delete/DeleteProductCommandHandler.cs  # use case handler
-    │   ├── GetAdminDetail/GetAdminProductDetailQueryHandler.cs  # use case handler
-    │   ├── GetAdminList/GetAdminProductsQueryHandler.cs  # use case handler
-    │   ├── Overview/CodeCheck/GetProductCodeCheckQueryHandler.cs  # free code and next MOD-XXX
-    │   ├── Overview/Create/CreateCatalogProductCommandHandler.cs  # «Новий ЗІЗ» / «Нова модель»
-    │   ├── Overview/GetList/GetProductOverviewPageQueryHandler.cs  # «Товари» page (CAT-013)
-    │   ├── Overview/GetList/ProductOverviewListing.cs  # search, filters, sort, page
-    │   ├── Overview/GetOne/GetProductOverviewItemQueryHandler.cs  # one row for the card
-    │   ├── Overview/Shared/Items/ProductOverviewItemReader.cs  # rows with published prices
-    │   ├── Overview/Shared/SewingModelCodes.cs  # next MOD-XXX
-    │   ├── Overview/Update/UpdateProductOverviewCommandHandler.cs  # «Товари» page fields
-    │   ├── Overview/Shared/ProductSlugCandidates.cs  # slug choices for a new product
-    │   ├── Photos/SetPhotos/SetProductPhotosCommandHandler.cs  # tab «Фото» save (CAT-018)
-    │   ├── Photos/SkuIndex/GetProductSkuIndexQueryHandler.cs  # products by sale SKU for imports
-    │   ├── OldSitePhotoImport/ImportOldSitePhotosCommandHandler.cs  # old-site photos and models (CAT-018)
-    │   ├── SheetImport/ImportSheetProductsCommandHandler.cs  # sheet import (CAT-010)
-    │   ├── SheetImport/Planning/SheetImportPlanner.cs  # pure plan and report
-    │   └── Update/ReplaceProductCommandHandler.cs  # use case handler
-    ├── Catalog.Domain/Catalog.Domain/Products/Entities/
+    │   ├── Commands/CreateProduct/CreateProductHandler.cs  # use case handler
+    │   ├── Commands/DeleteProduct/DeleteProductHandler.cs  # use case handler
+    │   ├── Queries/GetAdminProductDetail/GetAdminProductDetailHandler.cs  # use case handler
+    │   ├── Queries/GetAdminProducts/GetAdminProductsHandler.cs  # use case handler
+    │   ├── Queries/GetProductCodeCheck/GetProductCodeCheckHandler.cs  # free code and next MOD-XXX
+    │   ├── Commands/CreateCatalogProduct/CreateCatalogProductHandler.cs  # «Новий ЗІЗ» / «Нова модель»
+    │   ├── Queries/GetProductOverviewPage/GetProductOverviewPageHandler.cs  # «Товари» page (CAT-013)
+    │   ├── Queries/GetProductOverviewPage/ProductOverviewListing.cs  # search, filters, sort, page
+    │   ├── Queries/GetProductOverviewItem/GetProductOverviewItemHandler.cs  # one row for the card
+    │   ├── Shared/Overview/Items/ProductOverviewItemReader.cs  # rows with published prices
+    │   ├── Shared/Overview/SewingModelCodes.cs  # next MOD-XXX
+    │   ├── Commands/UpdateProductOverview/UpdateProductOverviewHandler.cs  # «Товари» page fields
+    │   ├── Shared/Overview/ProductSlugCandidates.cs  # slug choices for a new product
+    │   ├── Commands/SetProductPhotos/SetProductPhotosHandler.cs  # tab «Фото» save (CAT-018)
+    │   ├── Queries/GetProductSkuIndex/GetProductSkuIndexHandler.cs  # products by sale SKU for imports
+    │   ├── Commands/ImportOldSitePhotos/ImportOldSitePhotosHandler.cs  # old-site photos and models (CAT-018)
+    │   ├── Commands/ImportSheetProducts/ImportSheetProductsHandler.cs  # sheet import (CAT-010)
+    │   ├── Commands/ImportSheetProducts/SheetImportPlanner.cs  # pure plan and report
+    │   └── Commands/ReplaceProduct/ReplaceProductHandler.cs  # use case handler
+    ├── Catalog.Domain/Catalog.Domain/Products/
     │   ├── Ppe/PpeProductDetails.cs  # domain model
     │   ├── Product.cs  # domain model
     │   ├── Product.Overview.cs  # code and «Товари» page fields
     │   ├── Product.PhotoList.cs  # photo order and main photo (CAT-018)
     │   ├── ProductCatalogProfile.cs  # sheet row fields, section ID
     │   └── Sewing/SewingProductDetails.cs  # domain model
-    ├── Catalog.Infrastructure/Catalog.Infrastructure/Products/SheetImport/SheetProductImportStore.cs  # one-transaction import write
-    ├── Catalog.Infrastructure/Catalog.Infrastructure/Products/Overview/ProductOverviewVariantReader.cs  # variants, fabrics, prices in one query
-    └── Catalog.Infrastructure/Catalog.Infrastructure/DataBase/CatalogDbContext.cs  # data context
+    ├── Catalog.Infrastructure/Catalog.Infrastructure/Persistence/Repositories/Products/SheetProductImportStore.cs  # one-transaction import write
+    ├── Catalog.Infrastructure/Catalog.Infrastructure/Persistence/Repositories/Products/ProductOverviewVariantReader.cs  # variants, fabrics, prices in one query
+    └── Catalog.Infrastructure/Catalog.Infrastructure/Persistence/CatalogDbContext.cs  # data context
 ```
 
 ## Structure Diagram
 
 ```mermaid
 flowchart LR
-    A["ProductsController"] --> B["Create, replace, delete, and read handlers"]
+    A["ProductsEndpoints"] --> B["Create, replace, delete, and read handlers"]
     B --> C["Reference ID validation"]
     B --> D["Product"]
     D --> E["Categories, photos, and description"]
@@ -80,8 +80,8 @@ flowchart LR
 
 ## Tests
 
-- `tests/UnitTests/Product*Tests.cs` (incl. `ProductOverviewTests.cs`, `ProductOverviewListingTests.cs`), `tests/UnitTests/CatalogProductCreation*Tests.cs`, `tests/UnitTests/CatalogSheetImport*Tests.cs`, `tests/UnitTests/GetProductListRequestMapperTests.cs`, `tests/UnitTests/UnitTest1.cs` (ProductDomainTests), `tests/UnitTests/ProductPhotoListTests.cs`, `tests/UnitTests/OldSitePhotoImportTests.cs`
-- `tests/IntegrationTests/ProductsApiTests.cs`, `tests/IntegrationTests/ProductDeletionTests.cs`, `tests/IntegrationTests/CatalogProductPersistenceTests.cs`, `tests/IntegrationTests/GetAdminProductsSpecTests.cs`, `tests/IntegrationTests/CatalogSheetImportStoreTests.cs` (list page, prices and automatic publication), `tests/IntegrationTests/ProductPhotoPersistenceTests.cs`
+- `tests/UnitTests/Catalog/Products/Product*Tests.cs` (incl. `ProductOverviewTests.cs`, `ProductOverviewListingTests.cs`), `tests/UnitTests/Catalog/Products/CatalogProductCreation*Tests.cs`, `tests/UnitTests/Catalog/SheetImport/CatalogSheetImport*Tests.cs`, `tests/UnitTests/Catalog/Products/Overview/GetProductListRequestMapperTests.cs`, `tests/UnitTests/Catalog/Products/ProductDomainTests.cs` (ProductDomainTests), `tests/UnitTests/Catalog/Products/Photos/ProductPhotoListTests.cs`, `tests/UnitTests/Catalog/Products/Photos/OldSitePhotoImportTests.cs`
+- `tests/IntegrationTests/Catalog/Products/ProductsApiTests.cs`, `tests/IntegrationTests/Catalog/Products/ProductDeletionTests.cs`, `tests/IntegrationTests/Catalog/Products/CatalogProductPersistenceTests.cs`, `tests/IntegrationTests/Catalog/Products/GetAdminProductsSpecTests.cs`, `tests/IntegrationTests/Catalog/SheetImport/CatalogSheetImportStoreTests.cs` (list page, prices and automatic publication), `tests/IntegrationTests/Catalog/Products/ProductPhotoPersistenceTests.cs`
 
 Focused run: `dotnet test tests/UnitTests/UnitTests.csproj --filter Product` (covers `CatalogProductCreation`); `dotnet test tests/IntegrationTests/IntegrationTests.csproj --filter Product` (slow; needs `BREVIERP_CATALOG_TEST_CONNECTION`).
 

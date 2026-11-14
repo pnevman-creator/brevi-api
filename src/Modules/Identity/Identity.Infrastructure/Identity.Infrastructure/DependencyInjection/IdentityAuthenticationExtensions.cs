@@ -1,14 +1,14 @@
-using Identity.Infrastructure.Options;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Identity.Infrastructure.Integrations.AspNetIdentity;
 
 namespace Identity.Infrastructure.DependencyInjection;
 
 /// <summary>
 /// Registers the Identity session cookie, the only sign-in scheme of BreviERP.
 /// </summary>
-public static class IdentityAuthenticationExtensions
+internal static class IdentityAuthenticationExtensions
 {
-    public static IServiceCollection AddIdentityAuthentication(
+    internal static IServiceCollection AddIdentityAuthentication(
         this IServiceCollection services,
         IConfiguration configuration)
     {

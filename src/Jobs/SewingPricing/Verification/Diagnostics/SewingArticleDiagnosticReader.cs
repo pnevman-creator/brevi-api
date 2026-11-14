@@ -1,11 +1,13 @@
-using Catalog.Application.Contracts.Pricing;
-using Catalog.Application.Features.Pricing.Sewing.Preview;
-using Catalog.Application.Features.Pricing.Sewing.Evaluation;
 using Catalog.Domain.Pricing.Sewing;
-using Catalog.Domain.Products.Entities;
-using Catalog.Infrastructure.DataBase;
+using Catalog.Domain.Products;
 using CatalogImport.Source;
 using Microsoft.EntityFrameworkCore;
+using Catalog.Application.Abstractions.Pricing;
+using Catalog.Application.Features.Pricing.Queries.CalculateSewingArticle;
+using Catalog.Application.Features.Pricing.Shared.Sewing.Evaluation;
+using Catalog.Infrastructure.Persistence;
+using Catalog.Application.Abstractions.Pricing.Inputs;
+using Catalog.Application.Abstractions.Pricing.Settings;
 
 namespace SewingPricing.Jobs.Verification;
 
@@ -17,7 +19,7 @@ public sealed class SewingArticleDiagnosticReader(CatalogDbContext catalog, Work
     {
         var article = await catalog.Set<SewingArticle>().AsNoTracking().Where(x => x.SaleSku == sku)
             .Select(x => new { x.Id, x.ProductId }).SingleAsync(cancellationToken);
-        var handler = new CalculateSewingArticleQueryHandler(inputReader, settingsReader, referenceReader);
+        var handler = new CalculateSewingArticleHandler(inputReader, settingsReader, referenceReader);
         var strict = await handler.Handle(new(article.ProductId.Value, article.Id.Value, at), cancellationToken);
         if (!strict.IsSuccess)
             throw new InvalidDataException($"Article {sku} could not be resolved.");

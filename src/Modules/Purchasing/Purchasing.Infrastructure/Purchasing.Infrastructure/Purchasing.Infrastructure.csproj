@@ -4,21 +4,19 @@
     <ProjectReference Include="..\..\..\..\BuildingBlocks\BuildingBlocks.Infrastructure\BuildingBlocks.Infrastructure\BuildingBlocks.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Purchasing.Application\Purchasing.Application\Purchasing.Application.csproj" />
     <ProjectReference Include="..\..\Purchasing.Domain\Purchasing.Domain\Purchasing.Domain.csproj" />
+    <ProjectReference Include="..\..\..\Ai\Ai.Contracts\Ai.Contracts\Ai.Contracts.csproj" />
+    <ProjectReference Include="..\..\..\Accounting\Accounting.Contracts\Accounting.Contracts\Accounting.Contracts.csproj" />
+    <ProjectReference Include="..\..\..\Reference\Reference.Contracts\Reference.Contracts\Reference.Contracts.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Google.Apis.Auth" Version="1.78.0" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.14">
+    <PackageReference Include="Google.Apis.Auth" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
   </ItemGroup>
 
-  <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-  </PropertyGroup>
 
   <ItemGroup>
     <InternalsVisibleTo Include="UnitTests" />

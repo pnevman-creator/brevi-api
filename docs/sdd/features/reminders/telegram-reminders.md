@@ -16,22 +16,24 @@ src/Modules/Reminders/
     ReminderTime.cs    # Kyiv time zone
   Reminders.Application/Reminders.Application/
     Abstractions/      # IRemindersDbContext, ITelegramGateway, ReminderClock, webhook settings
-    Tasks/             # Get/Create/Update/Archive, PreviewDueDates, AssignChat; Mapping/ (mapper, validators, chat lookup)
-    Occurrences/       # GetOccurrences, Close/Reopen (+ ReminderOccurrenceStatusChanger updates live cards)
-    Chats/             # GetChats, UpdateChat (approve, rename), SendTestMessage
-    Calendar/          # Get/Add/Remove non-working days, WorkingCalendarLoader
-    Dispatch/          # ReminderOccurrenceGenerator, ReminderDispatcher (daily run)
-    Messages/          # ReminderMessageFormatter (Ukrainian HTML card, keyboards), ReminderCallbackData
-    Telegram/          # update DTOs; HandleUpdate/ (buttons, chat tracker); ConnectWebhook/
-    Contracts/         # request/response DTOs and string codes
+    Features/          # Commands/<UseCase>, Queries/<UseCase>, Shared/ per feature
+      Tasks/           # GetReminderTasks, Create/Update/ArchiveReminderTask, PreviewReminderDueDates, AssignReminderChat; Shared/ (mapper, validators, chat lookup, ReminderCodes)
+      Occurrences/     # GetReminderOccurrences, Close/ReopenReminderOccurrence (+ ReminderOccurrenceStatusChanger updates live cards)
+      Chats/           # GetReminderChats, UpdateReminderChat (approve, rename), SendReminderChatTest
+      Calendar/        # GetNonWorkingDays, Add/RemoveNonWorkingDay; Shared/WorkingCalendarLoader
+      Dispatch/Shared/ # ReminderOccurrenceGenerator, ReminderDispatcher (daily run)
+      Dispatch/Commands/DispatchReminders/ # the daily run as one command
+      Messages/Shared/ # ReminderMessageFormatter (Ukrainian HTML card, keyboards), ReminderCallbackData
+      Telegram/        # HandleTelegramUpdate (buttons, chat tracker), ConnectTelegramWebhook; Shared/ update DTOs
+      Access/Shared/   # ReminderAdmin
   Reminders.Infrastructure/Reminders.Infrastructure/
     Persistence/       # RemindersDbContext (schema reminders), configurations, migrations, Seeding/ (25 default tasks)
-    Telegram/          # TelegramOptions, TelegramBotApiGateway (HttpClient)
+    Integrations/Telegram/ # TelegramOptions, TelegramBotApiGateway (HttpClient)
     DependencyInjection/
   Reminders.Api/Reminders.Api/
-    Tasks/ Occurrences/ Chats/ Calendar/   # Admin controllers under /api/reminders
-    Telegram/TelegramWebhookController.cs  # anonymous webhook with secret header, Admin connect
-src/Bootstrapper/Host.Seed/Jobs/RemindersDispatchCommandRunner.cs
+    Endpoints/{Tasks,Occurrences,Chats,Calendar}/   # Admin endpoints under /api/reminders, one <UseCase>/ folder each
+    Endpoints/Telegram/   # ReceiveTelegramUpdateEndpoint (anonymous, secret header), ConnectTelegramWebhookEndpoint
+src/Bootstrapper/Host.Seed/Jobs/Tasks/Office/RemindersTaskRunner.cs   # task reminders: sends DispatchRemindersCommand (also the old --reminders-dispatch mode)
 ```
 
 ## Structure diagram
@@ -42,11 +44,11 @@ flowchart LR
   Job --> Dispatcher[ReminderDispatcher]
   Dispatcher --> Generator[Occurrence generator]
   Dispatcher --> Gateway[Telegram gateway]
-  Telegram --> Webhook[Webhook controller]
+  Telegram --> Webhook[Webhook endpoint]
   Webhook --> Handler[Button handler / chat tracker]
   Handler --> Gateway
-  Admin[Brevi Admin] --> Controllers[Reminders controllers]
-  Controllers --> UseCases[Mediator use cases]
+  Admin[Brevi Admin] --> Endpoints[Reminders endpoints]
+  Endpoints --> UseCases[Mediator use cases]
   UseCases --> Db[(reminders schema)]
   Dispatcher --> Db
   Handler --> Db
@@ -54,4 +56,4 @@ flowchart LR
 
 ## Tests
 
-`tests/UnitTests/Reminders/`: schedule and all 25 default deadlines, planner and snooze, dispatcher (SQLite in memory, fake clock, fake Telegram), button handler. Command: `dotnet test tests/UnitTests/UnitTests.csproj --filter "FullyQualifiedName~UnitTests.Reminders"`. Module references and schema: `tests/ArchitectureTests/RemindersDependencyTests.cs`.
+`tests/UnitTests/Reminders/`: schedule and all 25 default deadlines, planner and snooze, dispatcher (SQLite in memory, fake clock, fake Telegram), button handler. Command: `dotnet test tests/UnitTests/UnitTests.csproj --filter "FullyQualifiedName~UnitTests.Reminders"`. Module references and schema: `tests/ArchitectureTests/Modules/Office/RemindersDependencyTests.cs`.

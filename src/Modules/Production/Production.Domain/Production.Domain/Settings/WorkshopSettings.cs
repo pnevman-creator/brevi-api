@@ -1,4 +1,6 @@
+using BuildingBlocks.Domain.Results;
 using Production.Domain.Orders;
+using Production.Domain.Orders.Rules;
 
 namespace Production.Domain.Settings;
 
@@ -28,13 +30,16 @@ public sealed class WorkshopSettings
 
     public bool CanSendTelegram => TelegramEnabled && TelegramChatId is not null;
 
-    public void Update(bool enabled, long? chatId, int? threadId, string actorName, DateTimeOffset now)
+    public DomainResult Update(bool enabled, long? chatId, int? threadId, string actorName, DateTimeOffset now)
     {
-        if (enabled && chatId is null) throw new ArgumentException("A chat is needed to turn sending on.", nameof(chatId));
+        if (enabled && chatId is null)
+            return Error.Validation("production.telegram_chat_required", "Оберіть групу Telegram, щоб увімкнути надсилання.",
+                "telegramChatId");
         TelegramEnabled = enabled;
         TelegramChatId = chatId;
         TelegramThreadId = threadId;
         UpdatedByName = OrderText.Required(actorName, ProductionOrder.PersonMaxLength);
         UpdatedAt = now;
+        return DomainResult.Success();
     }
 }

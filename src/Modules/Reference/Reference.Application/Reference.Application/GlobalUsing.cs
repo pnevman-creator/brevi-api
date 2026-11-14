@@ -21,5 +21,7 @@ global using Ardalis.Specification;
 global using Ardalis.Result;
 global using Ardalis.Result.FluentValidation;
 
-global using BuildingBlocks.Domain.ValueObjects;
+global using BuildingBlocks.Domain;
 
+global using BuildingBlocks.Application;
+global using BuildingBlocks.Domain.Results;

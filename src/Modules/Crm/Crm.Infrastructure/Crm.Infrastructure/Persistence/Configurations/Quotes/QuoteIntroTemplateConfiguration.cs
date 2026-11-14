@@ -3,6 +3,7 @@ using Crm.Domain.Quotes.Introductions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
+
 namespace Crm.Infrastructure.Persistence.Configurations.Quotes;
 
 /// <summary>«Готові шаблони» of introductions; the pages are one jsonb document.</summary>
