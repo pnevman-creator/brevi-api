@@ -73,12 +73,14 @@ This is an index of project decisions and delivery; the [implemented feature map
 | Accounting | [001 «Бухгалтерія»](accounting/001-finance/README.md) | stages 1–3 implemented 2026-11-05 |
 | Purchasing | [001 «Рахунки на закупку»](purchasing/001-purchase-invoices/README.md) | stages 1–3 implemented 2026-11-05 |
 | Reminders | [001 Telegram deadline reminders](reminders/001-telegram-reminders/README.md) | implemented and locally verified 2026-11-01; not deployed |
+| ActivityLog | [001 «Журнал дій»: who created, changed or deleted what (ACT-001)](activity-log/001-staff-activity-log/README.md) | implemented 2026-11-16 ([audit](activity-log/001-staff-activity-log/audit.md)) |
 | Scheduling | [001 «Фонові задачі»: one scheduler, schedules in the database](scheduling/001-background-tasks/README.md) | in progress 2026-11-14 |
 | Identity | [001 Cookie sign-in like Kedr](identity/001-cookie-sign-in/README.md) | implemented 2026-11-03; not deployed |
 | Identity | [002 «Права доступу» (ACC-001)](identity/002-access-rights/README.md) | implemented 2026-11-08 |
 | Identity | [003 Role «SEO-фахівець» and «Робочі столи» (DESK-001)](identity/003-role-desks/README.md) | implemented 2026-11-11 |
 | Platform | [001 module schemas](platform/001-module-schemas/README.md)                                              | implementation                                                                                                     |
 | Platform | [003 Transactional outbox](platform/003-transactional-outbox/README.md) | implemented 2026-11-14; Cloud Scheduler job pending |
+| Platform | [004 Request tracing and log correlation](platform/004-request-tracing/README.md) | implemented 2026-11-16; Google Cloud setup by the owner pending |
 
 When a specification's status changes, update its row here in the same change.
 

@@ -1,3 +1,6 @@
+using BuildingBlocks.Application.Outbox;
+using BuildingBlocks.Infrastructure.Outbox;
+using BuildingBlocks.Infrastructure.Database;
 using Catalog.Domain.ProductCategories;
 using Catalog.Domain.Products;
 
@@ -12,6 +15,9 @@ public sealed class CatalogDbContext(DbContextOptions<CatalogDbContext> options)
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+        modelBuilder.AddTrigramSearch();
+        // The catalogue names its schema per table, so its outbox does too.
+        modelBuilder.AddOutbox().Entity<OutboxMessage>().ToTable(OutboxModelBuilderExtensions.Table, "catalog");
 
         modelBuilder.ApplyConfigurationsFromAssembly(
             typeof(CatalogDbContext).Assembly,

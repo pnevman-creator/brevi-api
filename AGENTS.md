@@ -9,8 +9,10 @@ BreviERP is the backend for Brevi, which sells in-house sewn products (Sewing: p
 ## Project context
 
 - [Architecture](docs/sdd/architecture/README.md) — modules, layers, and dependency boundaries.
+- [Architecture decisions (ADR)](docs/sdd/architecture/decisions/README.md) and [C4 diagrams](docs/sdd/architecture/c4/README.md) — why the system is built this way and how its parts connect. A new lasting decision (module, external system, way to run work or deploy) gets an ADR and a C4 update in the same change; the full architecture audit reports missing ones.
 - [Module rules](docs/sdd/standards/module-rules.md) — every module is `Api`, `Application`, `Contracts`, `Domain`, `Infrastructure`; another module is used only through its `Contracts` ([ADR-0006](docs/sdd/architecture/decisions/0006-module-contracts.md)); folders follow aggregates and features (`Features/<Feature>/{Commands,Queries}/<UseCase>/`), never kinds of classes; a folder holds at most six code files, then splits by meaning into named subfolders, with no empty or wrapper folders, in `src/` and `tests/` alike (only EF `Migrations/` exempt; `FolderSizeTests`); the hosts hold only composition; business rules return typed errors (exceptions only for the unexpected, one global exception handler); every input has a FluentValidation validator with Ukrainian messages. Open items are its «Known deviations».
 - [Standards](docs/sdd/standards/README.md) — stable rules for development, delivery, and verification.
+- [API contract](docs/sdd/contracts/README.md) — `docs/sdd/contracts/openapi.json` is generated from the code on every build and is the only machine-readable contract; never write OpenAPI YAML by hand. Each endpoint carries `WithName` (unique camelCase operation id), `WithSummary`, `Produces<T>` and `ProducesProblem`; CI fails when the committed file differs from the code, and `OpenApiDocumentRulesTests` checks ids, summaries, typed reads and number types. brevi-web downloads this file from `master` and calls the API through a typed `openapi-fetch` client ([ADR-0015](docs/sdd/architecture/decisions/0015-openapi-generated-from-code.md)).
 - [Specifications](docs/sdd/specs/README.md) — feature requirements, decisions, tasks, and completion evidence.
 - [Implemented feature map](docs/sdd/features/README.md) — navigation by module, structure, and code entry points.
 - [Contracts](docs/sdd/contracts/README.md) — public API behavior and contract synchronization.
@@ -35,6 +37,7 @@ For a new or substantially changed feature, update the [feature map](docs/sdd/fe
 | Focused unit test | `dotnet test tests/UnitTests/UnitTests.csproj --filter <ClassOrName>` | fast |
 | Architecture rules | `dotnet test tests/ArchitectureTests/ArchitectureTests.csproj` | fast |
 | Focused integration test | `dotnet test tests/IntegrationTests/IntegrationTests.csproj --filter <ClassOrName>` | slow; needs a separate PostgreSQL through `BREVIERP_CATALOG_TEST_CONNECTION` |
+| OpenAPI contract | `dotnet build src/Bootstrapper/Host.Api/Host.Api.csproj` regenerates `docs/sdd/contracts/openapi.json`; commit it with the endpoint change | fast |
 | Documentation change | `git diff --check` and check the changed links | fast |
 
 Do not run a full `dotnet build`/`dotnet test BreviERP.sln`, all integration tests, or `Host.Seed` data commands unless the user asks; CI runs the full suite. A small fix that restores documented behavior needs no SDD, file-role map, or audit: fix it, run the focused test, and describe the change briefly.
@@ -53,6 +56,8 @@ Do not run a full `dotnet build`/`dotnet test BreviERP.sln`, all integration tes
 | Operational jobs: catalogue import, pricing verification and activation | — | [Jobs overview](src/Jobs/README.md); run only through `Host.Seed`; runbooks in [data operations](docs/sdd/operations/data/migrations-and-seeding.md) |
 | Find database tables and relationships | — | [Database map](docs/sdd/architecture/data-model/README.md): start with the tree, then read only the relevant owner's file |
 | Database schema, migrations, and seed data | `$backend-database-change` | [Database rules](docs/sdd/standards/database-rules.md) and [data operations](docs/sdd/operations/data/migrations-and-seeding.md) |
+| Queries and N+1, indexes and search, transactions, concurrency, migration method | — | [Database rules](docs/sdd/standards/database-rules.md): what, where and how; every audit checks each section |
+| Double submit, retries, outbox and webhook handlers, imports (what a repeat does) | — | [Idempotency rules](docs/sdd/standards/idempotency-rules.md): decision table, `requestId` pattern, audit of every write operation |
 | Verify changes / hand off for review | `$backend-change-verification` / `$backend-pr-handoff` | [Testing rules](docs/sdd/standards/testing-rules.md) |
 | Differences between code and documentation | `$backend-docs-sync` | [Standards index](docs/sdd/standards/README.md) and [feature map](docs/sdd/features/README.md) |
 
@@ -63,6 +68,10 @@ The user's direct request and this repository's rules define the scope of work. 
 ## Scope and verification
 
 Complete all ready tasks within the agreed feature, phase, scenario, or task scope without a separate instruction for each file; stop at the scope boundary, an unresolved product decision, or a concrete blocker. The detailed procedure is in the [delivery rules](docs/sdd/standards/delivery-rules.md). Choose checks according to the [testing rules](docs/sdd/standards/testing-rules.md) and the configuration of affected projects. For new identifiers, read the [ID strategy](docs/sdd/standards/identifier-strategy.md).
+
+**Idempotency:** a repeated request or message must not do the work twice. Creates of money, stock, orders, numbered documents, КП and e-mails, public site requests, and anything that sends a message outside take a `requestId` saved in the same transaction under a unique index (stock commands an `OperationId`); a repeat returns the first result and a racing copy is caught, never 500; outbox handlers, Telegram webhooks, the scheduler, and imports check state, dedupe, or upsert before acting ([idempotency rules](docs/sdd/standards/idempotency-rules.md)).
+
+**Working with the database:** reads use `AsNoTracking` or a projection; no query or `SaveChanges` inside a loop; one `SaveChanges` per command (repositories never save on their own); search splits the input into words, each an escaped `ILIKE` on a column with a `gin_trgm_ops` index; shared state has a named race guard (conditional `UPDATE`, row version, or lock) and every idempotency key a unique index; migrations are a separate step before the deploy and stay compatible with the previous release ([database rules](docs/sdd/standards/database-rules.md)).
 
 For `Host.Seed`, migrations, and other actions that change database state, check the [project procedure](docs/sdd/operations/data/migrations-and-seeding.md) and the permitted environment.
 

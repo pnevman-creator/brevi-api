@@ -1,3 +1,4 @@
+using BuildingBlocks.Domain.Events;
 using BuildingBlocks.Domain.Results;
 using Production.Domain.Orders;
 using Production.Domain.Orders.Rules;
@@ -31,7 +32,7 @@ public sealed record WorkFacts(ProductionWorkKind Kind, int Quantity, DateOnly W
 /// as it was, so a later rate change does not change the pay of past work. A record is never edited or deleted: a wrong
 /// one is cancelled by «Сторно» with a reason (PRD-D36).
 /// </summary>
-public sealed class ProductionWork
+public sealed class ProductionWork : DomainEventSource
 {
     public const int MaxQuantity = 100_000;
     public const int CommentMaxLength = 1000;
@@ -41,7 +42,7 @@ public sealed class ProductionWork
     private ProductionWork() { }
 
     public static DomainResult<ProductionWork> Create(WorkTarget target, WorkFacts facts, string actorName,
-        DateTimeOffset now, string? legacyId = null)
+        DateTimeOffset now, string? legacyId = null, Guid? requestId = null)
     {
         if (facts.Quantity is <= 0 or > MaxQuantity)
             return Error.Validation("production.work_quantity", $"Кількість — від 1 до {MaxQuantity}.", "quantity");
@@ -50,7 +51,9 @@ public sealed class ProductionWork
         if (facts.OverPlan && !OverPlanReasons.IsKnown(facts.Reason))
             return Error.Validation("production.work_over_plan_reason", "Для роботи понад план оберіть причину.", "reason");
         var comment = OrderText.Check(facts.Comment, CommentMaxLength, "comment");
-        return comment.IsFailure ? comment.Error! : new ProductionWork(target, facts, actorName, now, legacyId);
+        return comment.IsFailure
+            ? comment.Error!
+            : new ProductionWork(target, facts, actorName, now, legacyId) { RequestId = requestId };
     }
 
     private ProductionWork(WorkTarget target, WorkFacts facts, string actorName, DateTimeOffset now, string? legacyId)
@@ -69,6 +72,7 @@ public sealed class ProductionWork
         CreatedAt = now;
         CreatedByName = OrderText.Required(actorName, ProductionOrder.PersonMaxLength);
         LegacyId = OrderText.Optional(legacyId, LegacyIdMaxLength);
+        if (LegacyId is null) Raise(new ProductionWorkRecorded(this, false));
     }
 
     public int Id { get; private set; }
@@ -96,6 +100,9 @@ public sealed class ProductionWork
     public string? VoidReason { get; private set; }
     public string? LegacyId { get; private set; }
 
+    /// <summary>The «Додати роботу» attempt; a repeat with the same id records nothing new (unique).</summary>
+    public Guid? RequestId { get; private init; }
+
     public bool IsVoided => VoidedAt is not null;
 
     /// <summary>Counts toward «пошито» or «покроєно» of the item.</summary>
@@ -109,6 +116,7 @@ public sealed class ProductionWork
         VoidReason = OrderText.Required(reason, ReasonMaxLength);
         VoidedByName = OrderText.Required(actorName, ProductionOrder.PersonMaxLength);
         VoidedAt = now;
+        Raise(new ProductionWorkRecorded(this, true));
         return DomainResult.Success();
     }
 }

@@ -1,3 +1,6 @@
+using ActivityLog.Contracts.Activity;
+using BuildingBlocks.Infrastructure.DomainEvents;
+using Warehouse.Application.Features.Activity.EventHandlers;
 using Warehouse.Infrastructure.Adapters.Identity;
 using Warehouse.Infrastructure.Adapters.Production;
 using Warehouse.Infrastructure.Adapters.Reference;
@@ -14,6 +17,7 @@ using Warehouse.Application.Features.Stock.Shared.Booking;
 using Warehouse.Application.Features.Stock.Shared.Operations;
 using Warehouse.Application.Features.Stock.Shared.Plans;
 using BuildingBlocks.Infrastructure.Database;
+using BuildingBlocks.Infrastructure.Outbox;
 
 namespace Warehouse.Infrastructure.DependencyInjection;
 
@@ -26,8 +30,12 @@ public static class WarehouseInfrastructureExtensions
     public static IServiceCollection AddWarehouseInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
         var connection = configuration.GetConnectionString("Default") ?? throw new InvalidOperationException("Missing ConnectionStrings:Default");
-        services.AddDbContext<WarehouseDbContext>(options => options.UseNpgsql(connection,
-            x => x.MigrationsHistoryTable("__EFMigrationsHistory", WarehouseDbContext.Schema)));
+        services.AddDomainEvents();
+        services.AddScoped<IActivityDescriber, FabricMovementActivity>();
+        services.AddScoped<IActivityDescriber, FabricRevisionActivity>();
+        services.AddDbContext<WarehouseDbContext>((provider, options) => options
+            .UseNpgsql(connection, x => x.MigrationsHistoryTable("__EFMigrationsHistory", WarehouseDbContext.Schema))
+            .AddDomainEvents(provider));
         services.AddScoped<IWarehouseDbContext>(sp => sp.GetRequiredService<WarehouseDbContext>());
         services.AddScoped<IDatabaseMigrator, DbMigrator<WarehouseDbContext>>();
         services.AddScoped<StockReservations>();
@@ -40,6 +48,9 @@ public static class WarehouseInfrastructureExtensions
         services.AddScoped<ItemFabricCards>();
         services.AddScoped<ItemPlans>();
         services.AddScoped<StockFacts>();
+        services.AddScoped<FabricHistory>();
+        services.AddOutbox<WarehouseDbContext>();
+        services.AddOutboxHandler<RecordFabricHistoryOutboxHandler>();
 
         // Contracts other modules use (ADR-0006).
         services.AddScoped<IStockFacts>(sp => sp.GetRequiredService<StockFacts>());

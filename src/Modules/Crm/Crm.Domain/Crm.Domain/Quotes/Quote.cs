@@ -8,21 +8,28 @@ namespace Crm.Domain.Quotes;
 
 /// <summary>
 /// A commercial proposal (КП). The author never changes; the responsible person sees and edits it (R-01, R-02).
-/// <see cref="Version"/> grows with every change and guards against stale saves (R-12).
+/// <see cref="Version"/> grows with every change and guards against stale saves (R-12). Every history line a person
+/// adds is also raised as <see cref="QuoteRecorded"/> for «Журнал дій» (ACT-001).
 /// </summary>
-public sealed class Quote
+public sealed class Quote : DomainEventSource
 {
     private readonly List<QuoteItem> _items = [];
     private readonly List<QuoteEvent> _events = [];
+
+    /// <summary>The fields before the first change of this command, for the changed fields of «Журнал дій».</summary>
+    private QuoteSnapshot? _before;
 
     private Quote() { }
 
     /// <summary>A new draft; the author is also responsible.</summary>
     public static DomainResult<Quote> Create(QuoteNumber number, QuoteKind kind, QuotePerson author, QuoteHeader header,
-        IEnumerable<QuoteItem> items, DateTimeOffset now)
+        IEnumerable<QuoteItem> items, DateTimeOffset now, Guid? requestId = null)
     {
         var valid = CheckHeader(header);
-        return valid.IsFailure ? valid.Error! : new Quote(number, kind, author, header, items, now);
+        if (valid.IsFailure) return valid.Error!;
+        var quote = new Quote(number, kind, author, header, items, now) { CreateRequestId = requestId };
+        quote.RaiseRecorded(QuoteEventKind.Created, null);
+        return quote;
     }
 
     private Quote(QuoteNumber number, QuoteKind kind, QuotePerson author, QuoteHeader header,
@@ -43,7 +50,7 @@ public sealed class Quote
         Version = 1;
         ApplyHeader(header);
         _items.AddRange(items);
-        Record(QuoteEventKind.Created, author, null, now);
+        AddHistory(QuoteEventKind.Created, author, null, now);
     }
 
     public long Id { get; private set; }
@@ -107,6 +114,9 @@ public sealed class Quote
 
     public int Version { get; private set; }
 
+    /// <summary>The create or copy attempt; a repeat with the same id returns this КП (unique).</summary>
+    public Guid? CreateRequestId { get; private init; }
+
     public IReadOnlyList<QuoteItem> Items => _items;
 
     /// <summary>History lines added in this change; saved ones are read by a separate query.</summary>
@@ -116,11 +126,11 @@ public sealed class Quote
     /// «Копіювати КП» (R-24): a new draft with the same header, introduction and items with their saved prices. The
     /// person who copies becomes its author and responsible.
     /// </summary>
-    public Quote CopyAs(QuoteNumber number, QuotePerson author, DateTimeOffset now)
+    public Quote CopyAs(QuoteNumber number, QuotePerson author, DateTimeOffset now, Guid? requestId = null)
     {
         var copy = new Quote(number, Kind, author,
             new QuoteHeader(InternalName, CustomerId, RecipientName, CompanyName, ClientComment, ManagerNote),
-            _items.OrderBy(x => x.Position).Select(x => x.Copy()), now);
+            _items.OrderBy(x => x.Position).Select(x => x.Copy()), now) { CreateRequestId = requestId };
         if (Introduction is { } introduction) copy.ApplyIntroduction(introduction);
         copy._events.Clear(); // the copy starts its history with «Копія КП N» instead of «Створено»
         copy.Record(QuoteEventKind.Copied, author, $"Копія КП {Number}", now);
@@ -150,14 +160,35 @@ public sealed class Quote
             quote.LastSentAt = state.LastSentAt ?? state.UpdatedAt;
         }
 
-        foreach (var line in events) quote.Record(line.Kind, line.Actor, line.Details, line.At);
-        quote.Record(QuoteEventKind.Imported, importedBy, note, now);
+        foreach (var line in events) quote.AddHistory(line.Kind, line.Actor, line.Details, line.At);
+        quote.AddHistory(QuoteEventKind.Imported, importedBy, note, now);
         return quote;
     }
 
-    /// <summary>Adds a history line; the caller records what the change was.</summary>
-    public void Record(QuoteEventKind kind, QuotePerson actor, string? details, DateTimeOffset at) =>
+    /// <summary>Adds a history line and raises it for «Журнал дій»; the caller records what the change was.</summary>
+    public void Record(QuoteEventKind kind, QuotePerson actor, string? details, DateTimeOffset at)
+    {
+        AddHistory(kind, actor, details, at);
+        RaiseRecorded(kind, details);
+    }
+
+    /// <summary>«Видалити КП»: the last event of the КП, raised before the handler removes it.</summary>
+    public void MarkDeleted() => Raise(new QuoteDeleted(Id, Number, InternalName));
+
+    /// <summary>The fields «Журнал дій» compares.</summary>
+    public QuoteSnapshot Snapshot() => new(InternalName, CustomerId, RecipientName, CompanyName, ClientComment,
+        ManagerNote, _items.Count, IntroLayout, RecipientEmail, LetterName, LetterSubject, LetterBody);
+
+    private void AddHistory(QuoteEventKind kind, QuotePerson actor, string? details, DateTimeOffset at) =>
         _events.Add(new QuoteEvent(kind, actor, details, at));
+
+    private void RaiseRecorded(QuoteEventKind kind, string? details)
+    {
+        Raise(new QuoteRecorded(this, kind, details, _before, Snapshot()));
+        _before = null;
+    }
+
+    private void Remember() => _before ??= Snapshot();
 
     /// <summary>A КП of the removed «Архів» that a production order keeps returns to the list (R-23).</summary>
     public void ReturnFromLegacyArchive(QuotePerson person, DateTimeOffset now)
@@ -174,6 +205,7 @@ public sealed class Quote
     {
         var valid = CheckHeader(header);
         if (valid.IsFailure) return valid;
+        Remember();
         ApplyHeader(header);
         _items.Clear();
         _items.AddRange(items);
@@ -185,6 +217,7 @@ public sealed class Quote
     public DomainResult AddItem(QuoteItem item, DateTimeOffset now)
     {
         if (_items.Count >= QuoteLimits.MaxItems) return QuoteErrors.TooManyItems();
+        Remember();
         _items.Add(item);
         Touch(now);
         return DomainResult.Success();
@@ -194,6 +227,7 @@ public sealed class Quote
     public DomainResult SetIntroduction(QuoteIntroduction introduction)
     {
         if (Kind != QuoteKind.Introduction) return QuoteErrors.NotIntroduction();
+        Remember();
         ApplyIntroduction(introduction);
         return DomainResult.Success();
     }

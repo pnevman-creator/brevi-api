@@ -60,6 +60,7 @@ Every work page of the admin is guarded by `access:<page>`; the action comes fro
 | `work-log`, `workshop-settings` (group «Адміністрування»), `workshop-staff`, `fabric-norms`, `payroll`, `timesheet` (the three «Персонал цеху» tabs) | `/api/production/work-log`, settings, staff, fabric norms and model compositions, payroll, timesheet; create = work entry, worker, payroll payment or adjustment; voids and month close are edit; `fabric-norms` delete = «Видалити норму» | Admin, WorkshopChief: every action the page has |
 | `workshop-reports` (group «Загальні звіти») | `/api/production/reports` | Admin (view only) |
 | `accounting`, `purchase-invoices` | `/api/accounting/**` (create = new operations, transfers, accounts, categories, counterparties, statement and file uploads; delete = accounts, categories, attachments; void, archive, restore, merge, book and rollback are edit), `/api/purchasing/invoices` | the director; Accountant every action of «Бухгалтерія», view and edit of «Рахунки на закупку» (owner 2026-11-12; a role saved earlier gets them too unless the director unticks them, see [DESK-001](../../../specs/identity/003-role-desks/README.md) D6) ([PUR-001](../../../specs/purchasing/001-purchase-invoices/README.md)) |
+| `activity-log` (group «Адміністрування», «Журнал дій») | `/api/activity-log/**` ([ACT-001](../../../specs/activity-log/001-staff-activity-log/README.md)); view only | Admin |
 | `background-tasks` (group «Адміністрування», «Фонові задачі») | `/api/scheduling/tasks/**`; create = «Запустити зараз», edit = schedule and on/off | Admin: all |
 | `reminders` | `/api/reminders/**` except the Telegram webhook; create = task, non-working day; delete = archive a task, remove a day; preview is view; close, reopen, chat test are edit | Admin: all |
 | `products`, `product-sections`, `materials`, `operations`, `pricing-parameters`, `price-import` | catalogue and reference writes (`materials` covers fabrics, accessories and colours «Кольори»); reads stay `CatalogRead` | Admin, Manager; Accountant view |
@@ -128,7 +129,7 @@ Every staff page of the admin and every API it calls must be configurable on «�
 5. **Docs:**
    - Add the row to the pages table above.
    - In the feature card, state the page key and default rights.
-   - In the OpenAPI contract, write `Requires access:<page>` in each operation's description, quoted inside a flow mapping, because a bare `:` breaks YAML there.
+   - The generated OpenAPI contract shows the endpoint; say the needed page in its `WithDescription` when a reader of the contract needs it.
 6. **Hand off to the frontend:** the admin needs the same key on its menu item and its route, and its actions on buttons. See the brevi-web standard `docs/standards/admin/access-rights.md`.
 
 ## Adding a policy or role

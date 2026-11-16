@@ -2,6 +2,11 @@
 
     <PropertyGroup>
         <UserSecretsId>33d6b29b-be63-449a-8f2d-2a12c0731327</UserSecretsId>
+        <!-- Every build writes the OpenAPI document of the code to docs/sdd/contracts/openapi.json (ADR-0015); the
+             container image build skips it. -->
+        <OpenApiGenerateDocuments Condition="'$(DOTNET_RUNNING_IN_CONTAINER)' != 'true'">true</OpenApiGenerateDocuments>
+        <OpenApiDocumentsDirectory>$(MSBuildProjectDirectory)/../../../docs/sdd/contracts</OpenApiDocumentsDirectory>
+        <OpenApiGenerateDocumentsOptions>--file-name openapi</OpenApiGenerateDocumentsOptions>
     </PropertyGroup>
 
     <ItemGroup>
@@ -10,20 +15,20 @@
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+        <PackageReference Include="Microsoft.Extensions.ApiDescription.Server">
+          <PrivateAssets>all</PrivateAssets>
+          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
         <PackageReference Include="Microsoft.OpenApi" />
-        <PackageReference Include="Swashbuckle.AspNetCore" />
+        <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.Tools">
           <PrivateAssets>all</PrivateAssets>
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-        <PackageReference Include="Serilog" />
-        <PackageReference Include="Serilog.AspNetCore" />
-        <PackageReference Include="Serilog.Enrichers.Environment" />
-        <PackageReference Include="Serilog.Enrichers.Process" />
-        <PackageReference Include="Serilog.Settings.Configuration" />
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\..\BuildingBlocks\BuildingBlocks.Observability\BuildingBlocks.Observability.csproj" />
       <ProjectReference Include="..\..\BuildingBlocks\BuildingBlocks.Infrastructure\BuildingBlocks.Infrastructure\BuildingBlocks.Infrastructure.csproj" />
       <ProjectReference Include="..\..\Modules\Accounting\Accounting.Api\Accounting.Api\Accounting.Api.csproj" />
       <ProjectReference Include="..\..\Modules\Accounting\Accounting.Application\Accounting.Application\Accounting.Application.csproj" />
@@ -45,6 +50,9 @@
       <ProjectReference Include="..\..\Modules\Scheduling\Scheduling.Api\Scheduling.Api\Scheduling.Api.csproj" />
       <ProjectReference Include="..\..\Modules\Scheduling\Scheduling.Application\Scheduling.Application\Scheduling.Application.csproj" />
       <ProjectReference Include="..\..\Modules\Scheduling\Scheduling.Infrastructure\Scheduling.Infrastructure\Scheduling.Infrastructure.csproj" />
+      <ProjectReference Include="..\..\Modules\ActivityLog\ActivityLog.Api\ActivityLog.Api\ActivityLog.Api.csproj" />
+      <ProjectReference Include="..\..\Modules\ActivityLog\ActivityLog.Application\ActivityLog.Application\ActivityLog.Application.csproj" />
+      <ProjectReference Include="..\..\Modules\ActivityLog\ActivityLog.Infrastructure\ActivityLog.Infrastructure\ActivityLog.Infrastructure.csproj" />
       <ProjectReference Include="..\..\Modules\Media\Media.Api\Media.Api\Media.Api.csproj" />
       <ProjectReference Include="..\..\Modules\Media\Media.Application\Media.Application\Media.Application.csproj" />
       <ProjectReference Include="..\..\Modules\Media\Media.Infrastructure\Media.Infrastructure\Media.Infrastructure.csproj" />
@@ -89,5 +97,10 @@
       <_ContentIncludedByDefault Remove="Host.Api\obj\Host.Api.csproj.nuget.dgspec.json" />
       <_ContentIncludedByDefault Remove="Host.Api\obj\project.assets.json" />
     </ItemGroup>
+
+    <!-- The SDK regenerates the document only when Host.Api.dll changes, but endpoints live in the module assemblies. -->
+    <Target Name="AlwaysGenerateOpenApiDocument" BeforeTargets="GenerateOpenApiDocuments">
+        <Delete Files="$(_OpenApiDocumentsCache)" />
+    </Target>
 
 </Project>
