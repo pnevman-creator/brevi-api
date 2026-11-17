@@ -1,18 +1,22 @@
+using BuildingBlocks.Domain.Entity;
 namespace Crm.Domain.Quotes.Sending;
 
 /// <summary>
 /// The Gmail a staff member sends КП from (R-15). The Google refresh token is stored encrypted; only the send
 /// permission is granted, Brevi never reads the mailbox.
 /// </summary>
-public sealed class StaffMailbox
+public sealed class StaffMailbox : IAggregateRoot
 {
     private StaffMailbox() { }
 
-    public StaffMailbox(int userId, string email, string protectedRefreshToken, string connectedByName, DateTimeOffset now)
+    private StaffMailbox(int userId, string email, string protectedRefreshToken, string connectedByName, DateTimeOffset now)
     {
         UserId = userId;
         Connect(email, protectedRefreshToken, connectedByName, now);
     }
+
+    public static StaffMailbox Create(int userId, string email, string protectedRefreshToken, string connectedByName, DateTimeOffset now) =>
+        new(userId, email, protectedRefreshToken, connectedByName, now);
 
     public int UserId { get; private set; }
     public string Email { get; private set; } = null!;

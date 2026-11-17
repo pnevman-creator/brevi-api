@@ -1,3 +1,4 @@
+using BuildingBlocks.Domain.Entity;
 using BuildingBlocks.Domain.Results;
 using Production.Domain.Orders;
 using Production.Domain.Orders.Rules;
@@ -9,7 +10,7 @@ namespace Production.Domain.Timesheet;
 /// was absent; no row means the day is not marked yet. One row per worker and day; every change is kept in
 /// <see cref="WorkshopTimeChange"/>.
 /// </summary>
-public sealed class WorkshopTimeEntry
+public sealed class WorkshopTimeEntry : IAggregateRoot
 {
     public const int MaxMinutes = 1440;
     public const int Step = 15;
@@ -59,11 +60,11 @@ public sealed class WorkshopTimeEntry
 }
 
 /// <summary>One change of «Робочий час»: who changed the hours of a worker on a day, from what to what.</summary>
-public sealed class WorkshopTimeChange
+public sealed class WorkshopTimeChange : IAggregateRoot
 {
     private WorkshopTimeChange() { }
 
-    public WorkshopTimeChange(int employeeId, string employeeName, DateOnly workDate, int? beforeMinutes,
+    private WorkshopTimeChange(int employeeId, string employeeName, DateOnly workDate, int? beforeMinutes,
         int afterMinutes, string actorName, DateTimeOffset now)
     {
         EmployeeId = employeeId;
@@ -74,6 +75,10 @@ public sealed class WorkshopTimeChange
         ChangedAt = now;
         ChangedByName = OrderText.Required(actorName, ProductionOrder.PersonMaxLength);
     }
+
+    public static WorkshopTimeChange Create(int employeeId, string employeeName, DateOnly workDate, int? beforeMinutes,
+        int afterMinutes, string actorName, DateTimeOffset now) =>
+        new(employeeId, employeeName, workDate, beforeMinutes, afterMinutes, actorName, now);
 
     public int Id { get; private set; }
     public int EmployeeId { get; private set; }

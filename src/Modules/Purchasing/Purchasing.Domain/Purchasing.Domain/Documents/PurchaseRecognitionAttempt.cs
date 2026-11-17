@@ -1,10 +1,11 @@
+using BuildingBlocks.Domain.Entity;
 namespace Purchasing.Domain.Documents;
 
 /// <summary>
 /// One press of «Розпізнати» for a file (fast model, then the strong one if needed). Its problems show on the card until a
 /// checked document exists. Append-only.
 /// </summary>
-public sealed class PurchaseRecognitionAttempt
+public sealed class PurchaseRecognitionAttempt : IAggregateRoot
 {
     public const int ProblemMaxLength = 500;
     public const int MaxProblems = 20;
@@ -12,7 +13,7 @@ public sealed class PurchaseRecognitionAttempt
 
     private PurchaseRecognitionAttempt() { }
 
-    public PurchaseRecognitionAttempt(string fileId, string messageId, PurchaseRecognitionOutcome outcome,
+    private PurchaseRecognitionAttempt(string fileId, string messageId, PurchaseRecognitionOutcome outcome,
         IEnumerable<string> problems, string? model, decimal costUsd, string? outputJson, string by, DateTimeOffset at)
     {
         FileId = fileId;
@@ -25,6 +26,10 @@ public sealed class PurchaseRecognitionAttempt
         By = by.Length > PurchaseCheckedDocument.ByMaxLength ? by[..PurchaseCheckedDocument.ByMaxLength] : by;
         At = at;
     }
+
+    public static PurchaseRecognitionAttempt Create(string fileId, string messageId, PurchaseRecognitionOutcome outcome,
+        IEnumerable<string> problems, string? model, decimal costUsd, string? outputJson, string by, DateTimeOffset at) =>
+        new(fileId, messageId, outcome, problems, model, costUsd, outputJson, by, at);
 
     public long Id { get; private set; }
     public string FileId { get; private set; } = null!;

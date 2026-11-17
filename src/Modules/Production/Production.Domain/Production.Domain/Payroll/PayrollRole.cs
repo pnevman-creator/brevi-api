@@ -1,3 +1,4 @@
+using BuildingBlocks.Domain.Entity;
 using Production.Domain.Orders;
 using Production.Domain.Orders.Rules;
 
@@ -13,11 +14,14 @@ public enum PayrollRoleKind
 }
 
 /// <summary>«Керівні частки»: who is paid the master's or the chief's share (PRD-D44). Holds until changed.</summary>
-public sealed class PayrollRole
+public sealed class PayrollRole : IAggregateRoot
 {
     private PayrollRole() { }
 
-    public PayrollRole(PayrollRoleKind role) => Role = role;
+    private PayrollRole(PayrollRoleKind role) => Role = role;
+
+    public static PayrollRole Create(PayrollRoleKind role) =>
+        new(role);
 
     public PayrollRoleKind Role { get; private set; }
     public int? EmployeeId { get; private set; }

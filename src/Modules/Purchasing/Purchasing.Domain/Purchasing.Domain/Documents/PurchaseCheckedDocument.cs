@@ -1,3 +1,4 @@
+using BuildingBlocks.Domain.Entity;
 using System.Globalization;
 
 namespace Purchasing.Domain.Documents;
@@ -6,19 +7,23 @@ namespace Purchasing.Domain.Documents;
 /// Checked facts of one original file (one per file id): read by AI and passed the arithmetic check, or uploaded by hand.
 /// A different version replaces it only on explicit request; the old one goes to <see cref="PurchaseCheckedDocumentHistory"/>.
 /// </summary>
-public sealed class PurchaseCheckedDocument
+public sealed class PurchaseCheckedDocument : IAggregateRoot
 {
     public const int ByMaxLength = 256;
 
     private PurchaseCheckedDocument() { }
 
-    public PurchaseCheckedDocument(string fileId, string messageId, PurchaseDocument document, PurchaseDocumentOrigin origin,
+    private PurchaseCheckedDocument(string fileId, string messageId, PurchaseDocument document, PurchaseDocumentOrigin origin,
         string? model, decimal? costUsd, string checkedBy, DateTimeOffset checkedAt)
     {
         Id = fileId;
         MessageId = messageId;
         Set(document, origin, model, costUsd, checkedBy, checkedAt);
     }
+
+    public static PurchaseCheckedDocument Create(string fileId, string messageId, PurchaseDocument document, PurchaseDocumentOrigin origin,
+        string? model, decimal? costUsd, string checkedBy, DateTimeOffset checkedAt) =>
+        new(fileId, messageId, document, origin, model, costUsd, checkedBy, checkedAt);
 
     /// <summary>The file id (SHA-256 of messageId:url).</summary>
     public string Id { get; private set; } = null!;
@@ -85,7 +90,7 @@ public enum PurchaseDocumentOrigin
 }
 
 /// <summary>A replaced version of a checked document; append-only.</summary>
-public sealed class PurchaseCheckedDocumentHistory
+public sealed class PurchaseCheckedDocumentHistory : IAggregateRoot
 {
     private PurchaseCheckedDocumentHistory() { }
 

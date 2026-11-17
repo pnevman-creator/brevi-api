@@ -1,3 +1,4 @@
+using BuildingBlocks.Domain.Entity;
 namespace Production.Domain.Archive;
 
 /// <summary>Which old book a record of «Архів цеху» comes from.</summary>
@@ -14,7 +15,7 @@ public enum WorkshopArchiveKind
 /// A read-only line of «Архів цеху» moved from the old «Цех» (PRD-D54). Nothing edits it; a repeat import of the same
 /// <see cref="SourceKey"/> is skipped.
 /// </summary>
-public sealed class WorkshopArchiveRecord
+public sealed class WorkshopArchiveRecord : IAggregateRoot
 {
     public const int SourceKeyMaxLength = 80;
     public const int ShortMaxLength = 200;
@@ -28,7 +29,7 @@ public sealed class WorkshopArchiveRecord
     {
     }
 
-    public WorkshopArchiveRecord(WorkshopArchiveKind kind, string sourceKey, int sourceRow, WorkshopArchiveEntry entry)
+    private WorkshopArchiveRecord(WorkshopArchiveKind kind, string sourceKey, int sourceRow, WorkshopArchiveEntry entry)
     {
         if (!Enum.IsDefined(kind)) throw new ArgumentOutOfRangeException(nameof(kind));
         if (sourceRow <= 0) throw new ArgumentOutOfRangeException(nameof(sourceRow));
@@ -52,6 +53,9 @@ public sealed class WorkshopArchiveRecord
             .Concat(_fields.Select(x => x.Value)).Where(x => !string.IsNullOrWhiteSpace(x))).ToLowerInvariant();
         SearchText = search.Length > SearchMaxLength ? search[..SearchMaxLength] : search;
     }
+
+    public static WorkshopArchiveRecord Create(WorkshopArchiveKind kind, string sourceKey, int sourceRow, WorkshopArchiveEntry entry) =>
+        new(kind, sourceKey, sourceRow, entry);
 
     public int Id { get; private set; }
     public WorkshopArchiveKind Kind { get; private set; }

@@ -1,17 +1,18 @@
+using BuildingBlocks.Domain.Entity;
 namespace Warehouse.Domain.Stock.Movements;
 
 /// <summary>
 /// A form submission of «Склад тканин» by its operation id. The same id with the same data returns the saved result
 /// instead of moving the fabric again; the same id with other data is refused.
 /// </summary>
-public sealed class StockOperation
+public sealed class StockOperation : IAggregateRoot
 {
     public const int KindMaxLength = 32;
     public const int HashLength = 64;
 
     private StockOperation() { }
 
-    public StockOperation(Guid id, string kind, string requestHash, int userId, string fabricCode, string colorKey,
+    private StockOperation(Guid id, string kind, string requestHash, int userId, string fabricCode, string colorKey,
         string color, decimal metersAfter, DateTimeOffset now)
     {
         if (id == Guid.Empty) throw new ArgumentException("Operation id is required.", nameof(id));
@@ -25,6 +26,10 @@ public sealed class StockOperation
         MetersAfter = metersAfter;
         CreatedAt = now;
     }
+
+    public static StockOperation Create(Guid id, string kind, string requestHash, int userId, string fabricCode, string colorKey,
+        string color, decimal metersAfter, DateTimeOffset now) =>
+        new(id, kind, requestHash, userId, fabricCode, colorKey, color, metersAfter, now);
 
     public Guid Id { get; private set; }
     public string Kind { get; private set; } = null!;

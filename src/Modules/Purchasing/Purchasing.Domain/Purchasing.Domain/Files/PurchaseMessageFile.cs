@@ -1,16 +1,17 @@
+using BuildingBlocks.Domain.Entity;
 namespace Purchasing.Domain.Files;
 
 /// <summary>
 /// A link from a message to an original document (usually Dropbox). Only the link is stored, not the file. A changed URL
 /// is a different file; a link removed from the sheet becomes inactive and is kept.
 /// </summary>
-public sealed class PurchaseMessageFile
+public sealed class PurchaseMessageFile : IAggregateRoot
 {
     public const string AwaitingRecognition = "awaiting_recognition";
 
     private PurchaseMessageFile() { }
 
-    public PurchaseMessageFile(string id, string messageId, string url, Guid run)
+    private PurchaseMessageFile(string id, string messageId, string url, Guid run)
     {
         Id = id;
         MessageId = messageId;
@@ -19,6 +20,9 @@ public sealed class PurchaseMessageFile
         SeenRun = run;
         State = AwaitingRecognition;
     }
+
+    public static PurchaseMessageFile Create(string id, string messageId, string url, Guid run) =>
+        new(id, messageId, url, run);
 
     /// <summary>SHA-256 of messageId:exactUrl, lower-case hex.</summary>
     public string Id { get; private set; } = null!;

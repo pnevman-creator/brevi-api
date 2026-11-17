@@ -1,3 +1,4 @@
+using BuildingBlocks.Domain.Entity;
 using BuildingBlocks.Domain.Results;
 using Content.Domain.ProductPages;
 
@@ -7,7 +8,7 @@ namespace Content.Domain.Articles;
 /// An article of the public site (CNT-004): its address, the date shown to readers, the cover photo of the «Фото»
 /// library and the texts by language. The site shows it only while <see cref="ShowOnSite"/> is on.
 /// </summary>
-public sealed class Article
+public sealed class Article : IAggregateRoot
 {
     private readonly List<ArticleText> _texts = [];
 
@@ -62,7 +63,7 @@ public sealed class Article
 
     /// <summary>Replaces the article as a whole; a language without any text loses its row.</summary>
     public DomainResult Replace(string slug, DateOnly publishedOn, bool showOnSite, int? coverPhotoId,
-        IReadOnlyDictionary<string, ArticleTextInput> texts, string updatedBy, DateTimeOffset now)
+        IReadOnlyDictionary<string, ArticleTextValues> texts, string updatedBy, DateTimeOffset now)
     {
         if (!ProductPageRules.IsValidSlug(slug)) return ProductPageErrors.InvalidSlug();
         Slug = slug;

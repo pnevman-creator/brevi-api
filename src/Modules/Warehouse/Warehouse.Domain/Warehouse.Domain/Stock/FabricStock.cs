@@ -1,3 +1,4 @@
+using BuildingBlocks.Domain.Entity;
 using BuildingBlocks.Domain.Results;
 using Warehouse.Domain.Stock.Errors;
 using Warehouse.Domain.Stock.Movements;
@@ -11,7 +12,7 @@ public sealed record StockFabric(int? FabricId, string Code, string Name);
 /// «Склад тканин»: metres of one fabric (by FAB- code) in one colour. The balance changes only through
 /// <see cref="FabricMovement"/>s; <see cref="Version"/> stops two people from moving it at once.
 /// </summary>
-public sealed class FabricStock
+public sealed class FabricStock : IAggregateRoot
 {
     public const int CodeMaxLength = 32;
     public const int NameMaxLength = 300;
@@ -26,7 +27,7 @@ public sealed class FabricStock
 
     private FabricStock() { }
 
-    public FabricStock(StockFabric fabric, string color, DateTimeOffset now, string? legacyId = null)
+    private FabricStock(StockFabric fabric, string color, DateTimeOffset now, string? legacyId = null)
     {
         FabricId = fabric.FabricId;
         FabricCode = WarehouseText.Clean(fabric.Code, CodeMaxLength).ToUpperInvariant();
@@ -37,6 +38,9 @@ public sealed class FabricStock
         UpdatedAt = now;
         LegacyId = string.IsNullOrWhiteSpace(legacyId) ? null : legacyId.Trim();
     }
+
+    public static FabricStock Create(StockFabric fabric, string color, DateTimeOffset now, string? legacyId = null) =>
+        new(fabric, color, now, legacyId);
 
     public int Id { get; private set; }
     public int? FabricId { get; private set; }

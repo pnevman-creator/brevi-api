@@ -1,3 +1,4 @@
+using BuildingBlocks.Domain.Entity;
 using Crm.Domain.Leads.Events;
 using Crm.Domain.Leads.Enums;
 using Crm.Domain.Leads.ValueObjects;
@@ -9,13 +10,13 @@ namespace Crm.Domain.Leads;
 /// company; the admin owns the calling work: who took it, the stage, the calls and the next contact.
 /// <see cref="Version"/> grows with every change of the work and guards against two managers at once.
 /// </summary>
-public sealed class Lead : DomainEventSource
+public sealed class Lead : DomainEventSource, IAggregateRoot
 {
     private readonly List<LeadCall> _calls = [];
 
     private Lead() { }
 
-    public Lead(LeadSheetRow row, DateTimeOffset now)
+    private Lead(LeadSheetRow row, DateTimeOffset now)
     {
         SourceId = row.SourceId;
         SheetNotes = LeadLimits.Cut(row.SheetNotes, LeadLimits.LongText);
@@ -24,6 +25,9 @@ public sealed class Lead : DomainEventSource
         Version = 1;
         ApplySheet(row, now);
     }
+
+    public static Lead Create(LeadSheetRow row, DateTimeOffset now) =>
+        new(row, now);
 
     public long Id { get; private set; }
 

@@ -1,16 +1,17 @@
+using BuildingBlocks.Domain.Entity;
 namespace Accounting.Domain.Audit;
 
 /// <summary>
 /// One entry of the single finance change log: who did what to which record, with JSON snapshots before and after.
 /// Append-only; it survives the deletion of its record.
 /// </summary>
-public sealed class AuditEntry
+public sealed class AuditEntry : IAggregateRoot
 {
     public const int ByMaxLength = 256;
 
     private AuditEntry() { }
 
-    public AuditEntry(AuditEntity entity, Guid entityId, AuditAction action, string by, DateTimeOffset at,
+    private AuditEntry(AuditEntity entity, Guid entityId, AuditAction action, string by, DateTimeOffset at,
         string? beforeJson, string? afterJson)
     {
         Entity = entity;
@@ -21,6 +22,10 @@ public sealed class AuditEntry
         BeforeJson = beforeJson;
         AfterJson = afterJson;
     }
+
+    public static AuditEntry Create(AuditEntity entity, Guid entityId, AuditAction action, string by, DateTimeOffset at,
+        string? beforeJson, string? afterJson) =>
+        new(entity, entityId, action, by, at, beforeJson, afterJson);
 
     public long Id { get; private set; }
     public AuditEntity Entity { get; private set; }

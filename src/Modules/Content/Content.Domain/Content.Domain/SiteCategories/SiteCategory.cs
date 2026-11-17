@@ -1,3 +1,4 @@
+using BuildingBlocks.Domain.Entity;
 using BuildingBlocks.Domain.Results;
 using Content.Domain.ProductPages;
 
@@ -7,7 +8,7 @@ namespace Content.Domain.SiteCategories;
 /// A category or subcategory of the public site catalog (CNT-003): its place in the two-level tree, whether the site
 /// shows it, its address and its texts in Ukrainian and Russian. The tree belongs to the site, not to admin sections.
 /// </summary>
-public sealed class SiteCategory
+public sealed class SiteCategory : IAggregateRoot
 {
     private readonly List<SiteCategoryText> _texts = [];
 
@@ -66,7 +67,7 @@ public sealed class SiteCategory
 
     /// <summary>Replaces the place in the tree, the address, the mark and all texts. A language without any text is not kept.</summary>
     public DomainResult Replace(int? parentId, int sortOrder, string slug, bool showOnSite,
-        IReadOnlyDictionary<string, SiteCategoryTextInput> texts, string updatedBy, DateTimeOffset now)
+        IReadOnlyDictionary<string, SiteCategoryTextValues> texts, string updatedBy, DateTimeOffset now)
     {
         if (!ProductPageRules.IsValidSlug(slug)) return ProductPageErrors.InvalidSlug();
         ParentId = parentId;

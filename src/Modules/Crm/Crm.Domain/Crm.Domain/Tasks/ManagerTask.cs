@@ -1,3 +1,4 @@
+using BuildingBlocks.Domain.Entity;
 using System.Globalization;
 using Crm.Domain.Tasks.Enums;
 using Crm.Domain.Tasks.ValueObjects;
@@ -9,14 +10,14 @@ namespace Crm.Domain.Tasks;
 /// <see cref="ManagerTaskStatus"/> and ticks its steps; everything else only Director and Admin change.
 /// <see cref="Version"/> grows with every change and guards against stale saves (R-12).
 /// </summary>
-public sealed class ManagerTask : DomainEventSource
+public sealed class ManagerTask : DomainEventSource, IAggregateRoot
 {
     private readonly List<ManagerTaskStep> _steps = [];
     private readonly List<ManagerTaskEvent> _events = [];
 
     private ManagerTask() { }
 
-    public ManagerTask(ManagerTaskDraft draft, ManagerTaskPerson author, DateTimeOffset now)
+    private ManagerTask(ManagerTaskDraft draft, ManagerTaskPerson author, DateTimeOffset now)
     {
         AuthorUserId = author.UserId;
         AuthorName = author.Name;
@@ -28,6 +29,9 @@ public sealed class ManagerTask : DomainEventSource
         _events.Add(new ManagerTaskEvent(ManagerTaskEventKind.Created, author, now, null));
         Raise(new ManagerTaskRecorded(this, ManagerTaskEventKind.Created, null, null));
     }
+
+    public static ManagerTask Create(ManagerTaskDraft draft, ManagerTaskPerson author, DateTimeOffset now) =>
+        new(draft, author, now);
 
     public long Id { get; private set; }
     public string Title { get; private set; } = null!;

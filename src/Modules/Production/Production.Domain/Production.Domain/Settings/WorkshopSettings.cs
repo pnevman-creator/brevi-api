@@ -1,3 +1,4 @@
+using BuildingBlocks.Domain.Entity;
 using BuildingBlocks.Domain.Events;
 using BuildingBlocks.Domain.Results;
 using Production.Domain.Orders;
@@ -9,18 +10,21 @@ namespace Production.Domain.Settings;
 /// «Налаштування цеху»: one row. Where the bot posts new orders: the workshop group and, in a group with topics, the
 /// topic. Sending stays off until someone turns it on.
 /// </summary>
-public sealed class WorkshopSettings : DomainEventSource
+public sealed class WorkshopSettings : DomainEventSource, IAggregateRoot
 {
     public const int SingletonId = 1;
 
     private WorkshopSettings() { }
 
-    public WorkshopSettings(long? chatId, int? threadId)
+    private WorkshopSettings(long? chatId, int? threadId)
     {
         Id = SingletonId;
         TelegramChatId = chatId;
         TelegramThreadId = threadId;
     }
+
+    public static WorkshopSettings Create(long? chatId, int? threadId) =>
+        new(chatId, threadId);
 
     public int Id { get; private set; }
     public bool TelegramEnabled { get; private set; }

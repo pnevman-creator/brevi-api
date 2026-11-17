@@ -1,3 +1,4 @@
+using BuildingBlocks.Domain.Entity;
 using BuildingBlocks.Domain.Results;
 using Production.Domain.Orders;
 using Production.Domain.Orders.Rules;
@@ -8,18 +9,21 @@ namespace Production.Domain.Forecast;
 /// The order «Прогноз пошиття» sews in, as the head of the workshop set it: one row. Orders not in the list come after
 /// it by order date and number (PRD-D38).
 /// </summary>
-public sealed class ForecastQueue
+public sealed class ForecastQueue : IAggregateRoot
 {
     public const int SingletonId = 1;
     public const int MaxOrders = 10_000;
 
     private ForecastQueue() { }
 
-    public ForecastQueue(DateTimeOffset now)
+    private ForecastQueue(DateTimeOffset now)
     {
         Id = SingletonId;
         UpdatedAt = now;
     }
+
+    public static ForecastQueue Create(DateTimeOffset now) =>
+        new(now);
 
     public int Id { get; private set; }
     public List<int> OrderIds { get; private set; } = [];

@@ -1,13 +1,14 @@
+using BuildingBlocks.Domain.Entity;
 using Crm.Domain.Quotes.ValueObjects;
 
 namespace Crm.Domain.Quotes.Sending;
 
 /// <summary>One letter with a КП that Gmail accepted: who sent it, from which address, to whom and when.</summary>
-public sealed class QuoteSending
+public sealed class QuoteSending : IAggregateRoot
 {
     private QuoteSending() { }
 
-    public QuoteSending(long quoteId, int quoteVersion, QuotePerson sender, string fromEmail, string to, string subject,
+    private QuoteSending(long quoteId, int quoteVersion, QuotePerson sender, string fromEmail, string to, string subject,
         string? providerMessageId, DateTimeOffset sentAt, Guid? requestId = null)
     {
         RequestId = requestId;
@@ -21,6 +22,10 @@ public sealed class QuoteSending
         ProviderMessageId = providerMessageId;
         SentAt = sentAt;
     }
+
+    public static QuoteSending Create(long quoteId, int quoteVersion, QuotePerson sender, string fromEmail, string to, string subject,
+        string? providerMessageId, DateTimeOffset sentAt, Guid? requestId = null) =>
+        new(quoteId, quoteVersion, sender, fromEmail, to, subject, providerMessageId, sentAt, requestId);
 
     public long Id { get; private set; }
 

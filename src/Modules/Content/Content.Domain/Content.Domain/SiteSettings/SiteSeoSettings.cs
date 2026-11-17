@@ -1,3 +1,4 @@
+using BuildingBlocks.Domain.Entity;
 using BuildingBlocks.Domain.Results;
 using System.Text.RegularExpressions;
 
@@ -8,19 +9,22 @@ namespace Content.Domain.SiteSettings;
 /// the search consoles and the picture shown when a page without its own picture is shared. One row; staff connect
 /// the services themselves, the site only places the codes.
 /// </summary>
-public sealed partial class SiteSeoSettings
+public sealed partial class SiteSeoSettings : IAggregateRoot
 {
     public const int SingletonId = 1;
     public const int VerificationMaxLength = 100;
 
     private SiteSeoSettings() { }
 
-    public SiteSeoSettings(string updatedBy, DateTimeOffset now)
+    private SiteSeoSettings(string updatedBy, DateTimeOffset now)
     {
         Id = SingletonId;
         UpdatedBy = updatedBy;
         UpdatedAtUtc = now;
     }
+
+    public static SiteSeoSettings Create(string updatedBy, DateTimeOffset now) =>
+        new(updatedBy, now);
 
     public int Id { get; private set; }
 

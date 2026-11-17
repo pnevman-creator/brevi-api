@@ -1,17 +1,18 @@
+using BuildingBlocks.Domain.Entity;
 namespace Warehouse.Domain.Stock.Movements;
 
 /// <summary>
 /// The journal of «Перенесення з v133» (WH-006): one record per export that replaced the stock, known by the SHA-256
 /// of its rows, with the counts it gave. A repeat of the same export finds it and changes nothing.
 /// </summary>
-public sealed class StockTransfer
+public sealed class StockTransfer : IAggregateRoot
 {
     public const int HashLength = 64;
     public const int SnapshotMaxLength = 200;
 
     private StockTransfer() { }
 
-    public StockTransfer(string hash, string? snapshot, int lines, int movements, int issues, decimal meters,
+    private StockTransfer(string hash, string? snapshot, int lines, int movements, int issues, decimal meters,
         string actorName, DateTimeOffset now)
     {
         if (hash.Length != HashLength) throw new ArgumentException("SHA-256 in hex is required.", nameof(hash));
@@ -24,6 +25,10 @@ public sealed class StockTransfer
         CreatedByName = WarehouseText.Clean(actorName, FabricMovement.PersonMaxLength);
         CreatedAt = now;
     }
+
+    public static StockTransfer Create(string hash, string? snapshot, int lines, int movements, int issues, decimal meters,
+        string actorName, DateTimeOffset now) =>
+        new(hash, snapshot, lines, movements, issues, meters, actorName, now);
 
     public int Id { get; private set; }
     public string Hash { get; private set; } = null!;

@@ -1,11 +1,15 @@
+using BuildingBlocks.Domain.Entity;
 namespace Ai.Domain.Usage;
 
 /// <summary>OpenAI use of one calendar month (UTC), counted from the token usage of each answer and the prices in settings.</summary>
-public sealed class AiUsageMonth
+public sealed class AiUsageMonth : IAggregateRoot
 {
     private AiUsageMonth() { }
 
-    public AiUsageMonth(string id) => Id = id;
+    private AiUsageMonth(string id) => Id = id;
+
+    public static AiUsageMonth Create(string id) =>
+        new(id);
 
     /// <summary><c>yyyy-MM</c> in UTC.</summary>
     public string Id { get; private set; } = null!;

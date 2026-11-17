@@ -1,13 +1,17 @@
+using BuildingBlocks.Domain.Entity;
 namespace Crm.Domain.Leads;
 
 /// <summary>The last run of the sheet sync, shown on the leads statistics page (LEAD-001 R-03). One row.</summary>
-public sealed class LeadSyncState
+public sealed class LeadSyncState : IAggregateRoot
 {
     public const string GoogleSheet = "google-leads";
 
     private LeadSyncState() { }
 
-    public LeadSyncState(string id) => Id = id;
+    private LeadSyncState(string id) => Id = id;
+
+    public static LeadSyncState Create(string id) =>
+        new(id);
 
     public string Id { get; private set; } = null!;
     public DateTimeOffset? LastRunAt { get; private set; }

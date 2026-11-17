@@ -1,14 +1,18 @@
+using BuildingBlocks.Domain.Entity;
 namespace Purchasing.Domain.Sync;
 
 /// <summary>Result of the last sheet sync: its time, counts and the last error.</summary>
-public sealed class PurchaseSyncState
+public sealed class PurchaseSyncState : IAggregateRoot
 {
     public const string GoogleFinance = "google-finance";
     public const int ErrorMaxLength = 1_000;
 
     private PurchaseSyncState() { }
 
-    public PurchaseSyncState(string id) => Id = id;
+    private PurchaseSyncState(string id) => Id = id;
+
+    public static PurchaseSyncState Create(string id) =>
+        new(id);
 
     public string Id { get; private set; } = null!;
     public DateTimeOffset? LastAttemptAt { get; private set; }
