@@ -1,3 +1,5 @@
+using BuildingBlocks.Application.Idempotency;
+using BuildingBlocks.Domain.Identifiers.People;
 using Warehouse.Application.Abstractions;
 using Warehouse.Domain.Stock;
 using Warehouse.Domain.Stock.Movements;
@@ -48,15 +50,15 @@ public sealed class StockPairs(IWarehouseDbContext db, StockOperations operation
     public async Task<Result<FabricStockOperationResponse>> SaveAsync(WarehouseActor actor, Guid operationId,
         string kind, string hash, StockPair pair, StockPairResult result, CancellationToken cancellationToken)
     {
-        foreach (var line in result.Lines.Where(x => x.Id == 0)) db.FabricStocks.Add(line);
-        var ids = result.Lines.Where(x => x.Id != 0).Select(x => x.Id).ToArray();
+        foreach (var line in result.Lines.Where(x => x.Id == new FabricStockId(0))) db.FabricStocks.Add(line);
+        var ids = result.Lines.Where(x => x.Id != new FabricStockId(0)).Select(x => x.Id).ToArray();
         var saved = ids.Length == 0
             ? []
             : await db.FabricMovements.Where(x => ids.Contains(x.StockId)).ToListAsync(cancellationToken);
         foreach (var line in result.Lines) line.Restate(saved.Where(x => x.StockId == line.Id).Concat(line.Movements));
 
         var color = pair.Lines.FirstOrDefault()?.Color ?? result.Lines[0].Color;
-        db.StockOperations.Add(StockOperation.Create(operationId, kind, hash, actor.UserId, pair.Code, pair.ColorKey, color,
+        db.StockOperations.Add(StockOperation.Create(operationId, kind, hash, new UserId(actor.UserId), pair.Code, pair.ColorKey, color,
             pair.Meters, Now));
         try
         {

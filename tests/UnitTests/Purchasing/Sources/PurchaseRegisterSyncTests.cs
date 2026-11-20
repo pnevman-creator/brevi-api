@@ -1,3 +1,4 @@
+using BuildingBlocks.Domain.Identifiers.ReferenceData;
 using Ardalis.Result;
 using Microsoft.EntityFrameworkCore;
 using Purchasing.Application.Abstractions;
@@ -93,7 +94,7 @@ public sealed class PurchaseRegisterSyncTests
         await using (var db = harness.Fresh())
         {
             var message = await db.Messages.SingleAsync();
-            db.Entry(message).Property(x => x.SupplierId).CurrentValue = 7;
+            db.Entry(message).Property(x => x.SupplierId).CurrentValue = new SupplierId(7);
             db.Entry(message).Property(x => x.ReviewNote).CurrentValue = "Перевірити кількість";
             db.Entry(message).Property(x => x.ReviewVersion).CurrentValue = 3;
             await db.SaveChangesAsync();
@@ -106,7 +107,7 @@ public sealed class PurchaseRegisterSyncTests
         var updated = await check.Messages.SingleAsync();
         Assert.That(updated.Text, Is.EqualTo("Новий текст"));
         Assert.That(updated.PaymentState, Is.EqualTo(PaymentState.MarkedPaid));
-        Assert.That((updated.SupplierId, updated.ReviewNote, updated.ReviewVersion), Is.EqualTo((7, "Перевірити кількість", 3)));
+        Assert.That((updated.SupplierId, updated.ReviewNote, updated.ReviewVersion), Is.EqualTo(((SupplierId?)new SupplierId(7), "Перевірити кількість", 3)));
         Assert.That(await check.SourceRevisions.CountAsync(), Is.EqualTo(2));
     }
 
@@ -138,7 +139,7 @@ public sealed class PurchaseRegisterSyncTests
         Assert.That(result.Status, Is.EqualTo(ResultStatus.Unavailable));
         await using var db = harness.Fresh();
         Assert.That(await db.SourceRows.CountAsync(x => x.Active), Is.EqualTo(1));
-        var state = await db.SyncStates.SingleAsync(x => x.Id == PurchaseSyncState.GoogleFinance);
+        var state = await db.SyncStates.SingleAsync(x => x.Id == new PurchaseSyncStateId(PurchaseSyncState.GoogleFinance));
         Assert.That(state.Error, Is.EqualTo("Google не дає доступу"));
         Assert.That(state.RecordCount, Is.EqualTo(1), "the last successful counts stay");
     }

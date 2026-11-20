@@ -1,3 +1,4 @@
+using BuildingBlocks.Infrastructure.Database;
 using BuildingBlocks.Infrastructure.Outbox;
 using Reference.Domain.FabricColors;
 using Reference.Domain.PpeMarkupRules;
@@ -15,6 +16,8 @@ namespace Reference.Infrastructure.Persistence;
 public partial class ReferenceDbContext(DbContextOptions<ReferenceDbContext> options)
     : DbContext(options), IReadReferenceDbContext
 {
+    public const string Schema = "reference";
+
     public DbSet<PricingParameter> PricingParameters => Set<PricingParameter>();
     public DbSet<PpeMarkupRule> PpeMarkupRules => Set<PpeMarkupRule>();
     public DbSet<ProductSection> ProductSections => Set<ProductSection>();
@@ -27,10 +30,13 @@ public partial class ReferenceDbContext(DbContextOptions<ReferenceDbContext> opt
 
     public void DiscardChanges() => ChangeTracker.Clear();
 
+    protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder) =>
+        configurationBuilder.AddTypedIds(typeof(Fabric).Assembly);
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
-        modelBuilder.HasDefaultSchema("reference");
+        modelBuilder.HasDefaultSchema(Schema);
 
         modelBuilder.ApplyConfigurationsFromAssembly(
             typeof(ReferenceDbContext).Assembly,

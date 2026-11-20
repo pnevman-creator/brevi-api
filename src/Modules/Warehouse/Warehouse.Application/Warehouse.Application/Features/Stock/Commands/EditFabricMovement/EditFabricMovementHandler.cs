@@ -1,3 +1,4 @@
+using Warehouse.Domain.Stock.Movements.Identifiers;
 using Warehouse.Domain.Stock;
 using Warehouse.Application.Features.Stock.Shared;
 using Warehouse.Domain.Stock.Movements;
@@ -38,7 +39,7 @@ public sealed class EditFabricMovementHandler(StockChanges changes, StockPairs p
         var state = new FabricMovementState(to.Id, input.OperationDate, delta.Value,
             receipt ? input.SupplierName : movement.SupplierName, receipt ? input.Document : movement.Document,
             issue && movement.ItemId is null ? input.Destination : movement.Destination, false);
-        if (state with { StockId = 0 } == movement.State with { StockId = 0 } && ReferenceEquals(from, to))
+        if (state with { StockId = default } == movement.State with { StockId = default } && ReferenceEquals(from, to))
             return Invalid("Meters", "Нічого не змінено.");
         if (!ReferenceEquals(from, to) && await revisions.IssueSourcesAsync(movement, cancellationToken) > 1)
             return Invalid("FabricCode", StockMessages.MultiSourceTarget);
@@ -46,7 +47,7 @@ public sealed class EditFabricMovementHandler(StockChanges changes, StockPairs p
         if (!FabricStock.IsValidMeters(to.Meters - left + delta.Value)) return Invalid("Meters", StockMessages.OutOfRange);
 
         var revision = to.Revise(movement, state, FabricMovementRevisionAction.Edit, input.Reason, actorName,
-            pairs.Now, input.OperationId);
+            pairs.Now, new StockOperationId(input.OperationId));
         if (revision.IsFailure) return revision.Error!.ToResult<FabricStockOperationResponse>();
         return await revisions.SaveAsync(command.Actor, input.OperationId, Kind, hash, revision.Value, from, to,
             cancellationToken);
@@ -72,7 +73,7 @@ public sealed class EditFabricMovementHandler(StockChanges changes, StockPairs p
             case FabricMovementKind.Receipt when input.FabricId is not null || !string.IsNullOrWhiteSpace(input.Color):
             {
                 // Only a colour: the same offer in another colour.
-                if ((input.FabricId ?? from.FabricId) is not { } fabricId)
+                if ((input.FabricId ?? from.FabricId?.Value) is not { } fabricId)
                     return Result<FabricStock>.Invalid(new ValidationError("FabricId", StockMessages.FabricNotFound));
                 var fabric = await changes.OfferAsync(fabricId, cancellationToken);
                 if (!fabric.IsSuccess) return fabric.Map(_ => default(FabricStock)!);

@@ -1,3 +1,6 @@
+using BuildingBlocks.Domain.Identifiers.Products;
+using BuildingBlocks.Domain.Identifiers.ReferenceData;
+using BuildingBlocks.Domain.Identifiers.People;
 using Crm.Domain.Quotes;
 using Crm.Domain.Quotes.Settings;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -15,7 +18,7 @@ namespace UnitTests.Crm.Quotes.Sending;
 [TestFixture]
 public sealed class QuoteIntroductionTests
 {
-    private static readonly QuoteStaffContact Manager = new(5, "Олена Петренко", "+38 050 000 00 00", "office@brevi.test");
+    private static readonly QuoteStaffContact Manager = new(new UserId(5), "Олена Петренко", "+38 050 000 00 00", "office@brevi.test");
 
     private static QuoteIntroPageInput Page(string season, params int[] products) =>
         new(season, products.Select(x => new QuoteIntroModelInput(null, x, x * 100L)).ToArray());
@@ -56,16 +59,16 @@ public sealed class QuoteIntroductionTests
 
     private static Quote SampleIntroduction()
     {
-        var items = Enumerable.Range(0, 8).Select(index => QuoteItem.Create(index, QuoteItemKind.Sewing, index + 1,
+        var items = Enumerable.Range(0, 8).Select(index => QuoteItem.Create(index, QuoteItemKind.Sewing, new ProductId(index + 1),
             new QuoteItemTexts($"MOD-{index + 1}", $"Модель {index + 1}", null, null, $"https://brevi.com.ua/m{index}", null,
                 index < 4 ? "Літо" : "Зима", "https://supplier.test"),
             [
-                QuoteItemOption.Create(0, index * 100 + 100, index, $"Тканина {index + 1}",
+                QuoteItemOption.Create(0, new ArticleId(index * 100 + 100), new FabricId(index), $"Тканина {index + 1}",
                     "60% бавовна, 40% поліестер, щільність 235 г/м²", false,
                     new QuotePrice(1500m, null, false), new QuotePrice(1400m, null, false),
                     new QuotePrice(1300.2m + index, null, true), DateTimeOffset.UnixEpoch),
             ])).ToArray();
-        var quote = Quote.Create(new QuoteNumber(2026, 11, 7), QuoteKind.Introduction, new QuotePerson(5, "Юлія"),
+        var quote = Quote.Create(new QuoteNumber(2026, 11, 7), QuoteKind.Introduction, new QuotePerson(new UserId(5), "Юлія"),
             new QuoteHeader("Агро — знайомство", null, "Іван", "ТОВ «Агро»", null, "Передзвонити у вівторок"),
             items, new DateTimeOffset(2026, 11, 4, 10, 0, 0, TimeSpan.Zero)).Value;
         quote.SetIntroduction(new QuoteIntroduction(QuoteIntroLayout.General, "office@agro.ua", "Після розмови"));

@@ -1,3 +1,5 @@
+using BuildingBlocks.Domain.Identifiers.Products;
+using BuildingBlocks.Domain.Identifiers.People;
 using Crm.Domain.Quotes;
 using Crm.Domain.Quotes.Settings;
 using Crm.Application.Features.Quotes.Shared.Catalog;
@@ -51,15 +53,15 @@ public sealed class QuoteItemPhotosTests
     [Test]
     public void Pdf_shows_the_main_photo_of_an_item_from_the_old_site()
     {
-        var item = QuoteItem.Create(0, QuoteItemKind.Ppe, 10,
+        var item = QuoteItem.Create(0, QuoteItemKind.Ppe, new ProductId(10),
             new QuoteItemTexts("PPE-1", "Рукавиці", null, null, null, "https://brevi.com.ua/image/old.jpg", null, null),
             [QuoteItemOption.Create(0, null, null, "Ціна", null, false, new QuotePrice(100m, null, true),
                 new QuotePrice(90m, null, true), new QuotePrice(80m, null, true), DateTimeOffset.UnixEpoch)]);
-        var quote = Quote.Create(new QuoteNumber(2026, 11, 5), QuoteKind.Request, new QuotePerson(5, "Юлія"),
+        var quote = Quote.Create(new QuoteNumber(2026, 11, 5), QuoteKind.Request, new QuotePerson(new UserId(5), "Юлія"),
             new QuoteHeader("КП", null, null, null, null, null), [item], DateTimeOffset.UnixEpoch).Value;
 
         var model = QuotePdfModelBuilder.Build(quote, QuoteSettingsDefaults.Content,
-            new QuoteStaffContact(5, "Юлія", null, null), new Dictionary<int, string> { [10] = Main });
+            new QuoteStaffContact(new UserId(5), "Юлія", null, null), new Dictionary<int, string> { [10] = Main });
 
         Assert.That(model.Items[0].PhotoUrl, Is.EqualTo(Main));
     }

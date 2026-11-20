@@ -1,3 +1,4 @@
+using Crm.Domain.Leads.Identifiers;
 using BuildingBlocks.Infrastructure.Database;
 using Crm.Domain.Tasks;
 using Microsoft.EntityFrameworkCore;
@@ -17,7 +18,7 @@ public sealed class ManagerTaskConfiguration : IEntityTypeConfiguration<ManagerT
                 "(\"Status\" = 'Done' AND \"CompletedAt\" IS NOT NULL) OR (\"Status\" <> 'Done' AND \"CompletedAt\" IS NULL)");
         });
         b.HasKey(x => x.Id);
-        b.Property(x => x.Id).ValueGeneratedOnAdd();
+        b.Property(x => x.Id).HasConversion(x => x.Value, x => new ManagerTaskId(x)).ValueGeneratedOnAdd();
         b.Property(x => x.Title).HasMaxLength(ManagerTaskLimits.TitleMaxLength);
         b.Property(x => x.Description).HasMaxLength(ManagerTaskLimits.DescriptionMaxLength);
         b.Property(x => x.AssigneeName).HasMaxLength(ManagerTaskLimits.NameMaxLength);
@@ -36,7 +37,7 @@ public sealed class ManagerTaskConfiguration : IEntityTypeConfiguration<ManagerT
         // A Crm customer by its public id, without a foreign key: the KeepinCRM sync may replace customers.
         b.HasMany(x => x.Steps).WithOne().HasForeignKey(x => x.TaskId).OnDelete(DeleteBehavior.Cascade);
         b.Navigation(x => x.Steps).HasField("_steps").UsePropertyAccessMode(PropertyAccessMode.Field);
-        b.HasMany(x => x.Events).WithOne().HasForeignKey(x => x.TaskId).OnDelete(DeleteBehavior.Cascade);
-        b.Navigation(x => x.Events).HasField("_events").UsePropertyAccessMode(PropertyAccessMode.Field);
+        b.HasMany(x => x.NewEvents).WithOne().HasForeignKey(x => x.TaskId).OnDelete(DeleteBehavior.Cascade);
+        b.Navigation(x => x.NewEvents).HasField("_newEvents").UsePropertyAccessMode(PropertyAccessMode.Field);
     }
 }

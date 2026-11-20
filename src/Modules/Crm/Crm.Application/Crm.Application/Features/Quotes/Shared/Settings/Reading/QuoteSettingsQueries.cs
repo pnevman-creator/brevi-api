@@ -11,7 +11,7 @@ internal static class QuoteSettingsQueries
         CancellationToken cancellationToken)
     {
         var query = tracking ? store.QuoteSettings : store.QuoteSettings.AsNoTracking();
-        return query.SingleOrDefaultAsync(x => x.Id == QuoteSettings.SingletonId, cancellationToken);
+        return query.SingleOrDefaultAsync(x => x.Id == new QuoteSettingsId(QuoteSettings.SingletonId), cancellationToken);
     }
 
     /// <summary>What the КП documents use: the saved settings, else the defaults.</summary>
@@ -22,5 +22,5 @@ internal static class QuoteSettingsQueries
     /// <summary>Connected Gmail addresses by staff member.</summary>
     public static async Task<IReadOnlyDictionary<int, string>> MailboxEmailsAsync(this IQuoteStore store,
         CancellationToken cancellationToken) =>
-        await store.StaffMailboxes.AsNoTracking().ToDictionaryAsync(x => x.UserId, x => x.Email, cancellationToken);
+        await store.StaffMailboxes.AsNoTracking().ToDictionaryAsync(x => x.UserId.Value, x => x.Email, cancellationToken);
 }

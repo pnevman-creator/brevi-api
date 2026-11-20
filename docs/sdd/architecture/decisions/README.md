@@ -7,7 +7,7 @@ Keep accepted decisions that change long-term boundaries, contracts, or approach
 | [0001](0001-modular-monolith.md) | Modular monolith with a database schema per module | Accepted |
 | [0002](0002-cross-module-ports.md) | Modules talk through ports implemented in the host | Superseded by 0006 |
 | [0003](0003-cookie-session-behind-proxy.md) | Cookie session + CSRF behind a Cloudflare proxy | Accepted |
-| [0004](0004-keyless-cloud-run-delivery.md) | Keyless delivery to Cloud Run, migrations as a job | Accepted |
+| [0004](0004-keyless-cloud-run-delivery.md) | Keyless delivery to Cloud Run, migrations as a job | Accepted; deploy source superseded by 0018 |
 | [0005](0005-nextjs-site-on-workers.md) | Public site on Next.js + Cloudflare Workers, reading the ERP API | Accepted |
 | [0006](0006-module-contracts.md) | Modules talk through their own Contracts projects | Accepted |
 | [0007](0007-use-cases-through-mediator.md) | Every use case is a command or query sent through Mediator from a Minimal API endpoint | Accepted |
@@ -21,6 +21,10 @@ Keep accepted decisions that change long-term boundaries, contracts, or approach
 | [0015](0015-openapi-generated-from-code.md) | The OpenAPI contract is generated from the code at build | Accepted |
 | [0016](0016-domain-events-to-activity-log.md) | Domain events reach the activity log through each module's outbox | Accepted |
 | [0017](0017-opentelemetry-traces-to-cloud-trace.md) | Requests are traced with OpenTelemetry straight to Google Cloud Trace; logs are Cloud Logging JSON with the trace id | Accepted |
+| [0018](0018-deploy-on-merge-from-main-repository.md) | Production deploys on every merge to `master` of Weretik/BreviERP | Accepted |
+| [0019](0019-module-graph-without-cycles.md) | The module graph has no cycle: an upstream module declares a port that a downstream module implements | Accepted |
+| [0020](0020-shared-kernel-ids-across-modules.md) | Ids referenced across modules live in the shared kernel `BuildingBlocks.Domain` | Accepted |
+| [0021](0021-read-cache-hybridcache.md) | Cached reads go through one port over HybridCache (memory only), dropped by tag after a command | Accepted |
 
 For a new decision, create `NNNN-short-name.md` and record:
 
@@ -39,7 +43,7 @@ Every backend keeps an accepted ADR for each area below. A full architecture aud
 | Area | ADR here |
 | --- | --- |
 | Architecture style and module boundaries, data ownership (schema per module) | 0001 |
-| Communication between modules | 0006 (supersedes 0002) |
+| Communication between modules | 0006 (supersedes 0002), 0019, 0020 (ids referenced across modules) |
 | Use-case shape (CQRS, mediator, endpoints) | 0007 |
 | Errors and validation | 0008 |
 | Authentication and authorization | 0003, 0011 |
@@ -55,5 +59,6 @@ Every backend keeps an accepted ADR for each area below. A full architecture aud
 | Public site and how it reads the backend | 0005 |
 | Public API contract (OpenAPI) | 0015 |
 | Observability (traces, structured logs) | 0017 |
+| Caching | 0021 |
 
 A new decision of this kind (a new module, a new external system, a new way to run work or to deploy) gets an ADR in the same change, and the C4 diagrams are updated with it. Frontend-only decisions live in brevi-web ([workspace ADRs](https://github.com/Weretik/brevi-web/blob/master/docs/architecture/adr/README.md)).

@@ -1,3 +1,5 @@
+using BuildingBlocks.Domain.Identifiers.ReferenceData;
+using Warehouse.Domain.Stock.Movements.Identifiers;
 using BuildingBlocks.Domain.Entity;
 using BuildingBlocks.Domain.Results;
 using Warehouse.Domain.Stock.Errors;
@@ -6,7 +8,7 @@ using Warehouse.Domain.Stock.Movements;
 namespace Warehouse.Domain.Stock;
 
 /// <summary>The fabric of «Тканини» a stock line holds, copied when the line is created.</summary>
-public sealed record StockFabric(int? FabricId, string Code, string Name);
+public sealed record StockFabric(FabricId? FabricId, string Code, string Name);
 
 /// <summary>
 /// «Склад тканин»: metres of one fabric (by FAB- code) in one colour. The balance changes only through
@@ -42,8 +44,8 @@ public sealed class FabricStock : IAggregateRoot
     public static FabricStock Create(StockFabric fabric, string color, DateTimeOffset now, string? legacyId = null) =>
         new(fabric, color, now, legacyId);
 
-    public int Id { get; private set; }
-    public int? FabricId { get; private set; }
+    public FabricStockId Id { get; private set; }
+    public FabricId? FabricId { get; private set; }
     public string FabricCode { get; private set; } = null!;
     public string FabricName { get; private set; } = null!;
     public string Color { get; private set; } = null!;
@@ -94,7 +96,7 @@ public sealed class FabricStock : IAggregateRoot
     public void Restate(IEnumerable<FabricMovement> movements)
     {
         var chain = movements.Where(x => x.StockId == Id || ReferenceEquals(x.Stock, this)).Distinct()
-            .OrderBy(x => x.OperationDate).ThenBy(x => x.CreatedAt).ThenBy(x => x.Id == 0 ? int.MaxValue : x.Id)
+            .OrderBy(x => x.OperationDate).ThenBy(x => x.CreatedAt).ThenBy(x => x.Id.Value == 0 ? int.MaxValue : x.Id.Value)
             .ToList();
         var balance = 0m;
         foreach (var movement in chain)
@@ -124,7 +126,7 @@ public sealed class FabricStock : IAggregateRoot
     /// adjustment non-zero; a voided movement has no effect. The caller restates the lines it left and joined.
     /// </summary>
     public DomainResult<FabricMovementRevision> Revise(FabricMovement movement, FabricMovementState state,
-        FabricMovementRevisionAction action, string? reason, string actorName, DateTimeOffset now, Guid operationId,
+        FabricMovementRevisionAction action, string? reason, string actorName, DateTimeOffset now, StockOperationId operationId,
         FabricMovementRevision? restores = null)
     {
         if (!movement.CanRevise) return StockErrors.CannotRevise();
@@ -163,7 +165,7 @@ public sealed class FabricStock : IAggregateRoot
     }
 
     private FabricMovement Add(FabricMovementKind kind, decimal delta, FabricMovementDetails details,
-        string actorName, DateTimeOffset now, int? reverses, string? legacyId)
+        string actorName, DateTimeOffset now, FabricMovementId? reverses, string? legacyId)
     {
         if (!IsValidMeters(delta) || !IsValidMeters(Meters + delta)) throw new ArgumentOutOfRangeException(nameof(delta));
         var movement = new FabricMovement(this, kind, Meters, delta, details, actorName, now, reverses, legacyId);

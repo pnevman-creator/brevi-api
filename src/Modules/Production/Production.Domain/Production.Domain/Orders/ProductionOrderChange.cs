@@ -1,3 +1,5 @@
+using BuildingBlocks.Domain.Identifiers.Orders;
+using Production.Domain.Orders.ValueObjects;
 using Production.Domain.Orders.Rules;
 
 namespace Production.Domain.Orders;
@@ -13,7 +15,7 @@ public sealed class ProductionOrderChange
 
     private ProductionOrderChange() { }
 
-    internal ProductionOrderChange(int? itemId, string? itemName, string field, string? before, string? after,
+    internal ProductionOrderChange(ProductionItemId? itemId, string? itemName, string field, string? before, string? after,
         string actorName, DateTimeOffset at)
     {
         ItemId = itemId;
@@ -26,8 +28,8 @@ public sealed class ProductionOrderChange
     }
 
     public long Id { get; private set; }
-    public int OrderId { get; private set; }
-    public int? ItemId { get; private set; }
+    public ProductionOrderId OrderId { get; private set; }
+    public ProductionItemId? ItemId { get; private set; }
     public string? ItemName { get; private set; }
     public string Field { get; private set; } = null!;
     public string? Before { get; private set; }

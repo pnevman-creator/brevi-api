@@ -1,3 +1,4 @@
+using BuildingBlocks.Domain;
 using Crm.Domain.Quotes;
 using Crm.Domain.Quotes.Sending;
 using Microsoft.EntityFrameworkCore;
@@ -12,7 +13,7 @@ public sealed class QuoteSendingConfiguration : IEntityTypeConfiguration<QuoteSe
     {
         b.ToTable("QuoteSendings");
         b.HasKey(x => x.Id);
-        b.Property(x => x.Id).ValueGeneratedOnAdd();
+        b.Property(x => x.Id).HasConversion(x => x.Value, x => new QuoteSendingId(x)).ValueGeneratedOnAdd();
         b.Property(x => x.SenderName).HasMaxLength(QuoteLimits.NameMaxLength);
         b.Property(x => x.FromEmail).HasMaxLength(QuoteSendingLimits.EmailMaxLength);
         b.Property(x => x.To).HasMaxLength(QuoteSendingLimits.RecipientsMaxLength);
@@ -21,5 +22,7 @@ public sealed class QuoteSendingConfiguration : IEntityTypeConfiguration<QuoteSe
         b.HasOne<Quote>().WithMany().HasForeignKey(x => x.QuoteId).OnDelete(DeleteBehavior.Cascade);
         b.HasIndex(x => new { x.QuoteId, x.SentAt });
         b.HasIndex(x => x.RequestId).IsUnique().HasFilter("\"RequestId\" IS NOT NULL");
+
+        b.Property(x => x.RequestHash).HasMaxLength(RequestKey.HashLength);
     }
 }

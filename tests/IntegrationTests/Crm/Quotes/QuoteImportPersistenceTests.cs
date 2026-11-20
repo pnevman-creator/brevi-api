@@ -1,5 +1,6 @@
 using Crm.Domain.Customers;
 using Crm.Domain.Customers.Identifiers;
+using BuildingBlocks.Domain.Identifiers.People;
 using Crm.Domain.Quotes;
 using Microsoft.EntityFrameworkCore;
 using Crm.Application.Features.Customers.Commands.SyncKeepinCrmClients;
@@ -54,7 +55,7 @@ public sealed class QuoteImportPersistenceTests : CrmDatabaseFixture
     {
         await using (var db = Context())
         {
-            var customer = Customer.Create("organization", "ТОВ «Агро»", null, null, new CrmUserId(1)).Value;
+            var customer = Customer.Create("organization", "ТОВ «Агро»", null, null, new UserId(1)).Value;
             customer.AddExternalIdentity(KeepinCrmClientIdentity.Create("18701991").Value);
             db.Customers.Add(customer);
             await db.SaveChangesAsync();
@@ -98,14 +99,14 @@ public sealed class QuoteImportPersistenceTests : CrmDatabaseFixture
             });
 
             var history = (await new GetQuoteHistoryHandler(db)
-                .Handle(new GetQuoteHistoryQuery(Director, imported[1].Id), default)).Value;
+                .Handle(new GetQuoteHistoryQuery(Director, imported[1].Id.Value), default)).Value;
             Assert.That(history.Select(x => x.Kind), Is.EquivalentTo(new[] { "Created", "Sent", "Imported" }));
             Assert.That(history.Single(x => x.Kind == "Imported").Details,
                 Is.EqualTo("Перенесено з калькулятора, старий номер 1-11-2026"));
 
             var reprice = await new RepriceQuoteHandler(db, new QuoteTestStaff(), new NoCatalog(), _clock,
                     new NoSewing())
-                .Handle(new RepriceQuoteCommand(Director, imported[0].Id, imported[0].Version, false), default);
+                .Handle(new RepriceQuoteCommand(Director, imported[0].Id.Value, imported[0].Version, false), default);
             Assert.That(reprice.Value.Unavailable.Single().Reason, Is.EqualTo(QuoteImportMapper.MissingCompositionReason));
         }
 

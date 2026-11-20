@@ -1,3 +1,5 @@
+using BuildingBlocks.Domain.Identifiers.Orders;
+using Warehouse.Domain.Stock.Movements.Identifiers;
 using BuildingBlocks.Application.DomainEvents;
 using System.Security.Cryptography;
 using System.Text.Json;
@@ -98,7 +100,7 @@ public sealed class TransferStockHandler(IWarehouseDbContext db, IWarehouseRefer
                 source.Error("production_items", id,
                     $"Позиція {position} завдання №{order.Number}: у старому «Цеху» {code ?? item.ModelName}, у Brevi {match.ModelCode ?? match.ModelName}.");
             else
-                result[id] = new V133Target(new FabricMovementTarget(order.OrderId, match.ItemId, order.Number,
+                result[id] = new V133Target(new FabricMovementTarget(new ProductionOrderId(order.OrderId), new ProductionItemId(match.ItemId), order.Number,
                     match.ModelName), match.Quantity);
         }
 
@@ -119,7 +121,7 @@ public sealed class TransferStockHandler(IWarehouseDbContext db, IWarehouseRefer
     {
         await db.FabricMovementRevisions.ExecuteDeleteAsync(cancellationToken);
         await db.FabricMovements.Where(x => x.ReversesMovementId != null)
-            .ExecuteUpdateAsync(x => x.SetProperty(m => m.ReversesMovementId, (int?)null), cancellationToken);
+            .ExecuteUpdateAsync(x => x.SetProperty(m => m.ReversesMovementId, (FabricMovementId?)null), cancellationToken);
         await db.FabricMovements.ExecuteDeleteAsync(cancellationToken);
         await db.FabricIssues.ExecuteDeleteAsync(cancellationToken);
         db.FabricItemPlans.RemoveRange(await db.FabricItemPlans.ToListAsync(cancellationToken));

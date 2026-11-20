@@ -1,3 +1,5 @@
+using BuildingBlocks.Domain.Identifiers.People;
+using Crm.Domain.Leads.Identifiers;
 using Crm.Domain.Leads;
 using Crm.Application.Features.Leads.Shared;
 using Crm.Application.Features.Leads.Shared.Persistence;
@@ -29,7 +31,7 @@ public sealed class GetLeadStatsHandler(ILeadStore store, TimeProvider clock)
             .Select(x => new { x.ByUserId, x.ByName, x.ResultName, x.Outcome })
             .ToListAsync(cancellationToken);
         var sync = await store.LeadSyncStates.AsNoTracking()
-            .SingleOrDefaultAsync(x => x.Id == LeadSyncState.GoogleSheet, cancellationToken);
+            .SingleOrDefaultAsync(x => x.Id == new LeadSyncStateId(LeadSyncState.GoogleSheet), cancellationToken);
 
         bool Open(LeadStage stage) => stage is not (LeadStage.Client or LeadStage.Closed);
         var open = leads.Where(x => Open(x.Stage)).ToList();
@@ -38,12 +40,12 @@ public sealed class GetLeadStatsHandler(ILeadStore store, TimeProvider clock)
             .Select(x => (Id: x.OwnerUserId!.Value, Name: x.OwnerName!))
             .Concat(calls.Select(x => (Id: x.ByUserId, Name: x.ByName)))
             .GroupBy(x => x.Id)
-            .Select(g => new LeadPersonResponse(g.Key, g.Last().Name));
+            .Select(g => new LeadPersonResponse(g.Key.Value, g.Last().Name));
 
         var managers = people.Select(person =>
             {
-                var own = open.Where(x => x.OwnerUserId == person.UserId).ToList();
-                var made = calls.Where(x => x.ByUserId == person.UserId).ToList();
+                var own = open.Where(x => x.OwnerUserId == new UserId(person.UserId)).ToList();
+                var made = calls.Where(x => x.ByUserId == new UserId(person.UserId)).ToList();
                 return new LeadManagerStatsResponse(
                     person,
                     own.Count,

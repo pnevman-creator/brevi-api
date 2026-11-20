@@ -76,7 +76,7 @@ flowchart TB
     seed -.-> secrets
 ```
 
-Deploy: changes land in `Weretik/BreviERP`; syncing the fork `pnevman-creator/brevi-api` starts GitHub Actions, which signs in without a key, runs `brevierp-seed` and then deploys `brevierp-api` ([ADR-0004](../decisions/0004-keyless-cloud-run-delivery.md)). The old OpenCart site keeps `brevi.com.ua` until the cutover; it is not drawn.
+Deploy: a merge to `master` of `Weretik/BreviERP` starts GitHub Actions, which signs in without a key, runs `brevierp-seed` and then deploys `brevierp-api` ([ADR-0004](../decisions/0004-keyless-cloud-run-delivery.md), [ADR-0018](../decisions/0018-deploy-on-merge-from-main-repository.md)). The old OpenCart site keeps `brevi.com.ua` until the cutover; it is not drawn.
 
 ## Level 3: Components of the backend
 
@@ -110,21 +110,18 @@ flowchart LR
         activitylog["<b>ActivityLog</b><br/>«Журнал дій»: who did what"]
     end
 
-    bb["<b>BuildingBlocks</b><br/>Result mapping, Mediator behaviors,<br/>outbox, shared primitives"]
+    bb["<b>BuildingBlocks</b><br/>Result mapping, Mediator behaviors,<br/>outbox, read cache (HybridCache, in memory),<br/>shared primitives"]
     ext["<b>Outside systems</b><br/>KeepinCRM, Google Sheets, Gmail,<br/>OpenAI, Telegram, CDN adm.tools,<br/>Dropbox, supplier sites, Cloud Run"]
 
     host --> sales & make & money & platform
-    crm --> catalog & reference & media & reminders & production
-    production --> catalog & reference & media & warehouse & reminders & crm
+    crm --> catalog & reference & media & reminders
+    production --> catalog & reference & media & reminders & crm
     warehouse --> production & reference
     purchasing --> ai & accounting & reference
     content --> catalog & reference & media
     catalog --> reference & media
     accounting --> reference & crm
-    reference --> catalog
-    media --> catalog & crm
-    identity --> media
-    activitylog --> identity
+    identity --> media & activitylog
     crm & production & warehouse & reference & catalog & media -. "activity.recorded (outbox)" .-> activitylog
     ext ==>|"ACL Integrations/KeepinCrm, GoogleSheets"| crm
     crm ==>|"ACL Integrations/Gmail, Pdf"| ext
@@ -138,7 +135,7 @@ flowchart LR
     sales & make & money & platform --> bb
 ```
 
-This diagram is the context map. A thin arrow from A to B means A's Infrastructure references `B.Contracts` (checked from the `.csproj` files on 2026-11-15); Crm, Production and Warehouse also use `Identity.Contracts` for staff names; ActivityLog uses it for the names in «Журнал дій». No module references another module's Application, Domain or Infrastructure, and there are no foreign keys between schemas ([ADR-0001](../decisions/0001-modular-monolith.md), [ADR-0006](../decisions/0006-module-contracts.md)). The exact references are in the [module map](../overview/modules.md). Thick arrows cross the system edge: an anti-corruption layer in the module's `Infrastructure/Integrations/<System>` translates the outside model, and messages out go through the outbox, sent by the scheduler tick. Five pairs still point both ways (Crm ↔ Production, Production ↔ Warehouse, Catalog ↔ Reference, Catalog ↔ Media, Crm ↔ Media); they are a [known deviation](../../standards/module-rules.md#known-deviations) being removed.
+This diagram is the context map. A thin arrow from A to B means A's Infrastructure references `B.Contracts` (checked from the `.csproj` files on 2026-11-18); Crm, Production and Warehouse also use `Identity.Contracts` for staff names. The arrows form no cycle ([ADR-0019](../decisions/0019-module-graph-without-cycles.md)): when an upstream module needs something of a downstream one, it declares a port in its own `Contracts` and the downstream module implements it, so the arrow still points downstream. Catalog implements Reference's pricing ports and Media's photo usage, Crm implements Media's photo usage, Production implements Crm's `IQuoteOrderLinks`, Warehouse implements Production's `IStockFacts`, and Identity implements ActivityLog's `IActivityActorNames` (the names in «Журнал дій»). No module references another module's Application, Domain or Infrastructure, and there are no foreign keys between schemas ([ADR-0001](../decisions/0001-modular-monolith.md), [ADR-0006](../decisions/0006-module-contracts.md)). The exact references are in the [module map](../overview/modules.md). Thick arrows cross the system edge: an anti-corruption layer in the module's `Infrastructure/Integrations/<System>` translates the outside model, and messages out go through the outbox, sent by the scheduler tick. The architecture test `Modules_do_not_depend_on_each_other_in_a_cycle` fails on any new cycle.
 
 ## Dynamic: an action reaches «Журнал дій»
 

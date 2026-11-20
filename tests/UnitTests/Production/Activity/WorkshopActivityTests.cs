@@ -1,3 +1,6 @@
+using BuildingBlocks.Domain.Identifiers.Orders;
+using BuildingBlocks.Domain.Identifiers.People;
+using Production.Domain.Orders.ValueObjects;
 using ActivityLog.Contracts.Activity;
 using BuildingBlocks.Domain.Events;
 using Production.Application.Features.Activity.EventHandlers;
@@ -20,7 +23,7 @@ public sealed class WorkshopActivityTests
     [Test]
     public void Recorded_and_voided_work_is_listed_but_moved_work_is_not()
     {
-        var target = new WorkTarget(1, 2, 3, "Ірина Бондар");
+        var target = new WorkTarget(new ProductionOrderId(1), new ProductionItemId(2), new WorkshopEmployeeId(3), "Ірина Бондар");
         var facts = new WorkFacts(ProductionWorkKind.Sewing, 15, Today, false, null, null, 120m);
         var work = ProductionWork.Create(target, facts, "Майстер", Now).Value;
         var describer = new ProductionWorkActivity();
@@ -36,11 +39,11 @@ public sealed class WorkshopActivityTests
     [Test]
     public void Renaming_an_employee_lists_the_change()
     {
-        var employee = WorkshopEmployee.Create("Олена Коваль", "Швачка", 1, Now).Value;
+        var employee = WorkshopEmployee.Create("Олена Коваль", "Швачка", new UserId(1), Now).Value;
         var describer = new WorkshopActivity();
         Assert.That(Last(describer, employee)!.Action, Is.EqualTo(ActivityActions.Created));
 
-        employee.Update("Олена Коваль", "Майстер цеху", 1, Now);
+        employee.Update("Олена Коваль", "Майстер цеху", new UserId(1), Now);
 
         Assert.That(Last(describer, employee)!.Changes,
             Is.EqualTo(new[] { new ActivityChangeItem("Посада", "Швачка", "Майстер цеху") }));
@@ -49,10 +52,10 @@ public sealed class WorkshopActivityTests
     [Test]
     public void A_changed_norm_lists_meters()
     {
-        var norm = ModelFabricNorm.Create("MOD-1", new FabricNormValues(1.5m, null, null, null, null, null), 1, Now).Value;
+        var norm = ModelFabricNorm.Create("MOD-1", new FabricNormValues(1.5m, null, null, null, null, null), new UserId(1), Now).Value;
         ((IHasDomainEvents)norm).ClearDomainEvents();
 
-        norm.Set(new FabricNormValues(1.75m, null, null, null, null, null), 1, Now.AddMinutes(1));
+        norm.Set(new FabricNormValues(1.75m, null, null, null, null, null), new UserId(1), Now.AddMinutes(1));
 
         Assert.That(Last(new FabricNormActivity(), norm)!.Changes,
             Is.EqualTo(new[] { new ActivityChangeItem("Один колір", "1,50 м", "1,75 м") }));
@@ -61,7 +64,7 @@ public sealed class WorkshopActivityTests
     [Test]
     public void A_payment_shows_kind_and_amount()
     {
-        var payment = PayrollPayment.Create(new PayrollEntryTarget(new DateOnly(2026, 11, 1), 3, "Ірина Бондар"), Today,
+        var payment = PayrollPayment.Create(new PayrollEntryTarget(new DateOnly(2026, 11, 1), new WorkshopEmployeeId(3), "Ірина Бондар"), Today,
             PayrollPaymentKind.Card, 12000m, null, "Директор", Now).Value;
 
         var entry = Last(new PayrollActivity(), payment);

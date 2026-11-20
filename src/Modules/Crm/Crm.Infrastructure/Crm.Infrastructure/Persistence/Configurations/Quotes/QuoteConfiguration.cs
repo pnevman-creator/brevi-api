@@ -1,3 +1,5 @@
+using BuildingBlocks.Domain;
+using BuildingBlocks.Domain.Identifiers.Orders;
 using BuildingBlocks.Infrastructure.Database;
 using Crm.Domain.Quotes;
 using Microsoft.EntityFrameworkCore;
@@ -17,7 +19,7 @@ public sealed class QuoteConfiguration : IEntityTypeConfiguration<Quote>
             t.HasCheckConstraint("CK_Quotes_NumberSequence", "\"NumberSequence\" > 0");
         });
         b.HasKey(x => x.Id);
-        b.Property(x => x.Id).ValueGeneratedOnAdd();
+        b.Property(x => x.Id).HasConversion(x => x.Value, x => new QuoteId(x)).ValueGeneratedOnAdd();
         b.Property(x => x.Number).HasMaxLength(QuoteLimits.NumberMaxLength);
         b.Property(x => x.Kind).HasConversion<string>().HasMaxLength(20);
         b.Property(x => x.Status).HasConversion<string>().HasMaxLength(20);
@@ -45,6 +47,8 @@ public sealed class QuoteConfiguration : IEntityTypeConfiguration<Quote>
         b.HasIndex(x => x.ArchivedAt);
         b.HasIndex(x => x.CustomerId);
         b.HasIndex(x => x.CreateRequestId).IsUnique().HasFilter("\"CreateRequestId\" IS NOT NULL");
+
+        b.Property(x => x.CreateRequestHash).HasMaxLength(RequestKey.HashLength);
         b.HasSearchText(nameof(Quote.Number), nameof(Quote.InternalName), nameof(Quote.CompanyName),
             nameof(Quote.RecipientName));
 
@@ -53,7 +57,7 @@ public sealed class QuoteConfiguration : IEntityTypeConfiguration<Quote>
         b.Navigation(x => x.Items).HasField("_items").UsePropertyAccessMode(PropertyAccessMode.Field);
 
         // History lines are only added through the КП and read by GetQuoteHistory; the КП never loads them.
-        b.HasMany(x => x.Events).WithOne().HasForeignKey(x => x.QuoteId).OnDelete(DeleteBehavior.Cascade);
-        b.Navigation(x => x.Events).HasField("_events").UsePropertyAccessMode(PropertyAccessMode.Field);
+        b.HasMany(x => x.NewEvents).WithOne().HasForeignKey(x => x.QuoteId).OnDelete(DeleteBehavior.Cascade);
+        b.Navigation(x => x.NewEvents).HasField("_newEvents").UsePropertyAccessMode(PropertyAccessMode.Field);
     }
 }

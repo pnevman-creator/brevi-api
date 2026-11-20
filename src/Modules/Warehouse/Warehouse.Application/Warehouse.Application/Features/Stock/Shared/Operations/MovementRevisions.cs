@@ -1,3 +1,6 @@
+using BuildingBlocks.Application.Idempotency;
+using BuildingBlocks.Domain.Identifiers.People;
+using Warehouse.Domain.Stock.Movements.Identifiers;
 using Warehouse.Application.Abstractions;
 using Warehouse.Domain.Stock;
 using Warehouse.Domain.Stock.Movements;
@@ -15,7 +18,7 @@ public sealed class MovementRevisions(IWarehouseDbContext db, StockOperations op
         CancellationToken cancellationToken)
     {
         var movement = await db.FabricMovements.Include(x => x.Stock)
-            .SingleOrDefaultAsync(x => x.Id == movementId, cancellationToken);
+            .SingleOrDefaultAsync(x => x.Id == new FabricMovementId(movementId), cancellationToken);
         if (movement is null) return Result<FabricMovement>.NotFound(StockMessages.MovementNotFound);
         if (!movement.CanRevise) return Result<FabricMovement>.Conflict(StockMessages.CannotRevise);
         if (movement.Revision != expectedRevision) return Result<FabricMovement>.Conflict(StockMessages.RevisionStale);
@@ -48,7 +51,7 @@ public sealed class MovementRevisions(IWarehouseDbContext db, StockOperations op
     {
         db.FabricMovementRevisions.Add(revision);
         var lines = new[] { from, to }.Distinct().ToList();
-        var ids = lines.Where(x => x.Id != 0).Select(x => x.Id).ToArray();
+        var ids = lines.Where(x => x.Id != new FabricStockId(0)).Select(x => x.Id).ToArray();
         var saved = await db.FabricMovements.Where(x => ids.Contains(x.StockId)).ToListAsync(cancellationToken);
         var all = saved.Append(revision.Movement).Distinct().ToList();
         foreach (var line in lines) line.Restate(all.Where(x => ReferenceEquals(x.Stock, line)));
@@ -57,7 +60,7 @@ public sealed class MovementRevisions(IWarehouseDbContext db, StockOperations op
         // Saved lines come back as the tracked, restated instances; a line this change created is not saved yet.
         var pair = await pairs.LoadAsync(to.FabricCode, to.Color, cancellationToken);
         var meters = pair.Lines.Contains(to) ? pair.Meters : pair.Meters + to.Meters;
-        db.StockOperations.Add(StockOperation.Create(operationId, kind, hash, actor.UserId, pair.Code, to.ColorKey,
+        db.StockOperations.Add(StockOperation.Create(operationId, kind, hash, new UserId(actor.UserId), pair.Code, to.ColorKey,
             to.Color, meters, pairs.Now));
         try
         {

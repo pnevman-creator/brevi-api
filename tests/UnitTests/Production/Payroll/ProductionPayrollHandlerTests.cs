@@ -1,3 +1,4 @@
+using BuildingBlocks.Domain.Identifiers.People;
 using Ardalis.Result;
 using Production.Domain.Payroll;
 using Production.Domain.Staff;
@@ -40,22 +41,22 @@ public sealed class ProductionPayrollHandlerTests
     public void Calculation_pays_every_part_by_the_shares()
     {
         var result = PayrollCalculation.Calculate(new PayrollInputs(
-            [1, 2, 3],
+            [new WorkshopEmployeeId(1), new WorkshopEmployeeId(2), new WorkshopEmployeeId(3)],
             [
-                new PayrollWorkLine(1, ProductionWorkKind.Sewing, 60, 300m),
-                new PayrollWorkLine(2, ProductionWorkKind.Sewing, 10, 300m),
-                new PayrollWorkLine(3, ProductionWorkKind.Cutting, 10, 300m)
+                new PayrollWorkLine(new WorkshopEmployeeId(1), ProductionWorkKind.Sewing, 60, 300m),
+                new PayrollWorkLine(new WorkshopEmployeeId(2), ProductionWorkKind.Sewing, 10, 300m),
+                new PayrollWorkLine(new WorkshopEmployeeId(3), ProductionWorkKind.Cutting, 10, 300m)
             ],
-            new Dictionary<int, decimal> { [2] = -100m },
-            new Dictionary<int, decimal> { [1] = 5000m },
-            new PayrollPeople(MasterId: 3, ChiefId: 4, EmbroideryId: 4),
+            new Dictionary<WorkshopEmployeeId, decimal> { [new WorkshopEmployeeId(2)] = -100m },
+            new Dictionary<WorkshopEmployeeId, decimal> { [new WorkshopEmployeeId(1)] = 5000m },
+            new PayrollPeople(MasterId: new WorkshopEmployeeId(3), ChiefId: new WorkshopEmployeeId(4), EmbroideryId: new WorkshopEmployeeId(4)),
             Stitches: 25_000,
             new PayrollRates(0.08m, 17_500m, 0.2174m, 0.11m, 0.12m, 1m)));
 
-        var first = result.Lines.Single(x => x.EmployeeId == 1);
-        var second = result.Lines.Single(x => x.EmployeeId == 2);
-        var cutter = result.Lines.Single(x => x.EmployeeId == 3);
-        var chief = result.Lines.Single(x => x.EmployeeId == 4);
+        var first = result.Lines.Single(x => x.EmployeeId == new WorkshopEmployeeId(1));
+        var second = result.Lines.Single(x => x.EmployeeId == new WorkshopEmployeeId(2));
+        var cutter = result.Lines.Single(x => x.EmployeeId == new WorkshopEmployeeId(3));
+        var chief = result.Lines.Single(x => x.EmployeeId == new WorkshopEmployeeId(4));
         Assert.Multiple(() =>
         {
             Assert.That(result.TotalSewing, Is.EqualTo(21_000m));
@@ -75,9 +76,9 @@ public sealed class ProductionPayrollHandlerTests
     [Test]
     public void Missing_people_and_shares_are_warnings()
     {
-        var result = PayrollCalculation.Calculate(new PayrollInputs([1],
-            [new PayrollWorkLine(1, ProductionWorkKind.Sewing, 1, 100m)],
-            new Dictionary<int, decimal>(), new Dictionary<int, decimal>(),
+        var result = PayrollCalculation.Calculate(new PayrollInputs([new WorkshopEmployeeId(1)],
+            [new PayrollWorkLine(new WorkshopEmployeeId(1), ProductionWorkKind.Sewing, 1, 100m)],
+            new Dictionary<WorkshopEmployeeId, decimal>(), new Dictionary<WorkshopEmployeeId, decimal>(),
             new PayrollPeople(null, null, null), 10, new PayrollRates(null, 17_500m, 0.2m, 0.11m, 0.12m, null)));
 
         Assert.That(result.Warnings, Is.EquivalentTo(new[]
@@ -179,12 +180,12 @@ public sealed class ProductionPayrollHandlerTests
     private static ProductionTestHarness Workshop(out int seamstress, out int master)
     {
         var workshop = ProductionOrderHandlerTests.Workshop();
-        var a = WorkshopEmployee.Create("Андреева", "Швачка", 1, workshop.Time.GetUtcNow()).Value;
-        var b = WorkshopEmployee.Create("Витковська", "Майстер цеху", 1, workshop.Time.GetUtcNow()).Value;
+        var a = WorkshopEmployee.Create("Андреева", "Швачка", new UserId(1), workshop.Time.GetUtcNow()).Value;
+        var b = WorkshopEmployee.Create("Витковська", "Майстер цеху", new UserId(1), workshop.Time.GetUtcNow()).Value;
         workshop.Db.Employees.AddRange(a, b);
         workshop.Db.SaveChanges();
-        seamstress = a.Id;
-        master = b.Id;
+        seamstress = a.Id.Value;
+        master = b.Id.Value;
         return workshop;
     }
 
@@ -201,12 +202,12 @@ public sealed class ProductionPayrollHandlerTests
     public async Task The_year_reads_its_months_in_a_handful_of_queries()
     {
         using var workshop = ProductionOrderHandlerTests.Workshop();
-        var employee = WorkshopEmployee.Create("Андреева", "Швачка", 1, workshop.Time.GetUtcNow()).Value;
+        var employee = WorkshopEmployee.Create("Андреева", "Швачка", new UserId(1), workshop.Time.GetUtcNow()).Value;
         workshop.Db.Employees.Add(employee);
         await workshop.Db.SaveChangesAsync();
         foreach (var (month, amount) in new[] { ("2026-03", 300m), ("2026-10", 100m), (Month, 250m) })
             await new CreatePayrollAdjustmentHandler(workshop.Db, Changes(workshop))
-                .Handle(new(Admin, month, new(employee.Id, amount, "Премія")), CancellationToken.None);
+                .Handle(new(Admin, month, new(employee.Id.Value, amount, "Премія")), CancellationToken.None);
 
         var commands = new CommandCounter();
         await using var db = workshop.OtherRequest(commands);

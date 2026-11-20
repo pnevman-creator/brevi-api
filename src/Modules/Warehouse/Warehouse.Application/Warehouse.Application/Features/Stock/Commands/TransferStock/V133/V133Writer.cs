@@ -1,3 +1,5 @@
+using BuildingBlocks.Domain.Identifiers.ReferenceData;
+using Warehouse.Domain.Stock.Movements.Identifiers;
 using System.Text.Json;
 using Warehouse.Application.Abstractions;
 using Warehouse.Domain.Stock;
@@ -37,7 +39,7 @@ internal sealed class V133Writer(
                     $"Тканини {code} немає в «Тканини»: її рядки перенесено з назвою старого «Цеху», без ціни.");
             var first = source.Movements.Where(x => x.Original.StockId == row.Id).Select(x => (DateTimeOffset?)x.At)
                 .Min();
-            var line = FabricStock.Create(new StockFabric(fabric?.Id, code, fabric?.Name ?? row.FabricName ?? code),
+            var line = FabricStock.Create(new StockFabric(FabricId.FromNullable(fabric?.Id), code, fabric?.Name ?? row.FabricName ?? code),
                 row.Color, first ?? now, row.Id);
             _lines[row.Id] = line;
             db.FabricStocks.Add(line);
@@ -113,7 +115,7 @@ internal sealed class V133Writer(
             Cut(after.Supplier, FabricMovement.SupplierMaxLength), Cut(after.Reference, FabricMovement.DocumentMaxLength),
             saved.Destination, after.IsVoided);
         var change = line.Revise(saved, state, action, null,
-            await nameOf(revision.ActorEmail, cancellationToken), revision.At, revision.OperationId, restores);
+            await nameOf(revision.ActorEmail, cancellationToken), revision.At, new StockOperationId(revision.OperationId), restores);
         if (change.IsFailure)
         {
             source.Error("fabric_movement_revisions", revision.Id, "Правку не можна застосувати за правилами складу.");
@@ -172,7 +174,7 @@ internal sealed class V133Writer(
             var movements = rows.ToDictionary(x => x.Id,
                 x => source.LineMovements[x.Id].Select(id => _movements[id]).ToList());
             int? version = null;
-            if (planned.Add(target.Target.ItemId) && Plan(batch.ItemId, target) is { } plan)
+            if (planned.Add(target.Target.ItemId.Value) && Plan(batch.ItemId, target) is { } plan)
             {
                 db.FabricItemPlans.Add(plan);
                 planCount++;

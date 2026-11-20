@@ -1,3 +1,7 @@
+using BuildingBlocks.Domain;
+using BuildingBlocks.Domain.Identifiers.Orders;
+using Production.Domain.Staff;
+using Production.Domain.Orders.ValueObjects;
 using BuildingBlocks.Domain.Entity;
 using BuildingBlocks.Domain.Events;
 using BuildingBlocks.Domain.Results;
@@ -22,7 +26,7 @@ public static class OverPlanReasons
 }
 
 /// <summary>Who did the work and for which item, as it was when the work was recorded.</summary>
-public sealed record WorkTarget(int OrderId, int ItemId, int EmployeeId, string EmployeeName);
+public sealed record WorkTarget(ProductionOrderId OrderId, ProductionItemId ItemId, WorkshopEmployeeId EmployeeId, string EmployeeName);
 
 /// <summary>What was done.</summary>
 public sealed record WorkFacts(ProductionWorkKind Kind, int Quantity, DateOnly WorkDate, bool OverPlan, string? Reason,
@@ -43,7 +47,7 @@ public sealed class ProductionWork : DomainEventSource, IAggregateRoot
     private ProductionWork() { }
 
     public static DomainResult<ProductionWork> Create(WorkTarget target, WorkFacts facts, string actorName,
-        DateTimeOffset now, string? legacyId = null, Guid? requestId = null)
+        DateTimeOffset now, string? legacyId = null, RequestKey? request = null)
     {
         if (facts.Quantity is <= 0 or > MaxQuantity)
             return Error.Validation("production.work_quantity", $"Кількість — від 1 до {MaxQuantity}.", "quantity");
@@ -54,7 +58,7 @@ public sealed class ProductionWork : DomainEventSource, IAggregateRoot
         var comment = OrderText.Check(facts.Comment, CommentMaxLength, "comment");
         return comment.IsFailure
             ? comment.Error!
-            : new ProductionWork(target, facts, actorName, now, legacyId) { RequestId = requestId };
+            : new ProductionWork(target, facts, actorName, now, legacyId) { RequestId = request?.Id, RequestHash = request?.Hash };
     }
 
     private ProductionWork(WorkTarget target, WorkFacts facts, string actorName, DateTimeOffset now, string? legacyId)
@@ -76,10 +80,10 @@ public sealed class ProductionWork : DomainEventSource, IAggregateRoot
         if (LegacyId is null) Raise(new ProductionWorkRecorded(this, false));
     }
 
-    public int Id { get; private set; }
-    public int OrderId { get; private set; }
-    public int ItemId { get; private set; }
-    public int EmployeeId { get; private set; }
+    public ProductionWorkId Id { get; private set; }
+    public ProductionOrderId OrderId { get; private set; }
+    public ProductionItemId ItemId { get; private set; }
+    public WorkshopEmployeeId EmployeeId { get; private set; }
     public string EmployeeName { get; private set; } = null!;
     public ProductionWorkKind Kind { get; private set; }
     public int Quantity { get; private set; }
@@ -103,6 +107,8 @@ public sealed class ProductionWork : DomainEventSource, IAggregateRoot
 
     /// <summary>The «Додати роботу» attempt; a repeat with the same id records nothing new (unique).</summary>
     public Guid? RequestId { get; private init; }
+    /// <summary>Hash of what the request asked for; a repeat with other data answers 409.</summary>
+    public string? RequestHash { get; private init; }
 
     public bool IsVoided => VoidedAt is not null;
 

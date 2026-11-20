@@ -1,3 +1,5 @@
+using BuildingBlocks.Domain.Identifiers.Orders;
+using BuildingBlocks.Domain.Identifiers.People;
 using Production.Application.Abstractions;
 using Production.Domain.Orders;
 using Production.Domain.FabricPlans;
@@ -20,12 +22,12 @@ internal static class ProductionOrderFiltering
     {
         var orders = db.Orders.AsNoTracking().Where(x => x.DeletedAt == null);
         if (query.CustomerId is { } customerId)
-            orders = orders.Where(x => x.CustomerId == customerId);
+            orders = orders.Where(x => x.CustomerId == new CustomerId(customerId));
         if (query.QuoteId is { } quoteId)
-            orders = orders.Where(x => x.QuoteId == quoteId);
+            orders = orders.Where(x => x.QuoteId == new QuoteId(quoteId));
 
         if (query.ManagerUserId is { } managerUserId)
-            orders = orders.Where(x => x.ManagerUserId == managerUserId);
+            orders = orders.Where(x => x.ManagerUserId == new UserId(managerUserId));
 
         if (!string.IsNullOrWhiteSpace(query.Manager))
         {

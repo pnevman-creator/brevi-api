@@ -1,3 +1,7 @@
+using BuildingBlocks.Domain;
+using BuildingBlocks.Application.Idempotency;
+using BuildingBlocks.Domain.Identifiers.People;
+using Crm.Domain.Leads.Identifiers;
 using Crm.Domain.Leads;
 using Crm.Domain.Tasks;
 using Crm.Application.Features.Leads.Shared;
@@ -27,16 +31,19 @@ public sealed class RecordLeadCallHandler(ILeadStore store, ITaskStaffReader sta
         CancellationToken cancellationToken)
     {
         var input = command.Input;
+        var request = RequestKeys.Of(input.RequestId, command with { Input = input with { RequestId = null } });
         var lead = await store.LoadAsync(command.Id, cancellationToken);
         if (lead is null) return Result.NotFound(LeadMessages.NotFound);
-        if (await RecordedAsync(lead.Id, input.RequestId, cancellationToken))
-            return Result.Success(await store.DetailAsync(lead, clock.GetUtcNow(), cancellationToken));
+        if (await RepeatOfAsync(lead.Id.Value, request, cancellationToken) is { } same)
+            return same
+                ? Result.Success(await store.DetailAsync(lead, clock.GetUtcNow(), cancellationToken))
+                : RequestKeys.Conflict<LeadDetailResponse>();
         if (lead.Version != input.Version) return Result.Conflict(LeadMessages.Stale);
         if (!lead.IsOpen) return Result.Invalid(new ValidationError(LeadMessages.Closed));
-        if (lead.OwnerUserId is not null && !lead.IsOwnedBy(command.Actor.UserId))
+        if (lead.OwnerUserId is not null && !lead.IsOwnedBy(new UserId(command.Actor.UserId)))
             return Result.Forbidden(LeadMessages.NotOwner);
 
-        var result = await store.LeadCallResults.SingleOrDefaultAsync(x => x.Id == input.ResultId && x.IsActive,
+        var result = await store.LeadCallResults.SingleOrDefaultAsync(x => x.Id == new LeadCallResultId(input.ResultId) && x.IsActive,
             cancellationToken);
         if (result is null) return Result.Invalid(new ValidationError(LeadMessages.ResultNotFound));
 
@@ -49,13 +56,13 @@ public sealed class RecordLeadCallHandler(ILeadStore store, ITaskStaffReader sta
 
         var member = await staff.FindAsync(command.Actor.UserId, cancellationToken);
         if (member is null) return Result.Forbidden(LeadMessages.ActorUnknown);
-        var by = new LeadPerson(member.UserId, member.Name);
-        var taskPerson = new ManagerTaskPerson(member.UserId, member.Name);
+        var by = new LeadPerson(new UserId(member.UserId), member.Name);
+        var taskPerson = new ManagerTaskPerson(new UserId(member.UserId), member.Name);
 
         lead.Take(by, now);
-        var call = lead.RecordCall(by, result, input.Comment, next, now, input.RequestId);
+        var call = lead.RecordCall(by, result, input.Comment, next, now, request);
 
-        foreach (var open in await store.OpenTasksAsync(lead.Id, cancellationToken))
+        foreach (var open in await store.OpenTasksAsync(lead.Id.Value, cancellationToken))
             open.ChangeStatus(ManagerTaskStatus.Done, taskPerson, now);
         if (call.NextContactAt is { } nextAt)
             store.ManagerTasks.Add(LeadCallTask.Create(lead, call, taskPerson, nextAt, now));
@@ -63,15 +70,21 @@ public sealed class RecordLeadCallHandler(ILeadStore store, ITaskStaffReader sta
         if (await store.TrySaveAsync(cancellationToken))
             return Result.Success(await store.DetailAsync(lead, now, cancellationToken));
         // The same press arrived twice at once: the other request recorded the call.
-        if (!await RecordedAsync(lead.Id, input.RequestId, cancellationToken)) return Result.Conflict(LeadMessages.Stale);
+        if (await RepeatOfAsync(lead.Id.Value, request, cancellationToken) is not { } savedSame)
+            return Result.Conflict(LeadMessages.Stale);
+        if (!savedSame) return RequestKeys.Conflict<LeadDetailResponse>();
         store.Leads.Entry(lead).Context.ChangeTracker.Clear();
-        var saved = await store.LoadAsync(lead.Id, cancellationToken);
+        var saved = await store.LoadAsync(lead.Id.Value, cancellationToken);
         return Result.Success(await store.DetailAsync(saved!, now, cancellationToken));
     }
 
-    private async Task<bool> RecordedAsync(long leadId, Guid? requestId, CancellationToken cancellationToken) =>
-        requestId is { } id
-        && await store.LeadCalls.AsNoTracking().AnyAsync(x => x.LeadId == leadId && x.RequestId == id, cancellationToken);
+    /// <summary>Null when this request recorded no call yet; else whether the call came from the same data.</summary>
+    private async Task<bool?> RepeatOfAsync(long leadId, RequestKey? request, CancellationToken cancellationToken) =>
+        request is { } key
+            ? RequestKeys.Same(key, await store.LeadCalls.AsNoTracking()
+                .Where(x => x.LeadId == new LeadId(leadId) && x.RequestId == key.Id)
+                .Select(x => new RequestKeys.Saved(x.RequestHash)).SingleOrDefaultAsync(cancellationToken))
+            : null;
 
     /// <summary>A retry without a date is planned <see cref="LeadCallResult.RetryDays"/> days later (R-06).</summary>
     private static DateTimeOffset? NextContact(LeadCallResult result, DateTimeOffset? given, DateTimeOffset now) =>

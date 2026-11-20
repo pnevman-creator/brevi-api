@@ -1,3 +1,5 @@
+using BuildingBlocks.Domain.Identifiers.Products;
+using BuildingBlocks.Domain.Identifiers.People;
 using BuildingBlocks.Domain.Entity;
 using BuildingBlocks.Domain.Results;
 using System.Globalization;
@@ -22,7 +24,7 @@ public sealed class EmbroiderySavedCalculation : DomainEventSource, IAggregateRo
 
     public static DomainResult<EmbroiderySavedCalculation> Create(string? name, Guid? customerPublicId,
         string? customerName, EmbroideryInput input, EmbroideryRateSnapshot snapshot, EmbroideryResult result,
-        int createdByUserId, string createdByName, DateTimeOffset now, string? category = null) =>
+        UserId createdByUserId, string createdByName, DateTimeOffset now, string? category = null) =>
         category is not null && result.Prices.All(x => x.Name != category)
             ? Settings.EmbroiderySettingsErrors.CategoryNotInResult()
             : Saved(new EmbroiderySavedCalculation(name, customerPublicId, customerName, input, snapshot, result,
@@ -35,7 +37,7 @@ public sealed class EmbroiderySavedCalculation : DomainEventSource, IAggregateRo
     }
 
     private EmbroiderySavedCalculation(string? name, Guid? customerPublicId, string? customerName, EmbroideryInput input,
-        EmbroideryRateSnapshot snapshot, EmbroideryResult result, int createdByUserId, string createdByName,
+        EmbroideryRateSnapshot snapshot, EmbroideryResult result, UserId createdByUserId, string createdByName,
         DateTimeOffset now, string? category)
     {
         Category = category;
@@ -53,7 +55,7 @@ public sealed class EmbroiderySavedCalculation : DomainEventSource, IAggregateRo
         CreatedAt = now;
     }
 
-    public long Id { get; private set; }
+    public EmbroiderySavedCalculationId Id { get; private set; }
 
     /// <summary>The old calculator's record id for a calculation moved from its archive; null for one saved here.</summary>
     public string? LegacyId { get; private set; }
@@ -84,9 +86,9 @@ public sealed class EmbroiderySavedCalculation : DomainEventSource, IAggregateRo
     public bool Incomplete { get; private set; }
 
     /// <summary>A photo or mockup of the design from the Media library, for the workshop; null when none.</summary>
-    public int? MockupMediaFileId { get; private set; }
+    public MediaFileId? MockupMediaFileId { get; private set; }
 
-    public int CreatedByUserId { get; private set; }
+    public UserId CreatedByUserId { get; private set; }
     public string CreatedByName { get; private set; } = null!;
     public DateTimeOffset CreatedAt { get; private set; }
 
@@ -95,7 +97,7 @@ public sealed class EmbroiderySavedCalculation : DomainEventSource, IAggregateRo
     /// result those rates give, which the import checked against the old saved prices.
     /// </summary>
     public static EmbroiderySavedCalculation Transferred(string legacyId, string? name, EmbroideryInput input,
-        EmbroideryRateSnapshot snapshot, EmbroideryResult result, int createdByUserId, string createdByName,
+        EmbroideryRateSnapshot snapshot, EmbroideryResult result, UserId createdByUserId, string createdByName,
         DateTimeOffset createdAt) =>
         new(name, null, null, input, snapshot, result, createdByUserId, createdByName, createdAt, null)
         {
@@ -103,7 +105,7 @@ public sealed class EmbroiderySavedCalculation : DomainEventSource, IAggregateRo
         };
 
     /// <summary>Sets or clears the mockup; the only thing that changes after saving.</summary>
-    public void SetMockup(int? mediaFileId)
+    public void SetMockup(MediaFileId? mediaFileId)
     {
         if (mediaFileId == MockupMediaFileId) return;
         MockupMediaFileId = mediaFileId;
@@ -111,7 +113,7 @@ public sealed class EmbroiderySavedCalculation : DomainEventSource, IAggregateRo
     }
 
     /// <summary>Tells «Журнал дій» (ACT-001) that the calculation is being deleted; call it before removing it.</summary>
-    public void MarkDeleted() => Raise(new EmbroideryCalculationDeleted(Id, Name));
+    public void MarkDeleted() => Raise(new EmbroideryCalculationDeleted(Id.Value, Name));
 
     /// <summary>«ВШ-0042»: the id with the prefix, never stored.</summary>
     public static string NumberOf(long id) => "ВШ-" + id.ToString("D4", CultureInfo.InvariantCulture);

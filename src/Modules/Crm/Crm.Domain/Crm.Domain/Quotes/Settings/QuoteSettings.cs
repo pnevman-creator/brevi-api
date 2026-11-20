@@ -1,3 +1,4 @@
+using BuildingBlocks.Domain.Identifiers.People;
 using BuildingBlocks.Domain.Entity;
 using BuildingBlocks.Domain.Results;
 using Crm.Domain.Quotes.Errors;
@@ -16,12 +17,12 @@ public sealed class QuoteSettings : DomainEventSource, IAggregateRoot
 
     public static DomainResult<QuoteSettings> Create(QuoteSettingsContent content, string updatedByName, DateTimeOffset now)
     {
-        var settings = new QuoteSettings { Id = SingletonId, Version = 0 };
+        var settings = new QuoteSettings { Id = new QuoteSettingsId(SingletonId), Version = 0 };
         var applied = settings.Apply(content, updatedByName, now);
         return applied.IsFailure ? applied.Error! : settings;
     }
 
-    public int Id { get; private set; }
+    public QuoteSettingsId Id { get; private set; }
     public QuoteCompanyDetails Company { get; private set; } = null!;
     public QuoteEmailTemplate Email { get; private set; } = null!;
     public QuotePdfTexts Pdf { get; private set; } = null!;
@@ -56,7 +57,7 @@ public sealed class QuoteSettings : DomainEventSource, IAggregateRoot
     }
 
     /// <summary>The saved contact of a staff member, or null to use their account name, phone and email.</summary>
-    public QuoteStaffContact? ContactOf(int userId) => StaffContacts.FirstOrDefault(x => x.UserId == userId);
+    public QuoteStaffContact? ContactOf(UserId userId) => StaffContacts.FirstOrDefault(x => x.UserId == userId);
 }
 
 /// <summary>Everything the settings page edits.</summary>

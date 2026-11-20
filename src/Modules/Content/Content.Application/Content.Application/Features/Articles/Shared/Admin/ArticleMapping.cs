@@ -10,8 +10,8 @@ internal static class ArticleMapping
     {
         var uk = article.TextIn(ProductPageRules.Ukrainian);
         var ru = article.TextIn(ProductPageRules.Russian);
-        var cover = article.CoverPhotoId is { } id ? photos.GetValueOrDefault(id) : null;
-        return new ArticleRow(article.Id, article.Slug, article.PublishedOn, article.ShowOnSite, uk?.Title, ru?.Title,
+        var cover = article.CoverPhotoId is { } id ? photos.GetValueOrDefault(id.Value) : null;
+        return new ArticleRow(article.Id.Value, article.Slug, article.PublishedOn, article.ShowOnSite, uk?.Title, ru?.Title,
             uk is { Body.Count: > 0 }, ru is { Body.Count: > 0 }, uk is { HasSeo: true } && ru is { HasSeo: true },
             cover?.ThumbnailUrl ?? cover?.Url, article.UpdatedAtUtc);
     }
@@ -21,7 +21,7 @@ internal static class ArticleMapping
         : new ArticleTextResponse(text.Title, text.Excerpt, text.SeoTitle, text.SeoDescription, text.Body);
 
     public static ArticleResponse Detail(Article article, IReadOnlyDictionary<int, ContentMediaPhoto> photos) =>
-        new(Row(article, photos), article.Revision, article.UpdatedBy, article.CoverPhotoId,
+        new(Row(article, photos), article.Revision, article.UpdatedBy, article.CoverPhotoId?.Value,
             Text(article.TextIn(ProductPageRules.Ukrainian)), Text(article.TextIn(ProductPageRules.Russian)),
             article.PhotoIds().Where(photos.ContainsKey).Select(id => photos[id])
                 .Select(x => new ArticlePhoto(x.Id, x.Url, x.ThumbnailUrl, x.Width, x.Height)).ToArray());

@@ -9,7 +9,7 @@ internal static class LeadResponseMapper
     /// <summary>SQL-translatable projection for lists and «Мій день».</summary>
     public static IQueryable<LeadSummaryResponse> ToSummaries(this IQueryable<Lead> leads, DateTimeOffset now) =>
         leads.Select(x => new LeadSummaryResponse(
-            x.Id,
+            x.Id.Value,
             x.SourceId,
             x.Company,
             x.Category,
@@ -17,7 +17,7 @@ internal static class LeadResponseMapper
             x.Industry,
             x.CallReason,
             x.Stage.ToString(),
-            x.OwnerUserId == null ? null : new LeadPersonResponse(x.OwnerUserId.Value, x.OwnerName!),
+            x.OwnerUserId == null ? null : new LeadPersonResponse(x.OwnerUserId.Value.Value, x.OwnerName!),
             x.LastResultName,
             x.LastCallAt,
             x.NextContactAt,
@@ -29,7 +29,7 @@ internal static class LeadResponseMapper
 
     public static LeadDetailResponse ToDetail(this Lead lead, string? categoryDescription, long? openTaskId,
         DateTimeOffset now) =>
-        new(lead.Id,
+        new(lead.Id.Value,
             lead.SourceId,
             lead.Company,
             lead.Category,
@@ -54,7 +54,7 @@ internal static class LeadResponseMapper
             lead.SheetNotes,
             lead.InSheet,
             lead.Stage.ToString(),
-            lead.OwnerUserId is { } owner ? new LeadPersonResponse(owner, lead.OwnerName!) : null,
+            lead.OwnerUserId is { } owner ? new LeadPersonResponse(owner.Value, lead.OwnerName!) : null,
             lead.TakenAt,
             lead.LastResultName,
             lead.LastCallAt,
@@ -63,11 +63,11 @@ internal static class LeadResponseMapper
             lead.CallCount,
             openTaskId,
             lead.Calls.OrderByDescending(x => x.At).ThenByDescending(x => x.Id)
-                .Select(x => new LeadCallResponse(x.Id, new LeadPersonResponse(x.ByUserId, x.ByName), x.At, x.ResultId,
+                .Select(x => new LeadCallResponse(x.Id, new LeadPersonResponse(x.ByUserId.Value, x.ByName), x.At, x.ResultId.Value,
                     x.ResultName, x.Outcome.ToString(), x.Comment, x.NextContactAt))
                 .ToArray(),
             lead.Version);
 
     public static LeadCallResultResponse ToResponse(this LeadCallResult x) =>
-        new(x.Id, x.Name, x.Outcome.ToString(), x.RetryDays, x.IsActive, x.Position);
+        new(x.Id.Value, x.Name, x.Outcome.ToString(), x.RetryDays, x.IsActive, x.Position);
 }

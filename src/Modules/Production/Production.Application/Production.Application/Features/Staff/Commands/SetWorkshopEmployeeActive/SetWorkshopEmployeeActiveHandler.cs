@@ -1,3 +1,5 @@
+using BuildingBlocks.Domain.Identifiers.People;
+using Production.Domain.Staff;
 using Production.Application.Abstractions;
 using Production.Application.Features.Orders.Shared;
 using Production.Application.Features.Staff.Shared;
@@ -10,13 +12,13 @@ public sealed class SetWorkshopEmployeeActiveHandler(IProductionDbContext db, Ti
     public async ValueTask<Result<WorkshopEmployeeResponse>> Handle(SetWorkshopEmployeeActiveCommand command,
         CancellationToken cancellationToken)
     {
-        var employee = await db.Employees.FirstOrDefaultAsync(x => x.Id == command.Id, cancellationToken);
+        var employee = await db.Employees.FirstOrDefaultAsync(x => x.Id == new WorkshopEmployeeId(command.Id), cancellationToken);
         if (employee is null) return Result<WorkshopEmployeeResponse>.NotFound(StaffMessages.NotFound);
         if (command.IsActive && !employee.IsActive
             && await EmployeeLookup.ActiveNameTakenAsync(db, employee.FullName, employee.Id, cancellationToken))
             return Result<WorkshopEmployeeResponse>.Conflict(StaffMessages.DuplicateName);
 
-        employee.SetActive(command.IsActive, command.UserId, clock.GetUtcNow());
+        employee.SetActive(command.IsActive, UserId.FromNullable(command.UserId), clock.GetUtcNow());
         await db.SaveChangesAsync(cancellationToken);
         return Result.Success(employee.ToResponse());
     }

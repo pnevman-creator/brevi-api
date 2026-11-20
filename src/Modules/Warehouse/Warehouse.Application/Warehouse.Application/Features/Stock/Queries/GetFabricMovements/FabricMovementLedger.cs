@@ -1,3 +1,4 @@
+using BuildingBlocks.Domain.Identifiers.Orders;
 using System.Linq.Expressions;
 using BuildingBlocks.Application;
 using Warehouse.Application.Abstractions;
@@ -8,7 +9,7 @@ using Warehouse.Application.Features.Stock.Queries.GetFabricMovements.Results;
 namespace Warehouse.Application.Features.Stock.Queries.GetFabricMovements;
 
 /// <summary>A shelf line as the filters and the pair balance need it.</summary>
-internal sealed record FabricShelfLine(int Id, string FabricCode, string FabricName, string Color, string ColorKey)
+internal sealed record FabricShelfLine(FabricStockId Id, string FabricCode, string FabricName, string Color, string ColorKey)
 {
     public string Pair => $"{FabricAliases.Canonical(FabricCode)}|{ColorKey}";
 
@@ -47,7 +48,7 @@ internal static class FabricMovementLedger
             movements = movements.Where(x => lines.Contains(x.StockId));
         }
 
-        if (query.ItemId is { } itemId) movements = movements.Where(x => x.ItemId == itemId);
+        if (query.ItemId is { } itemId) movements = movements.Where(x => x.ItemId == new ProductionItemId(itemId));
         if (query.From is { } from) movements = movements.Where(x => x.OperationDate >= from);
         if (query.To is { } to) movements = movements.Where(x => x.OperationDate <= to);
         foreach (var word in SearchWords.Words(query.Search)) movements = movements.Where(Matches(word, shelf));
@@ -133,7 +134,7 @@ internal static class FabricMovementLedger
             foreach (var movement in pair.OrderBy(x => x.OperationDate).ThenBy(x => x.CreatedAt).ThenBy(x => x.Id))
             {
                 if (!movement.IsVoided) balance += movement.Delta;
-                if (ids.Contains(movement.Id)) result[movement.Id] = balance;
+                if (ids.Contains(movement.Id)) result[movement.Id.Value] = balance;
             }
         }
 

@@ -1,3 +1,4 @@
+using BuildingBlocks.Domain.Identifiers.Products;
 using Content.Application.Abstractions;
 using Content.Domain.ProductPages;
 using Content.Domain.SiteCategories;
@@ -78,7 +79,7 @@ public sealed class ImportOldSiteCategoriesHandler(
             foreach (var (item, isNew) in accepted.Where(x => (x.Item.ParentSlug is null) == level))
             {
                 if (command.DryRun || !(isNew || command.Overwrite)) continue;
-                int? parentId = item.ParentSlug is null ? null : bySlug[item.ParentSlug].Id;
+                SiteCategoryId? parentId = item.ParentSlug is null ? null : bySlug[item.ParentSlug].Id;
                 bySlug.TryGetValue(item.Slug, out var category);
                 var place = category is not null && category.ParentId == parentId
                     ? category.SortOrder
@@ -105,9 +106,9 @@ public sealed class ImportOldSiteCategoriesHandler(
 
         foreach (var (item, _) in accepted)
         {
-            var categoryId = bySlug.TryGetValue(item.Slug, out var category) ? category.Id : 0;
+            var categoryId = bySlug.TryGetValue(item.Slug, out var category) ? category.Id : default;
             var current = links.GetValueOrDefault(categoryId) ?? [];
-            var inCategory = current.Select(x => x.ProductId).ToHashSet();
+            var inCategory = current.Select(x => x.ProductId.Value).ToHashSet();
             var place = current.Count == 0 ? 0 : current.Max(x => x.SortOrder);
             foreach (var url in item.ProductUrls ?? [])
             {
@@ -120,7 +121,7 @@ public sealed class ImportOldSiteCategoriesHandler(
 
                 if (!inCategory.Add(productId.Value)) continue;
                 productLinks++;
-                if (!command.DryRun) db.SiteCategoryProducts.Add(SiteCategoryProduct.Create(categoryId, productId.Value, ++place));
+                if (!command.DryRun) db.SiteCategoryProducts.Add(SiteCategoryProduct.Create(categoryId, new ProductId(productId.Value), ++place));
             }
         }
 

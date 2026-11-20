@@ -1,3 +1,6 @@
+using BuildingBlocks.Domain;
+using BuildingBlocks.Domain.Identifiers.Orders;
+using BuildingBlocks.Domain.Identifiers.People;
 using BuildingBlocks.Domain.Results;
 using System.Globalization;
 using Production.Domain.Orders.Enums;
@@ -26,7 +29,7 @@ public sealed class ProductionOrder : DomainEventSource, IAggregateRoot
     public const int CancelReasonMaxLength = 1000;
 
     private readonly List<ProductionItem> _items = [];
-    private readonly List<ProductionOrderChange> _changes = [];
+    private readonly List<ProductionOrderChange> _newChanges = [];
     private readonly List<ProductionShipment> _shipments = [];
     private readonly List<ProductionOrderFile> _files = [];
 
@@ -51,7 +54,8 @@ public sealed class ProductionOrder : DomainEventSource, IAggregateRoot
         CustomerId = origin.CustomerId;
         ManagerUserId = origin.ManagerUserId;
         ManagerName = OrderText.Required(origin.ManagerName, PersonMaxLength);
-        CreateRequestId = origin.RequestId;
+        CreateRequestId = origin.Request?.Id;
+        CreateRequestHash = origin.Request?.Hash;
         LegacyId = OrderText.Optional(origin.LegacyId, LegacyIdMaxLength);
         CopiedFromOrderId = origin.CopiedFromOrderId;
         PriceTier = priceTier;
@@ -65,7 +69,7 @@ public sealed class ProductionOrder : DomainEventSource, IAggregateRoot
         Raise(new ProductionOrderRecorded(this, ProductionOrderActivity.Created, []));
     }
 
-    public int Id { get; private set; }
+    public ProductionOrderId Id { get; private set; }
 
     /// <summary>Order number shown to people; the old app's numbers are kept on transfer.</summary>
     public int Number { get; private set; }
@@ -73,20 +77,20 @@ public sealed class ProductionOrder : DomainEventSource, IAggregateRoot
     /// <summary>A new order that lost its number to another order saved first takes the next one.</summary>
     public void TakeNumber(int number)
     {
-        if (Id != 0) throw new InvalidOperationException("A saved order keeps its number.");
+        if (Id != new ProductionOrderId(0)) throw new InvalidOperationException("A saved order keeps its number.");
         Number = number;
     }
 
     /// <summary>The Crm КП; null for an order moved from the old app, which keeps only <see cref="QuoteNumber"/>.</summary>
-    public long? QuoteId { get; private set; }
+    public QuoteId? QuoteId { get; private set; }
 
     public string? QuoteNumber { get; private set; }
-    public long? CustomerId { get; private set; }
+    public CustomerId? CustomerId { get; private set; }
 
     /// <summary>The client as the workshop sees it; may differ from the КП (another company name for this order).</summary>
     public string ClientName { get; private set; } = null!;
 
-    public int? ManagerUserId { get; private set; }
+    public UserId? ManagerUserId { get; private set; }
     public string ManagerName { get; private set; } = null!;
     public ProductionOrderStatus Status { get; private set; }
 
@@ -96,11 +100,13 @@ public sealed class ProductionOrder : DomainEventSource, IAggregateRoot
     public string? Comment { get; private set; }
     public ReportPriceTier? PriceTier { get; private set; }
     public Guid? CreateRequestId { get; private set; }
+    /// <summary>Hash of what the create request asked for; a repeat with other data answers 409.</summary>
+    public string? CreateRequestHash { get; private set; }
 
     /// <summary>Id of the order in the old «Цех»; null for orders made in Brevi.</summary>
     public string? LegacyId { get; private set; }
 
-    public int? CopiedFromOrderId { get; private set; }
+    public ProductionOrderId? CopiedFromOrderId { get; private set; }
     public DateTimeOffset CreatedAt { get; private set; }
     public string CreatedByName { get; private set; } = null!;
     public DateTimeOffset UpdatedAt { get; private set; }
@@ -114,13 +120,17 @@ public sealed class ProductionOrder : DomainEventSource, IAggregateRoot
 
     public IReadOnlyList<ProductionShipment> Shipments => _shipments;
 
-    public int ShippedQuantity(int itemId) => _shipments.Where(x => x.ItemId == itemId).Sum(x => x.Quantity);
+    public int ShippedQuantity(ProductionItemId itemId) => _shipments.Where(x => x.ItemId == itemId).Sum(x => x.Quantity);
 
     /// <summary>Every item is shipped in full, so the order may be closed.</summary>
     public bool IsFullyShipped => _items.All(x => ShippedQuantity(x.Id) >= x.Quantity);
 
     /// <summary>History lines added in this change; saved ones are read by a separate query.</summary>
-    public IReadOnlyList<ProductionOrderChange> Changes => _changes;
+    /// <summary>
+    /// History lines this change adds. The saved history is its own records (read through <c>OrderChanges</c>) and is
+    /// never loaded with the order, because it grows with every edit.
+    /// </summary>
+    public IReadOnlyList<ProductionOrderChange> NewChanges => _newChanges;
 
     public bool IsDeleted => DeletedAt is not null;
 
@@ -136,9 +146,9 @@ public sealed class ProductionOrder : DomainEventSource, IAggregateRoot
         DateTimeOffset now)
     {
         var valid = DomainResult.Combine([CheckHeader(header),
-            .. _items.Where(x => items.ContainsKey(x.Id)).Select(x => ProductionItem.Check(items[x.Id].Details))]);
+            .. _items.Where(x => items.ContainsKey(x.Id.Value)).Select(x => ProductionItem.Check(items[x.Id.Value].Details))]);
         if (valid.IsFailure) return valid.Error!;
-        var before = _changes.Count;
+        var before = _newChanges.Count;
         Track(null, null, "Клієнт", ClientName, OrderText.Required(header.ClientName, ClientMaxLength), actorName, now);
         Track(null, null, "Дата створення", Format(OrderDate), Format(header.OrderDate), actorName, now);
         Track(null, null, "Коментар", Comment, OrderText.Optional(header.Comment, CommentMaxLength), actorName, now);
@@ -146,7 +156,7 @@ public sealed class ProductionOrder : DomainEventSource, IAggregateRoot
 
         foreach (var item in _items)
         {
-            if (!items.TryGetValue(item.Id, out var update)) continue;
+            if (!items.TryGetValue(item.Id.Value, out var update)) continue;
             var old = item.Details;
             var next = update.Details;
             var name = item.ModelName;
@@ -171,7 +181,7 @@ public sealed class ProductionOrder : DomainEventSource, IAggregateRoot
             }
         }
 
-        if (_changes.Count == before) return false;
+        if (_newChanges.Count == before) return false;
         Publish(ProductionOrderActivity.Changed, before);
         Touch(now);
         return true;
@@ -182,41 +192,41 @@ public sealed class ProductionOrder : DomainEventSource, IAggregateRoot
     {
         if (IsDeleted) return;
         DeletedAt = now;
-        _changes.Add(new ProductionOrderChange(null, null, "Видалено", null, "Так", actorName, now));
+        _newChanges.Add(new ProductionOrderChange(null, null, "Видалено", null, "Так", actorName, now));
         Raise(new ProductionOrderRecorded(this, ProductionOrderActivity.Deleted, []));
         Touch(now);
     }
 
     /// <returns>False when the stages did not change.</returns>
-    public DomainResult<bool> SetItemStages(int itemId, IEnumerable<ProductionStage> stages, string actorName,
+    public DomainResult<bool> SetItemStages(ProductionItemId itemId, IEnumerable<ProductionStage> stages, string actorName,
         DateTimeOffset now)
     {
-        var from = _changes.Count;
+        var from = _newChanges.Count;
         var changed = Stages(itemId, stages, actorName, now);
         if (changed.IsSuccess && changed.Value) Publish(ProductionOrderActivity.StagesChanged, from);
         return changed;
     }
 
-    private DomainResult<bool> Stages(int itemId, IEnumerable<ProductionStage> stages, string actorName,
+    private DomainResult<bool> Stages(ProductionItemId itemId, IEnumerable<ProductionStage> stages, string actorName,
         DateTimeOffset now)
     {
         if (FindItem(itemId) is not { } item) return ProductionOrderErrors.ItemNotInOrder();
         var before = ProductionStages.Describe(item.Stages);
         if (!item.SetStages(stages)) return false;
-        _changes.Add(new ProductionOrderChange(item.Id, item.ModelName, "Етапи", before,
+        _newChanges.Add(new ProductionOrderChange(item.Id, item.ModelName, "Етапи", before,
             ProductionStages.Describe(item.Stages), actorName, now));
         Touch(now);
         return true;
     }
 
     /// <summary>Quantity still to ship for an item.</summary>
-    public int RemainingToShip(int itemId) => Item(itemId).Quantity - ShippedQuantity(itemId);
+    public int RemainingToShip(ProductionItemId itemId) => Item(itemId).Quantity - ShippedQuantity(itemId);
 
     /// <summary>
     /// «Відвантажити»: part of an item goes to the client. When the item is shipped in full, «Фактично відвантажено»
     /// is ticked for it.
     /// </summary>
-    public DomainResult<ProductionShipment> Ship(int itemId, int quantity, DateOnly shippedOn, string? comment,
+    public DomainResult<ProductionShipment> Ship(ProductionItemId itemId, int quantity, DateOnly shippedOn, string? comment,
         string actorName, DateTimeOffset now)
     {
         if (FindItem(itemId) is not { } item) return ProductionOrderErrors.ItemNotInOrder();
@@ -224,10 +234,10 @@ public sealed class ProductionOrder : DomainEventSource, IAggregateRoot
         if (quantity > RemainingToShip(itemId)) return ProductionOrderErrors.TooMuchShipped();
         var text = OrderText.Check(comment, ProductionShipment.CommentMaxLength, "comment");
         if (text.IsFailure) return text.Error!;
-        var from = _changes.Count;
+        var from = _newChanges.Count;
         var shipment = new ProductionShipment(item.Id, quantity, shippedOn, comment, actorName, now);
         _shipments.Add(shipment);
-        _changes.Add(new ProductionOrderChange(item.Id, item.ModelName, "Відвантаження", null,
+        _newChanges.Add(new ProductionOrderChange(item.Id, item.ModelName, "Відвантаження", null,
             $"{quantity} шт., {Format(shippedOn)}{(shipment.Comment is null ? "" : $", {shipment.Comment}")}",
             actorName, now));
         if (RemainingToShip(itemId) == 0 && !item.Stages.Contains(ProductionStage.Shipped))
@@ -243,9 +253,9 @@ public sealed class ProductionOrder : DomainEventSource, IAggregateRoot
         if (shipment is null) return ProductionOrderErrors.ShipmentNotFound();
         _shipments.Remove(shipment);
         var item = Item(shipment.ItemId);
-        _changes.Add(new ProductionOrderChange(item.Id, item.ModelName, "Відвантаження скасовано",
+        _newChanges.Add(new ProductionOrderChange(item.Id, item.ModelName, "Відвантаження скасовано",
             $"{shipment.Quantity} шт., {Format(shipment.ShippedOn)}", null, actorName, now));
-        Publish(ProductionOrderActivity.ShipmentCancelled, _changes.Count - 1);
+        Publish(ProductionOrderActivity.ShipmentCancelled, _newChanges.Count - 1);
         Touch(now);
         return DomainResult.Success();
     }
@@ -256,7 +266,7 @@ public sealed class ProductionOrder : DomainEventSource, IAggregateRoot
         if (Status != ProductionOrderStatus.New) return ProductionOrderErrors.NotNew();
         if (!IsFullyShipped) return ProductionOrderErrors.NotFullyShipped();
         ChangeStatus(ProductionOrderStatus.Closed, null, actorName, now);
-        Publish(ProductionOrderActivity.Closed, _changes.Count - 1);
+        Publish(ProductionOrderActivity.Closed, _newChanges.Count - 1);
         return DomainResult.Success();
     }
 
@@ -267,7 +277,7 @@ public sealed class ProductionOrder : DomainEventSource, IAggregateRoot
         var text = OrderText.Check(reason, CancelReasonMaxLength, "reason", required: true);
         if (text.IsFailure) return text;
         ChangeStatus(ProductionOrderStatus.Cancelled, OrderText.Required(reason, CancelReasonMaxLength), actorName, now);
-        Publish(ProductionOrderActivity.Cancelled, _changes.Count - 1);
+        Publish(ProductionOrderActivity.Cancelled, _newChanges.Count - 1);
         return DomainResult.Success();
     }
 
@@ -276,7 +286,7 @@ public sealed class ProductionOrder : DomainEventSource, IAggregateRoot
     {
         if (Status == ProductionOrderStatus.New) return ProductionOrderErrors.AlreadyOpen();
         ChangeStatus(ProductionOrderStatus.New, null, actorName, now);
-        Publish(ProductionOrderActivity.Reopened, _changes.Count - 1);
+        Publish(ProductionOrderActivity.Reopened, _newChanges.Count - 1);
         return DomainResult.Success();
     }
 
@@ -284,11 +294,11 @@ public sealed class ProductionOrder : DomainEventSource, IAggregateRoot
     public IReadOnlyList<ProductionOrderFile> Files => _files;
 
     /// <summary>A file may belong to the whole order (no item) or to one of its own items.</summary>
-    public DomainResult CanAddFile(int? itemId) =>
+    public DomainResult CanAddFile(ProductionItemId? itemId) =>
         itemId is { } id && FindItem(id) is null ? ProductionOrderErrors.ItemNotInOrder() : DomainResult.Success();
 
     /// <summary>«Додати файл»: the file joins the order or one of its items with a history line.</summary>
-    public DomainResult<ProductionOrderFile> AddFile(int? itemId, ProductionFileKind kind, string name,
+    public DomainResult<ProductionOrderFile> AddFile(ProductionItemId? itemId, ProductionFileKind kind, string name,
         string contentType, long bytes, string url, string? storageKey, string actorName, DateTimeOffset now)
     {
         var added = AddMovedFile(itemId, kind, name, contentType, bytes, url, storageKey, actorName, now);
@@ -297,7 +307,7 @@ public sealed class ProductionOrder : DomainEventSource, IAggregateRoot
     }
 
     /// <summary>A file moved from the old «Цех»: it keeps who added it there and when, with no history line.</summary>
-    public DomainResult<ProductionOrderFile> AddMovedFile(int? itemId, ProductionFileKind kind, string name,
+    public DomainResult<ProductionOrderFile> AddMovedFile(ProductionItemId? itemId, ProductionFileKind kind, string name,
         string contentType, long bytes, string url, string? storageKey, string createdByName, DateTimeOffset createdAt)
     {
         var allowed = CanAddFile(itemId);
@@ -322,25 +332,25 @@ public sealed class ProductionOrder : DomainEventSource, IAggregateRoot
     /// A history line about an item (or the whole order when <paramref name="itemId"/> is null), such as a file; a
     /// person's line also goes to «Журнал дій».
     /// </summary>
-    public void RecordAbout(int? itemId, string field, string? before, string? after, string actorName,
+    public void RecordAbout(ProductionItemId? itemId, string field, string? before, string? after, string actorName,
         DateTimeOffset now)
     {
-        _changes.Add(new ProductionOrderChange(itemId,
+        _newChanges.Add(new ProductionOrderChange(itemId,
             itemId is null ? null : _items.FirstOrDefault(x => x.Id == itemId)?.ModelName, field, before, after,
             actorName, now));
-        Publish(ProductionOrderActivity.Noted, _changes.Count - 1);
+        Publish(ProductionOrderActivity.Noted, _newChanges.Count - 1);
     }
 
     /// <summary>A history line only, such as «Створено» or «Перенесено»; «Журнал дій» already has the action.</summary>
     public void Record(string field, string? after, string actorName, DateTimeOffset now) =>
-        _changes.Add(new ProductionOrderChange(null, null, field, null, after, actorName, now));
+        _newChanges.Add(new ProductionOrderChange(null, null, field, null, after, actorName, now));
 
     private void Publish(ProductionOrderActivity kind, int from) =>
-        Raise(new ProductionOrderRecorded(this, kind, _changes.Skip(from).ToList()));
+        Raise(new ProductionOrderRecorded(this, kind, _newChanges.Skip(from).ToList()));
 
-    private ProductionItem? FindItem(int itemId) => _items.FirstOrDefault(x => x.Id == itemId);
+    private ProductionItem? FindItem(ProductionItemId itemId) => _items.FirstOrDefault(x => x.Id == itemId);
 
-    private ProductionItem Item(int itemId) =>
+    private ProductionItem Item(ProductionItemId itemId) =>
         FindItem(itemId) ?? throw new ArgumentException("No such item.", nameof(itemId));
 
     private static DomainResult CheckHeader(OrderHeader header) => DomainResult.Combine(
@@ -352,7 +362,7 @@ public sealed class ProductionOrder : DomainEventSource, IAggregateRoot
         var before = StatusLabel(Status);
         Status = status;
         CancelReason = reason;
-        _changes.Add(new ProductionOrderChange(null, null, "Статус", before,
+        _newChanges.Add(new ProductionOrderChange(null, null, "Статус", before,
             reason is null ? StatusLabel(status) : $"{StatusLabel(status)}: {reason}", actorName, now));
         Touch(now);
     }
@@ -377,11 +387,11 @@ public sealed class ProductionOrder : DomainEventSource, IAggregateRoot
         Comment = OrderText.Optional(header.Comment, CommentMaxLength);
     }
 
-    private void Track(int? itemId, string? itemName, string field, string? before, string? after, string actorName,
+    private void Track(ProductionItemId? itemId, string? itemName, string field, string? before, string? after, string actorName,
         DateTimeOffset now)
     {
         if (string.Equals(before ?? string.Empty, after ?? string.Empty, StringComparison.Ordinal)) return;
-        _changes.Add(new ProductionOrderChange(itemId, itemName, field, before, after, actorName, now));
+        _newChanges.Add(new ProductionOrderChange(itemId, itemName, field, before, after, actorName, now));
     }
 
     private static IEnumerable<string> Clean(IEnumerable<string> colors) =>
@@ -403,14 +413,14 @@ public sealed class ProductionOrder : DomainEventSource, IAggregateRoot
 
 /// <summary>Where the order came from: the КП, a copy, or the old app; set once.</summary>
 public sealed record OrderOrigin(
-    long? QuoteId,
+    QuoteId? QuoteId,
     string? QuoteNumber,
-    long? CustomerId,
-    int? ManagerUserId,
+    CustomerId? CustomerId,
+    UserId? ManagerUserId,
     string ManagerName,
-    Guid? RequestId,
+    RequestKey? Request,
     string? LegacyId = null,
-    int? CopiedFromOrderId = null);
+    ProductionOrderId? CopiedFromOrderId = null);
 
 /// <summary>The fields above the items.</summary>
 public sealed record OrderHeader(string ClientName, DateOnly OrderDate, string? Comment);

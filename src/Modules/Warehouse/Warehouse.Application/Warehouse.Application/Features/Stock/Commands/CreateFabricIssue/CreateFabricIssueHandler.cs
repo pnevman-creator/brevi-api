@@ -1,3 +1,7 @@
+using BuildingBlocks.Application.Idempotency;
+using BuildingBlocks.Domain.Identifiers.Orders;
+using BuildingBlocks.Domain.Identifiers.People;
+using Warehouse.Domain.Stock.Movements.Identifiers;
 using Warehouse.Application.Abstractions;
 using Warehouse.Domain.Stock;
 using Warehouse.Application.Features.Stock.Shared;
@@ -41,7 +45,7 @@ public sealed class CreateFabricIssueHandler(IWarehouseProductionReader producti
         plan ??= plans.Save(item, actorName, now);
         var planned = ItemPlans.Apply(item, plan);
         var covered = (await db.FabricIssues.AsNoTracking().Include(x => x.Lines)
-                .Where(x => x.ItemId == item.ItemId && x.ReversedAt == null).ToListAsync(cancellationToken))
+                .Where(x => x.ItemId == new ProductionItemId(item.ItemId) && x.ReversedAt == null).ToListAsync(cancellationToken))
             .SelectMany(x => x.Lines).Where(x => x.Plan is not null)
             .GroupBy(x => x.Plan!).ToDictionary(g => g.Key, g => g.Sum(x => x.CoveredMeters));
 
@@ -70,7 +74,7 @@ public sealed class CreateFabricIssueHandler(IWarehouseProductionReader producti
 
         var target = item.Target;
         var issue = FabricIssue.Create(target, input.IssuedOn, input.Note, actorName, now, issuedQuantity: input.IssuedQuantity,
-            operationId: input.OperationId, planVersion: plan.Version);
+            operationId: new StockOperationId(input.OperationId), planVersion: plan.Version);
         var left = forms.Where(x => x.Part is not null).Select(x => x.Part!).Distinct().ToDictionary(x => x,
             x => Math.Min(FabricItemPlan.ComparisonPlan(x.Meters, input.IssuedQuantity, plan.Quantity),
                 Math.Max(0m, x.Meters - covered.GetValueOrDefault(x.Key))));
@@ -79,7 +83,7 @@ public sealed class CreateFabricIssueHandler(IWarehouseProductionReader producti
         {
             var (row, pair, part) = forms[i];
             var details = new FabricMovementDetails(input.IssuedOn, row.Note ?? input.Note, Target: target,
-                OperationId: input.OperationId);
+                OperationId: new StockOperationId(input.OperationId));
             var spent = pair.Issue(row.Meters, details, actorName, now);
             if (!spent.IsDone) return Invalid($"Lines[{i}]", StockMessages.TooMuch);
             touched.AddRange(spent.Lines);
@@ -120,7 +124,7 @@ public sealed class CreateFabricIssueHandler(IWarehouseProductionReader producti
         var ids = lines.Select(x => x.Id).ToArray();
         var savedMovements = await db.FabricMovements.Where(x => ids.Contains(x.StockId)).ToListAsync(cancellationToken);
         foreach (var line in lines) line.Restate(savedMovements.Where(x => x.StockId == line.Id).Concat(line.Movements));
-        db.StockOperations.Add(StockOperation.Create(operationId, Kind, hash, actor.UserId, first.Code, first.ColorKey,
+        db.StockOperations.Add(StockOperation.Create(operationId, Kind, hash, new UserId(actor.UserId), first.Code, first.ColorKey,
             first.Lines[0].Color, first.Meters, pairs.Now));
         try
         {

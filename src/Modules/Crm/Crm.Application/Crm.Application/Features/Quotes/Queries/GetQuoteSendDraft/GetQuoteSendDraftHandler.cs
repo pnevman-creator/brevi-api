@@ -1,3 +1,6 @@
+using BuildingBlocks.Domain.Identifiers.Orders;
+using BuildingBlocks.Domain.Identifiers.People;
+using Crm.Domain.Quotes;
 using Crm.Application.Features.Quotes.Shared.Access;
 using Crm.Application.Features.Quotes.Shared.Pdf.Composing;
 using Crm.Application.Features.Quotes.Shared.Persistence;
@@ -17,13 +20,13 @@ public sealed class GetQuoteSendDraftHandler(IQuoteStore store, QuotePdfComposer
     public async ValueTask<Result<QuoteSendDraftResponse>> Handle(GetQuoteSendDraftQuery query,
         CancellationToken cancellationToken)
     {
-        var quote = await store.Quotes.AsNoTracking().SingleOrDefaultAsync(x => x.Id == query.Id, cancellationToken);
+        var quote = await store.Quotes.AsNoTracking().SingleOrDefaultAsync(x => x.Id == new QuoteId(query.Id), cancellationToken);
         if (quote is null || !query.Actor.CanAccess(quote)) return Result.NotFound(QuoteMessages.NotFound);
 
         var context = await composer.LoadContextAsync(cancellationToken);
         var sender = context.ContactOf(await composer.MemberAsync(query.Actor.UserId, "", cancellationToken));
         var mailbox = await store.StaffMailboxes.AsNoTracking()
-            .Where(x => x.UserId == query.Actor.UserId).Select(x => x.Email).SingleOrDefaultAsync(cancellationToken);
+            .Where(x => x.UserId == new UserId(query.Actor.UserId)).Select(x => x.Email).SingleOrDefaultAsync(cancellationToken);
         var site = context.Settings.Company.Site;
         string Fill(string text) => QuoteMarks.Fill(text, sender, site, quote.Number, quote.RecipientName, quote.CompanyName);
 

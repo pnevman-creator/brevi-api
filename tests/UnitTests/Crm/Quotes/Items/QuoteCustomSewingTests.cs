@@ -1,3 +1,5 @@
+using BuildingBlocks.Domain.Identifiers.ReferenceData;
+using BuildingBlocks.Domain.Identifiers.People;
 using Crm.Domain.Quotes;
 using Crm.Application.Features.Quotes.Shared;
 using Crm.Application.Features.Quotes.Shared.Building;
@@ -10,7 +12,7 @@ namespace UnitTests.Crm.Quotes.Items;
 /// <summary>«Виріб з нуля» (R-20): priced by the Catalog formula, kept on save while its composition stays.</summary>
 public sealed class QuoteCustomSewingTests
 {
-    private static readonly QuotePerson Manager = new(17, "Олена");
+    private static readonly QuotePerson Manager = new(new UserId(17), "Олена");
     private static readonly DateTimeOffset Now = new(2026, 11, 4, 10, 0, 0, TimeSpan.Zero);
 
     private static QuoteOptionInput Fabric(int fabricId, decimal meters, long? id = null, bool recommended = false) =>
@@ -68,7 +70,7 @@ public sealed class QuoteCustomSewingTests
         Assert.Multiple(() =>
         {
             Assert.That(option.Title, Is.EqualTo("Тканина 5 + Тканина 6"));
-            Assert.That(option.Fabrics.Select(x => (x.FabricId, x.Meters)), Is.EqualTo(new[] { (5, 1.2m), (6, 0.5m) }));
+            Assert.That(option.Fabrics.Select(x => (x.FabricId, x.Meters)), Is.EqualTo(new[] { (new FabricId(5), 1.2m), (new FabricId(6), 0.5m) }));
             Assert.That(option.Retail.Source, Is.EqualTo((1.2m * 200m + 0.5m * 300m + 100m) * 2));
         });
     }

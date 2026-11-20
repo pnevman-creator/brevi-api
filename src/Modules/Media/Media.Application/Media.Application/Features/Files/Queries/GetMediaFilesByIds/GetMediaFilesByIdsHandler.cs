@@ -1,3 +1,5 @@
+using BuildingBlocks.Domain.Identifiers.Products;
+using Media.Domain.Files;
 using Media.Application.Abstractions;
 using Media.Application.Features.Files.Shared;
 
@@ -8,7 +10,7 @@ public sealed class GetMediaFilesByIdsHandler(IMediaDbContext db)
 {
     public async ValueTask<Result<IReadOnlyList<MediaFileResponse>>> Handle(GetMediaFilesByIdsQuery query, CancellationToken cancellationToken)
     {
-        var ids = query.Ids.Distinct().ToList();
+        var ids = query.Ids.Distinct().Select(x => new MediaFileId(x)).ToList();
         if (ids.Count == 0) return Result.Success<IReadOnlyList<MediaFileResponse>>([]);
         var files = await db.Files.AsNoTracking().Where(x => ids.Contains(x.Id))
             .Select(MediaFileResponse.Projection).ToListAsync(cancellationToken);

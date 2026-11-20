@@ -1,3 +1,5 @@
+using BuildingBlocks.Domain;
+using BuildingBlocks.Domain.Identifiers.People;
 using BuildingBlocks.Domain.Entity;
 using BuildingBlocks.Domain.Results;
 
@@ -23,11 +25,12 @@ public sealed class SiteRequest : IAggregateRoot
     private SiteRequest() { }
 
     public static DomainResult<SiteRequest> Create(string? phone, string? workwear, string? quantity, string? comment,
-        string locale, string? fileName, string? fileUrl, DateTimeOffset now, Guid? requestId = null) =>
+        string locale, string? fileName, string? fileUrl, DateTimeOffset now, RequestKey? request = null) =>
         Cut(phone, PhoneMaxLength) is { } cleanPhone
             ? new SiteRequest(cleanPhone, workwear, quantity, comment, locale, fileName, fileUrl, now)
             {
-                RequestId = requestId
+                RequestId = request?.Id,
+                RequestHash = request?.Hash
             }
             : SiteRequestErrors.PhoneRequired();
 
@@ -46,10 +49,12 @@ public sealed class SiteRequest : IAggregateRoot
         Version = 1;
     }
 
-    public long Id { get; private set; }
+    public SiteRequestId Id { get; private set; }
 
     /// <summary>The form the site sent; the same form sent again adds nothing (unique).</summary>
     public Guid? RequestId { get; private init; }
+    /// <summary>Hash of what the request asked for; a repeat with other data answers 409.</summary>
+    public string? RequestHash { get; private init; }
     public string Phone { get; private set; } = null!;
     public string? Workwear { get; private set; }
     public string? Quantity { get; private set; }
@@ -64,7 +69,7 @@ public sealed class SiteRequest : IAggregateRoot
     public string? FileUrl { get; private set; }
 
     public SiteRequestStatus Status { get; private set; }
-    public int? OwnerUserId { get; private set; }
+    public UserId? OwnerUserId { get; private set; }
     public string? OwnerName { get; private set; }
     public DateTimeOffset? TakenAt { get; private set; }
     public DateTimeOffset? ClosedAt { get; private set; }
@@ -89,7 +94,7 @@ public sealed class SiteRequest : IAggregateRoot
     }
 
     /// <summary>«Беру»: false when another manager already holds it.</summary>
-    public bool Take(int userId, string name, DateTimeOffset now)
+    public bool Take(UserId userId, string name, DateTimeOffset now)
     {
         if (!IsOpen) return false;
         if (OwnerUserId is not null && OwnerUserId != userId) return false;
@@ -102,7 +107,7 @@ public sealed class SiteRequest : IAggregateRoot
     }
 
     /// <summary>«Готово» or «Не заявка» with what came of it; the closer becomes the owner when nobody was.</summary>
-    public DomainResult Close(SiteRequestStatus status, int userId, string name, string? note, DateTimeOffset now)
+    public DomainResult Close(SiteRequestStatus status, UserId userId, string name, string? note, DateTimeOffset now)
     {
         if (status is not (SiteRequestStatus.Done or SiteRequestStatus.Spam)) return SiteRequestErrors.CloseStatusInvalid();
         if (OwnerUserId is null)

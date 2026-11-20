@@ -1,3 +1,4 @@
+using BuildingBlocks.Domain.Identifiers.Orders;
 using Production.Application.Abstractions;
 using Production.Domain.Orders;
 using Production.Application.Features.Orders.Shared;
@@ -32,8 +33,8 @@ public sealed class GetProductionOrdersHandler(IProductionDbContext db, IProduct
         var total = await orders.CountAsync(cancellationToken);
         var rows = await Sorted(orders, query.Sort)
             .Skip((query.Page - 1) * query.PageSize).Take(query.PageSize)
-            .Select(x => new ProductionOrderSummaryResponse(x.Id, x.Number, x.Status.ToString(), x.ClientName,
-                x.QuoteId, x.QuoteNumber, x.ManagerName, x.OrderDate, x.Items.Count,
+            .Select(x => new ProductionOrderSummaryResponse(x.Id.Value, x.Number, x.Status.ToString(), x.ClientName,
+                x.QuoteId != null ? x.QuoteId.Value.Value : (long?)null, x.QuoteNumber, x.ManagerName, x.OrderDate, x.Items.Count,
                 x.Items.Sum(item => item.Quantity),
                 x.Items.Min(item => (DateOnly?)item.DueDate),
                 x.LegacyId != null, x.UpdatedAt,

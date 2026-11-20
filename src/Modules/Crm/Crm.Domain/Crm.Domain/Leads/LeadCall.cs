@@ -1,3 +1,6 @@
+using BuildingBlocks.Domain;
+using BuildingBlocks.Domain.Identifiers.People;
+using Crm.Domain.Leads.Identifiers;
 using Crm.Domain.Leads.Enums;
 using Crm.Domain.Leads.ValueObjects;
 
@@ -9,9 +12,10 @@ public sealed class LeadCall
     private LeadCall() { }
 
     internal LeadCall(LeadPerson by, LeadCallResult result, string? comment, DateTimeOffset? nextContactAt,
-        DateTimeOffset at, Guid? requestId = null)
+        DateTimeOffset at, RequestKey? request = null)
     {
-        RequestId = requestId;
+        RequestId = request?.Id;
+        RequestHash = request?.Hash;
         ByUserId = by.UserId;
         ByName = by.Name;
         ResultId = result.Id;
@@ -26,10 +30,12 @@ public sealed class LeadCall
 
     /// <summary>The «Зберегти» attempt; a repeat with the same id records nothing new (unique).</summary>
     public Guid? RequestId { get; private set; }
-    public long LeadId { get; private set; }
-    public int ByUserId { get; private set; }
+    /// <summary>Hash of what the request asked for; a repeat with other data answers 409.</summary>
+    public string? RequestHash { get; private set; }
+    public LeadId LeadId { get; private set; }
+    public UserId ByUserId { get; private set; }
     public string ByName { get; private set; } = null!;
-    public long ResultId { get; private set; }
+    public LeadCallResultId ResultId { get; private set; }
     public string ResultName { get; private set; } = null!;
     public LeadOutcome Outcome { get; private set; }
     public string? Comment { get; private set; }

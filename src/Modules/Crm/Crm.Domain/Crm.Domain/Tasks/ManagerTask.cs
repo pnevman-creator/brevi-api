@@ -1,3 +1,5 @@
+using BuildingBlocks.Domain.Identifiers.People;
+using Crm.Domain.Leads.Identifiers;
 using BuildingBlocks.Domain.Entity;
 using System.Globalization;
 using Crm.Domain.Tasks.Enums;
@@ -13,7 +15,7 @@ namespace Crm.Domain.Tasks;
 public sealed class ManagerTask : DomainEventSource, IAggregateRoot
 {
     private readonly List<ManagerTaskStep> _steps = [];
-    private readonly List<ManagerTaskEvent> _events = [];
+    private readonly List<ManagerTaskEvent> _newEvents = [];
 
     private ManagerTask() { }
 
@@ -26,19 +28,19 @@ public sealed class ManagerTask : DomainEventSource, IAggregateRoot
         UpdatedAt = now;
         Version = 1;
         Apply(draft);
-        _events.Add(new ManagerTaskEvent(ManagerTaskEventKind.Created, author, now, null));
+        _newEvents.Add(new ManagerTaskEvent(ManagerTaskEventKind.Created, author, now, null));
         Raise(new ManagerTaskRecorded(this, ManagerTaskEventKind.Created, null, null));
     }
 
     public static ManagerTask Create(ManagerTaskDraft draft, ManagerTaskPerson author, DateTimeOffset now) =>
         new(draft, author, now);
 
-    public long Id { get; private set; }
+    public ManagerTaskId Id { get; private set; }
     public string Title { get; private set; } = null!;
     public string? Description { get; private set; }
-    public int AssigneeUserId { get; private set; }
+    public UserId AssigneeUserId { get; private set; }
     public string AssigneeName { get; private set; } = null!;
-    public int AuthorUserId { get; private set; }
+    public UserId AuthorUserId { get; private set; }
     public string AuthorName { get; private set; } = null!;
     public DateTimeOffset DueAt { get; private set; }
     public bool IsUrgent { get; private set; }
@@ -48,13 +50,17 @@ public sealed class ManagerTask : DomainEventSource, IAggregateRoot
     public DateTimeOffset? CompletedAt { get; private set; }
 
     /// <summary>The lead whose next call this task is (LEAD-001 R-08); null for tasks the director gives.</summary>
-    public long? LeadId { get; private set; }
+    public LeadId? LeadId { get; private set; }
     public DateTimeOffset CreatedAt { get; private set; }
     public DateTimeOffset UpdatedAt { get; private set; }
     public int Version { get; private set; }
 
     public IReadOnlyList<ManagerTaskStep> Steps => _steps;
-    public IReadOnlyList<ManagerTaskEvent> Events => _events;
+    /// <summary>
+    /// History lines this change adds. The saved history is its own records, read by a query and never loaded with the
+    /// task, because it grows with every edit.
+    /// </summary>
+    public IReadOnlyList<ManagerTaskEvent> NewEvents => _newEvents;
 
     /// <summary>«ЗД-0142»: the id with the prefix, never stored.</summary>
     public static string NumberOf(long id) => "ЗД-" + id.ToString("D4", CultureInfo.InvariantCulture);
@@ -69,7 +75,7 @@ public sealed class ManagerTask : DomainEventSource, IAggregateRoot
     public ManagerTaskLane LaneAt(DateTimeOffset now) => LaneOf(Status, DueAt, IsUrgent, now);
 
     /// <summary>A «Подзвонити» task made by a recorded lead call (LEAD-001 R-08).</summary>
-    public static ManagerTask ForLeadCall(long leadId, ManagerTaskDraft draft, ManagerTaskPerson author,
+    public static ManagerTask ForLeadCall(LeadId leadId, ManagerTaskDraft draft, ManagerTaskPerson author,
         DateTimeOffset now) => new(draft, author, now) { LeadId = leadId };
 
     /// <summary>Director or Admin saves the side panel; history records reassignment and a new due time.</summary>
@@ -82,12 +88,12 @@ public sealed class ManagerTask : DomainEventSource, IAggregateRoot
         Apply(draft);
         Raise(new ManagerTaskRecorded(this, ManagerTaskEventKind.Edited, null, before));
 
-        _events.Add(new ManagerTaskEvent(ManagerTaskEventKind.Edited, by, now, null));
-        if (reassigned) _events.Add(new ManagerTaskEvent(ManagerTaskEventKind.Reassigned, by, now, AssigneeName));
+        _newEvents.Add(new ManagerTaskEvent(ManagerTaskEventKind.Edited, by, now, null));
+        if (reassigned) _newEvents.Add(new ManagerTaskEvent(ManagerTaskEventKind.Reassigned, by, now, AssigneeName));
         if (dueChanged)
-            _events.Add(new ManagerTaskEvent(ManagerTaskEventKind.DueChanged, by, now,
+            _newEvents.Add(new ManagerTaskEvent(ManagerTaskEventKind.DueChanged, by, now,
                 DueAt.ToString("O", CultureInfo.InvariantCulture)));
-        if (urgentChanged) _events.Add(UrgentEvent(by, now));
+        if (urgentChanged) _newEvents.Add(UrgentEvent(by, now));
         Touch(now);
     }
 
@@ -97,7 +103,7 @@ public sealed class ManagerTask : DomainEventSource, IAggregateRoot
         if (status == Status) return false;
         Status = status;
         CompletedAt = status == ManagerTaskStatus.Done ? now : null;
-        _events.Add(new ManagerTaskEvent(ManagerTaskEventKind.StatusChanged, by, now, status.ToString()));
+        _newEvents.Add(new ManagerTaskEvent(ManagerTaskEventKind.StatusChanged, by, now, status.ToString()));
         Raise(new ManagerTaskRecorded(this, ManagerTaskEventKind.StatusChanged, status.ToString(), null));
         Touch(now);
         return true;
@@ -107,7 +113,7 @@ public sealed class ManagerTask : DomainEventSource, IAggregateRoot
     {
         if (isUrgent == IsUrgent) return false;
         IsUrgent = isUrgent;
-        _events.Add(UrgentEvent(by, now));
+        _newEvents.Add(UrgentEvent(by, now));
         Raise(new ManagerTaskRecorded(this, ManagerTaskEventKind.UrgentChanged, null, null));
         Touch(now);
         return true;
@@ -120,7 +126,7 @@ public sealed class ManagerTask : DomainEventSource, IAggregateRoot
         if (step is null) return false;
         if (step.IsDone == isDone) return true;
         step.Mark(isDone);
-        _events.Add(new ManagerTaskEvent(
+        _newEvents.Add(new ManagerTaskEvent(
             isDone ? ManagerTaskEventKind.StepChecked : ManagerTaskEventKind.StepUnchecked, by, now, step.Text));
         Raise(new ManagerTaskRecorded(this,
             isDone ? ManagerTaskEventKind.StepChecked : ManagerTaskEventKind.StepUnchecked, step.Text, null));
@@ -129,7 +135,7 @@ public sealed class ManagerTask : DomainEventSource, IAggregateRoot
     }
 
     /// <summary>Tells «Журнал дій» (ACT-001) that the task is being deleted; call it before removing the task.</summary>
-    public void MarkDeleted() => Raise(new ManagerTaskDeleted(Id, Title));
+    public void MarkDeleted() => Raise(new ManagerTaskDeleted(Id.Value, Title));
 
     public ManagerTaskSnapshot Snapshot() => new(Title, Description, AssigneeName, DueAt, IsUrgent, CustomerName,
         _steps.Count);

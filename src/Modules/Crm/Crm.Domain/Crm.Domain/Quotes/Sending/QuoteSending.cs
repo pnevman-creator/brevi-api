@@ -1,3 +1,7 @@
+using BuildingBlocks.Domain;
+using BuildingBlocks.Domain.Identifiers.Orders;
+using BuildingBlocks.Domain.Identifiers.People;
+using Crm.Domain.Quotes;
 using BuildingBlocks.Domain.Entity;
 using Crm.Domain.Quotes.ValueObjects;
 
@@ -8,10 +12,11 @@ public sealed class QuoteSending : IAggregateRoot
 {
     private QuoteSending() { }
 
-    private QuoteSending(long quoteId, int quoteVersion, QuotePerson sender, string fromEmail, string to, string subject,
-        string? providerMessageId, DateTimeOffset sentAt, Guid? requestId = null)
+    private QuoteSending(QuoteId quoteId, int quoteVersion, QuotePerson sender, string fromEmail, string to, string subject,
+        string? providerMessageId, DateTimeOffset sentAt, RequestKey? request = null)
     {
-        RequestId = requestId;
+        RequestId = request?.Id;
+        RequestHash = request?.Hash;
         QuoteId = quoteId;
         QuoteVersion = quoteVersion;
         SenderUserId = sender.UserId;
@@ -23,20 +28,22 @@ public sealed class QuoteSending : IAggregateRoot
         SentAt = sentAt;
     }
 
-    public static QuoteSending Create(long quoteId, int quoteVersion, QuotePerson sender, string fromEmail, string to, string subject,
-        string? providerMessageId, DateTimeOffset sentAt, Guid? requestId = null) =>
-        new(quoteId, quoteVersion, sender, fromEmail, to, subject, providerMessageId, sentAt, requestId);
+    public static QuoteSending Create(QuoteId quoteId, int quoteVersion, QuotePerson sender, string fromEmail, string to, string subject,
+        string? providerMessageId, DateTimeOffset sentAt, RequestKey? request = null) =>
+        new(quoteId, quoteVersion, sender, fromEmail, to, subject, providerMessageId, sentAt, request);
 
-    public long Id { get; private set; }
+    public QuoteSendingId Id { get; private set; }
 
     /// <summary>The «Надіслати» press; a repeat with the same id sends nothing new (unique).</summary>
     public Guid? RequestId { get; private set; }
-    public long QuoteId { get; private set; }
+    /// <summary>Hash of what the request asked for; a repeat with other data answers 409.</summary>
+    public string? RequestHash { get; private set; }
+    public QuoteId QuoteId { get; private set; }
 
     /// <summary>The КП version whose PDF went out.</summary>
     public int QuoteVersion { get; private set; }
 
-    public int SenderUserId { get; private set; }
+    public UserId SenderUserId { get; private set; }
     public string SenderName { get; private set; } = null!;
     public string FromEmail { get; private set; } = null!;
 

@@ -1,3 +1,4 @@
+using BuildingBlocks.Domain.Identifiers.People;
 using BuildingBlocks.Domain.Entity;
 using BuildingBlocks.Domain.Results;
 using Crm.Domain.Quotes.Enums;
@@ -34,7 +35,7 @@ public sealed class QuoteIntroTemplate : DomainEventSource, IAggregateRoot
         Raise(new QuoteIntroTemplateSaved(this));
     }
 
-    public long Id { get; private set; }
+    public QuoteIntroTemplateId Id { get; private set; }
     public string Name { get; private set; } = null!;
 
     /// <summary>The name in lower case; unique, so two templates never differ only by letter case.</summary>
@@ -43,12 +44,12 @@ public sealed class QuoteIntroTemplate : DomainEventSource, IAggregateRoot
     public QuoteIntroLayout Layout { get; private set; }
     public string? LetterName { get; private set; }
     public IReadOnlyList<QuoteIntroTemplatePage> Pages { get; private set; } = [];
-    public int AuthorUserId { get; private set; }
+    public UserId AuthorUserId { get; private set; }
     public string AuthorName { get; private set; } = null!;
     public DateTimeOffset CreatedAt { get; private set; }
 
     /// <summary>Tells «Журнал дій» (ACT-001) that the template is being deleted; call it before removing it.</summary>
-    public void MarkDeleted() => Raise(new QuoteIntroTemplateDeleted(Id, Name));
+    public void MarkDeleted() => Raise(new QuoteIntroTemplateDeleted(Id.Value, Name));
 }
 
 /// <summary>One page: the main model first, then the three chosen ones.</summary>

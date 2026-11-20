@@ -46,7 +46,7 @@ public sealed class GetSeoOverviewHandler(IContentDbContext db, IContentCatalogR
     private async Task<IEnumerable<SeoPage>> ProductsAsync(CancellationToken cancellationToken)
     {
         var shown = await db.ProductPages.AsNoTracking().Include(x => x.Texts).Where(x => x.ShowOnSite)
-            .ToDictionaryAsync(x => x.ProductId, cancellationToken);
+            .ToDictionaryAsync(x => x.ProductId.Value, cancellationToken);
         if (shown.Count == 0) return [];
         return (await catalog.GetAllAsync(cancellationToken))
             .Where(x => x.IsActive && shown.ContainsKey(x.Id))
@@ -73,7 +73,7 @@ public sealed class GetSeoOverviewHandler(IContentDbContext db, IContentCatalogR
             var uk = category.TextIn(Uk);
             var ru = category.TextIn(Ru);
             var name = uk?.Name ?? category.Slug;
-            return new SeoPage(SeoArea.Category, category.Id.ToString(System.Globalization.CultureInfo.InvariantCulture),
+            return new SeoPage(SeoArea.Category, category.Id.Value.ToString(System.Globalization.CultureInfo.InvariantCulture),
                 name, $"/catalog/{category.Slug}",
                 new SeoTexts(uk?.SeoTitle, uk?.SeoDescription, uk?.SeoTitle ?? name),
                 ru?.Name is null ? null : new SeoTexts(ru.SeoTitle, ru.SeoDescription, ru.SeoTitle ?? ru.Name));
@@ -89,7 +89,7 @@ public sealed class GetSeoOverviewHandler(IContentDbContext db, IContentCatalogR
             var uk = article.TextIn(Uk);
             var ru = article.TextIn(Ru);
             var name = uk?.Title ?? article.Slug;
-            return new SeoPage(SeoArea.Article, article.Id.ToString(System.Globalization.CultureInfo.InvariantCulture),
+            return new SeoPage(SeoArea.Article, article.Id.Value.ToString(System.Globalization.CultureInfo.InvariantCulture),
                 name, $"/articles/{article.Slug}",
                 new SeoTexts(uk?.SeoTitle, uk?.SeoDescription, uk?.SeoTitle ?? name),
                 ru?.Title is null ? null : new SeoTexts(ru.SeoTitle, ru.SeoDescription, ru.SeoTitle ?? ru.Title));

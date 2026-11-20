@@ -1,3 +1,4 @@
+using BuildingBlocks.Domain.Identifiers.People;
 using Crm.Domain.SiteRequests;
 using Crm.Application.Features.SiteRequests.Shared;
 using Crm.Application.Abstractions.SiteRequests;
@@ -12,26 +13,26 @@ public sealed class ChangeSiteRequestHandler(ISiteRequestStore store, ITaskStaff
     public async ValueTask<Result<SiteRequestResponse>> Handle(ChangeSiteRequestCommand command,
         CancellationToken cancellationToken)
     {
-        var request = await store.SiteRequests.FirstOrDefaultAsync(x => x.Id == command.Id, cancellationToken);
+        var request = await store.SiteRequests.FirstOrDefaultAsync(x => x.Id == new SiteRequestId(command.Id), cancellationToken);
         if (request is null) return Result.NotFound(SiteRequestMessages.NotFound);
         if (request.Version != command.Input.Version) return Result.Conflict(SiteRequestMessages.Stale);
         var member = await staff.FindAsync(command.UserId, cancellationToken);
         if (member is null) return Result.Forbidden(SiteRequestMessages.ActorUnknown);
 
         var now = clock.GetUtcNow();
-        var mayManage = command.IsAdmin || request.OwnerUserId is null || request.OwnerUserId == command.UserId;
+        var mayManage = command.IsAdmin || request.OwnerUserId is null || request.OwnerUserId == new UserId(command.UserId);
         switch (command.Input.Action)
         {
             case "Take":
                 if (!request.IsOpen) return Result.Invalid(new ValidationError(SiteRequestMessages.Closed));
-                if (!request.Take(member.UserId, member.Name, now))
+                if (!request.Take(new UserId(member.UserId), member.Name, now))
                     return Result.Conflict(SiteRequestMessages.TakenBy(request.OwnerName));
                 break;
             case "Done" or "Spam":
                 if (!request.IsOpen) return Result.Invalid(new ValidationError(SiteRequestMessages.Closed));
                 if (!mayManage) return Result.Forbidden(SiteRequestMessages.NotYours);
                 var closed = request.Close(command.Input.Action == "Done" ? SiteRequestStatus.Done : SiteRequestStatus.Spam,
-                    member.UserId, member.Name, command.Input.Note, now);
+                    new UserId(member.UserId), member.Name, command.Input.Note, now);
                 if (closed.IsFailure) return closed.Error!.ToResult<SiteRequestResponse>();
                 break;
             default:

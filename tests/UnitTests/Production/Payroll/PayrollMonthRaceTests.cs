@@ -1,3 +1,4 @@
+using BuildingBlocks.Domain.Identifiers.People;
 using Ardalis.Result;
 using Microsoft.EntityFrameworkCore;
 using Production.Application.Features.Orders.Shared.Access;
@@ -32,7 +33,7 @@ public sealed class PayrollMonthRaceTests
         var raced = await changes.ApplyAsync(Admin, Month, adminOnly: true, async change =>
         {
             await CloseInAnotherRequestAsync(workshop);
-            var payment = PayrollPayment.Create(new PayrollEntryTarget(change.Period.Month, seamstress, "Андреева"), Day,
+            var payment = PayrollPayment.Create(new PayrollEntryTarget(change.Period.Month, new WorkshopEmployeeId(seamstress), "Андреева"), Day,
                 PayrollPaymentKind.Advance, 50m, null, change.ActorName, change.Now);
             workshop.Db.PayrollPayments.Add(payment.Value);
             return null;
@@ -84,10 +85,10 @@ public sealed class PayrollMonthRaceTests
 
     private static int Employee(ProductionTestHarness workshop)
     {
-        var employee = WorkshopEmployee.Create("Андреева", "Швачка", 1, workshop.Time.GetUtcNow()).Value;
+        var employee = WorkshopEmployee.Create("Андреева", "Швачка", new UserId(1), workshop.Time.GetUtcNow()).Value;
         workshop.Db.Employees.Add(employee);
         workshop.Db.SaveChanges();
-        return employee.Id;
+        return employee.Id.Value;
     }
 
     private static async Task CloseInAnotherRequestAsync(ProductionTestHarness workshop)

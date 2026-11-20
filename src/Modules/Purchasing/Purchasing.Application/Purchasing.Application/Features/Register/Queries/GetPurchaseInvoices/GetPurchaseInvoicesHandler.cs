@@ -1,3 +1,4 @@
+using BuildingBlocks.Domain.Identifiers.ReferenceData;
 using Purchasing.Application.Abstractions;
 using Purchasing.Domain.Documents;
 using Purchasing.Domain.Ingestion;
@@ -39,7 +40,7 @@ public sealed class GetPurchaseInvoicesHandler(IPurchasingDbContext db, IPurchas
             cards = cards.Where(x => x.Message.SupplierId == null);
 
         if (query.SupplierId is { } supplierId)
-            cards = cards.Where(x => x.Message.SupplierId == supplierId);
+            cards = cards.Where(x => x.Message.SupplierId == new SupplierId(supplierId));
 
         if (query.DocumentFrom is not null || query.DocumentTo is not null || query.Vat is not null)
         {
@@ -107,7 +108,7 @@ public sealed class GetPurchaseInvoicesHandler(IPurchasingDbContext db, IPurchas
             {
                 var document = documents.TryGetValue(l.Id, out var stored) ? PurchaseDocumentMapping.ToResponse(stored) : null;
                 var attempt = document is null && attempts.TryGetValue(l.Id, out var last) ? PurchaseDocumentMapping.ToResponse(last) : null;
-                return new PurchaseInvoiceLinkResponse(l.Id, l.Url, FileLinkRules.IsSafeDropbox(l.Url), document, attempt);
+                return new PurchaseInvoiceLinkResponse(l.Id.Value, l.Url, FileLinkRules.IsSafeDropbox(l.Url), document, attempt);
             }).ToList();
             var issues = x.Row.Issues.Concat(cardLinks.SelectMany(LinkIssues)).ToList();
             var state = issues.Count > 0 ? PurchaseInvoiceState.NeedsReview
@@ -117,11 +118,11 @@ public sealed class GetPurchaseInvoicesHandler(IPurchasingDbContext db, IPurchas
             var totalMinor = PurchasePayments.TotalMinor(cardLinks.Select(l => l.Document).OfType<PurchaseDocumentResponse>());
             var payments = PurchasePayments.Respond(paymentLinks[x.Message.Id], operations);
             return new PurchaseInvoiceResponse(
-                x.Message.Id, x.Message.TelegramKey, x.Row.SourceUid, x.Row.RowNumber, x.RowCount,
+                x.Message.Id.Value, x.Message.TelegramKey, x.Row.SourceUid, x.Row.RowNumber, x.RowCount,
                 raw.ChatName, raw.FromUser, x.Message.MessageAt, x.Message.Text, x.Message.StatusOriginal,
                 x.Message.MarkAt, x.Message.MarkBy, x.Message.PaymentState == PaymentState.MarkedPaid,
-                x.Message.SupplierId,
-                x.Message.SupplierId is { } supplierId ? supplierNames.GetValueOrDefault(supplierId) : null,
+                x.Message.SupplierId?.Value,
+                x.Message.SupplierId is { } supplierId ? supplierNames.GetValueOrDefault(supplierId.Value) : null,
                 x.Message.ReviewNote, x.Message.ReviewVersion, x.Message.ReviewedBy, x.Message.ReviewedAt,
                 state,
                 issues,

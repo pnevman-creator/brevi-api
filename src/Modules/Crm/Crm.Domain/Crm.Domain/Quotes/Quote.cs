@@ -1,3 +1,6 @@
+using BuildingBlocks.Domain;
+using BuildingBlocks.Domain.Identifiers.Orders;
+using BuildingBlocks.Domain.Identifiers.People;
 using BuildingBlocks.Domain.Entity;
 using BuildingBlocks.Domain.Results;
 using Crm.Domain.Quotes.Enums;
@@ -15,7 +18,7 @@ namespace Crm.Domain.Quotes;
 public sealed class Quote : DomainEventSource, IAggregateRoot
 {
     private readonly List<QuoteItem> _items = [];
-    private readonly List<QuoteEvent> _events = [];
+    private readonly List<QuoteEvent> _newEvents = [];
 
     /// <summary>The fields before the first change of this command, for the changed fields of «Журнал дій».</summary>
     private QuoteSnapshot? _before;
@@ -24,11 +27,11 @@ public sealed class Quote : DomainEventSource, IAggregateRoot
 
     /// <summary>A new draft; the author is also responsible.</summary>
     public static DomainResult<Quote> Create(QuoteNumber number, QuoteKind kind, QuotePerson author, QuoteHeader header,
-        IEnumerable<QuoteItem> items, DateTimeOffset now, Guid? requestId = null)
+        IEnumerable<QuoteItem> items, DateTimeOffset now, RequestKey? request = null)
     {
         var valid = CheckHeader(header);
         if (valid.IsFailure) return valid.Error!;
-        var quote = new Quote(number, kind, author, header, items, now) { CreateRequestId = requestId };
+        var quote = new Quote(number, kind, author, header, items, now) { CreateRequestId = request?.Id, CreateRequestHash = request?.Hash };
         quote.RaiseRecorded(QuoteEventKind.Created, null);
         return quote;
     }
@@ -54,7 +57,7 @@ public sealed class Quote : DomainEventSource, IAggregateRoot
         AddHistory(QuoteEventKind.Created, author, null, now);
     }
 
-    public long Id { get; private set; }
+    public QuoteId Id { get; private set; }
     public string Number { get; private set; } = null!;
     public int NumberYear { get; private set; }
     public int NumberMonth { get; private set; }
@@ -72,9 +75,9 @@ public sealed class Quote : DomainEventSource, IAggregateRoot
     public string? CompanyName { get; private set; }
     public string? ClientComment { get; private set; }
     public string? ManagerNote { get; private set; }
-    public int AuthorUserId { get; private set; }
+    public UserId AuthorUserId { get; private set; }
     public string AuthorName { get; private set; } = null!;
-    public int ResponsibleUserId { get; private set; }
+    public UserId ResponsibleUserId { get; private set; }
     public string ResponsibleName { get; private set; } = null!;
     public DateTimeOffset CreatedAt { get; private set; }
     public DateTimeOffset UpdatedAt { get; private set; }
@@ -117,23 +120,29 @@ public sealed class Quote : DomainEventSource, IAggregateRoot
 
     /// <summary>The create or copy attempt; a repeat with the same id returns this КП (unique).</summary>
     public Guid? CreateRequestId { get; private init; }
+    /// <summary>Hash of what the create request asked for; a repeat with other data answers 409.</summary>
+    public string? CreateRequestHash { get; private init; }
 
     public IReadOnlyList<QuoteItem> Items => _items;
 
     /// <summary>History lines added in this change; saved ones are read by a separate query.</summary>
-    public IReadOnlyList<QuoteEvent> Events => _events;
+    /// <summary>
+    /// History lines this change adds. The saved «Історія змін» is its own records (read through <c>QuoteEvents</c>)
+    /// and is never loaded with the КП, because it grows with every edit.
+    /// </summary>
+    public IReadOnlyList<QuoteEvent> NewEvents => _newEvents;
 
     /// <summary>
     /// «Копіювати КП» (R-24): a new draft with the same header, introduction and items with their saved prices. The
     /// person who copies becomes its author and responsible.
     /// </summary>
-    public Quote CopyAs(QuoteNumber number, QuotePerson author, DateTimeOffset now, Guid? requestId = null)
+    public Quote CopyAs(QuoteNumber number, QuotePerson author, DateTimeOffset now, RequestKey? request = null)
     {
         var copy = new Quote(number, Kind, author,
             new QuoteHeader(InternalName, CustomerId, RecipientName, CompanyName, ClientComment, ManagerNote),
-            _items.OrderBy(x => x.Position).Select(x => x.Copy()), now) { CreateRequestId = requestId };
+            _items.OrderBy(x => x.Position).Select(x => x.Copy()), now) { CreateRequestId = request?.Id, CreateRequestHash = request?.Hash };
         if (Introduction is { } introduction) copy.ApplyIntroduction(introduction);
-        copy._events.Clear(); // the copy starts its history with «Копія КП N» instead of «Створено»
+        copy._newEvents.Clear(); // the copy starts its history with «Копія КП N» instead of «Створено»
         copy.Record(QuoteEventKind.Copied, author, $"Копія КП {Number}", now);
         return copy;
     }
@@ -174,14 +183,14 @@ public sealed class Quote : DomainEventSource, IAggregateRoot
     }
 
     /// <summary>«Видалити КП»: the last event of the КП, raised before the handler removes it.</summary>
-    public void MarkDeleted() => Raise(new QuoteDeleted(Id, Number, InternalName));
+    public void MarkDeleted() => Raise(new QuoteDeleted(Id.Value, Number, InternalName));
 
     /// <summary>The fields «Журнал дій» compares.</summary>
     public QuoteSnapshot Snapshot() => new(InternalName, CustomerId, RecipientName, CompanyName, ClientComment,
         ManagerNote, _items.Count, IntroLayout, RecipientEmail, LetterName, LetterSubject, LetterBody);
 
     private void AddHistory(QuoteEventKind kind, QuotePerson actor, string? details, DateTimeOffset at) =>
-        _events.Add(new QuoteEvent(kind, actor, details, at));
+        _newEvents.Add(new QuoteEvent(kind, actor, details, at));
 
     private void RaiseRecorded(QuoteEventKind kind, string? details)
     {

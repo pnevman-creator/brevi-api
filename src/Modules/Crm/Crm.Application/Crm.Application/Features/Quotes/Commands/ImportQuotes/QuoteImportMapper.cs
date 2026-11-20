@@ -1,3 +1,6 @@
+using BuildingBlocks.Domain.Identifiers.Products;
+using BuildingBlocks.Domain.Identifiers.ReferenceData;
+using BuildingBlocks.Domain.Identifiers.People;
 using Crm.Domain.Quotes;
 using Crm.Application.Features.Quotes.Shared;
 using Crm.Application.Features.Quotes.Shared.Building;
@@ -67,7 +70,7 @@ public sealed class QuoteImportMapper(
     {
         var email = person.Email?.Trim().ToLowerInvariant();
         if (email is { Length: > 0 } && _staff.TryGetValue(email, out var member))
-            return new QuotePerson(member.UserId, member.Name);
+            return new QuotePerson(new UserId(member.UserId), member.Name);
         _unknown.TryAdd(email ?? person.Name.Trim(), new QuoteImportPerson(email, person.Name.Trim()));
         return null;
     }
@@ -104,7 +107,7 @@ public sealed class QuoteImportMapper(
                 warn($"Варіанта «{option.Title.Trim()}» немає в каталозі: ціну збережено, «Перерахувати» її не оновить.");
             return Option(index, option, variant?.ArticleId, fabricId, takenAt);
         });
-        return QuoteItem.Create(position, QuoteItemKind.Sewing, model.ProductId,
+        return QuoteItem.Create(position, QuoteItemKind.Sewing, new ProductId(model.ProductId),
             Texts(input, code, QuoteItemsBuilder.SewingSubtitle), options);
     }
 
@@ -124,7 +127,7 @@ public sealed class QuoteImportMapper(
         if (option.HasManualPrice)
             option.SetManualAudit(source.ManualReason ?? "Перенесено з калькулятора",
                 Manual(source, author), source.ManualAt ?? takenAt);
-        return QuoteItem.Create(position, QuoteItemKind.Ppe, productId,
+        return QuoteItem.Create(position, QuoteItemKind.Ppe, new ProductId(productId),
             Texts(input, code, QuoteItemsBuilder.PpeSubtitle), [option]);
     }
 
@@ -174,7 +177,7 @@ public sealed class QuoteImportMapper(
                 warn($"Тканини {option.FabricCode} немає в довіднику: ціну збережено.");
             var row = Option(index, option, null, fabric?.Id, takenAt);
             return fabric is not null && option.FabricMeters is > 0
-                ? row.WithFabrics([QuoteItemOptionFabric.Create(0, fabric.Id, fabric.Name, option.FabricMeters.Value)])
+                ? row.WithFabrics([QuoteItemOptionFabric.Create(0, new FabricId(fabric.Id), fabric.Name, option.FabricMeters.Value)])
                 : row;
         });
         return QuoteItem.Create(position, QuoteItemKind.CustomSewing, null,
@@ -194,7 +197,7 @@ public sealed class QuoteImportMapper(
 
     private static QuoteItemOption Option(int position, ImportOptionInput input, long? articleId, int? fabricId,
         DateTimeOffset takenAt, string? title = null, bool? recommended = null) =>
-        QuoteItemOption.Create(position, articleId, fabricId, title ?? input.Title, input.Details, recommended ?? input.IsRecommended,
+        QuoteItemOption.Create(position, ArticleId.FromNullable(articleId), FabricId.FromNullable(fabricId), title ?? input.Title, input.Details, recommended ?? input.IsRecommended,
             Price(input.Prices.Retail), Price(input.Prices.Wholesale), Price(input.Prices.Large), takenAt);
 
     private static QuotePrice Price(ImportPriceInput price) => new(price.Source, price.Manual, price.Shown);

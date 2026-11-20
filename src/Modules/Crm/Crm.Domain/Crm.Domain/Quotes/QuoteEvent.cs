@@ -1,3 +1,5 @@
+using BuildingBlocks.Domain.Identifiers.Orders;
+using BuildingBlocks.Domain.Identifiers.People;
 using Crm.Domain.Quotes.ValueObjects;
 
 namespace Crm.Domain.Quotes;
@@ -18,9 +20,9 @@ public sealed class QuoteEvent
     }
 
     public long Id { get; private set; }
-    public long QuoteId { get; private set; }
+    public QuoteId QuoteId { get; private set; }
     public QuoteEventKind Kind { get; private set; }
-    public int ActorUserId { get; private set; }
+    public UserId ActorUserId { get; private set; }
     public string ActorName { get; private set; } = null!;
 
     /// <summary>A short note, for example the recipients of a letter or the new responsible person.</summary>

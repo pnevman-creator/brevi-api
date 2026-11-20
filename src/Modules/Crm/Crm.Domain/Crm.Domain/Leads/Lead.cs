@@ -1,3 +1,6 @@
+using BuildingBlocks.Domain;
+using BuildingBlocks.Domain.Identifiers.People;
+using Crm.Domain.Leads.Identifiers;
 using BuildingBlocks.Domain.Entity;
 using Crm.Domain.Leads.Events;
 using Crm.Domain.Leads.Enums;
@@ -29,7 +32,7 @@ public sealed class Lead : DomainEventSource, IAggregateRoot
     public static Lead Create(LeadSheetRow row, DateTimeOffset now) =>
         new(row, now);
 
-    public long Id { get; private set; }
+    public LeadId Id { get; private set; }
 
     /// <summary>The «ID» column of the sheet: the number managers search by. The AI may repeat it, so it is not a key.</summary>
     public int SourceId { get; private set; }
@@ -69,7 +72,7 @@ public sealed class Lead : DomainEventSource, IAggregateRoot
     /// <summary>False when the row disappeared from the sheet; the lead and its calls stay.</summary>
     public bool InSheet { get; private set; }
 
-    public int? OwnerUserId { get; private set; }
+    public UserId? OwnerUserId { get; private set; }
     public string? OwnerName { get; private set; }
     public DateTimeOffset? TakenAt { get; private set; }
     public LeadStage Stage { get; private set; }
@@ -154,7 +157,7 @@ public sealed class Lead : DomainEventSource, IAggregateRoot
         SyncedAt = now;
     }
 
-    public bool IsOwnedBy(int userId) => OwnerUserId == userId;
+    public bool IsOwnedBy(UserId userId) => OwnerUserId == userId;
 
     /// <summary>Takes a free lead (R-04). False when somebody else already has it.</summary>
     public bool Take(LeadPerson by, DateTimeOffset now)
@@ -224,18 +227,18 @@ public sealed class Lead : DomainEventSource, IAggregateRoot
     /// result: required for callback, talking and offer, cleared when the result closes the lead.
     /// </summary>
     public LeadCall RecordCall(LeadPerson by, LeadCallResult result, string? comment, DateTimeOffset? nextContactAt,
-        DateTimeOffset now, Guid? requestId = null)
+        DateTimeOffset now, RequestKey? request = null)
     {
-        var call = Call(by, result, comment, nextContactAt, now, requestId);
+        var call = Call(by, result, comment, nextContactAt, now, request);
         Raise(new LeadCallRecorded(this, result.Name, call.Comment, call.NextContactAt));
         return call;
     }
 
     private LeadCall Call(LeadPerson by, LeadCallResult result, string? comment, DateTimeOffset? nextContactAt,
-        DateTimeOffset now, Guid? requestId)
+        DateTimeOffset now, RequestKey? request)
     {
         var next = result.Outcome.Closes() ? null : nextContactAt;
-        var call = new LeadCall(by, result, comment, next, now, requestId);
+        var call = new LeadCall(by, result, comment, next, now, request);
         _calls.Add(call);
         Stage = result.Outcome.Stage();
         LastResultName = result.Name;

@@ -1,3 +1,7 @@
+using BuildingBlocks.Domain.Identifiers.Orders;
+using BuildingBlocks.Domain.Identifiers.Products;
+using Crm.Domain.Embroidery.Saved;
+using Crm.Domain.Quotes;
 using Crm.Domain.Quotes.Enums;
 
 namespace Crm.Domain.Quotes.Items;
@@ -11,7 +15,7 @@ public sealed class QuoteItem
     private QuoteItem() { }
 
     private QuoteItem(
-        int position, QuoteItemKind kind, int? productId, QuoteItemTexts texts, IEnumerable<QuoteItemOption> options,
+        int position, QuoteItemKind kind, ProductId? productId, QuoteItemTexts texts, IEnumerable<QuoteItemOption> options,
         IEnumerable<QuoteItemLine>? lines = null)
     {
         Position = position;
@@ -30,17 +34,17 @@ public sealed class QuoteItem
     }
 
     public static QuoteItem Create(
-        int position, QuoteItemKind kind, int? productId, QuoteItemTexts texts, IEnumerable<QuoteItemOption> options,
+        int position, QuoteItemKind kind, ProductId? productId, QuoteItemTexts texts, IEnumerable<QuoteItemOption> options,
         IEnumerable<QuoteItemLine>? lines = null) =>
         new(position, kind, productId, texts, options, lines);
 
-    public long Id { get; private set; }
-    public long QuoteId { get; private set; }
+    public QuoteItemId Id { get; private set; }
+    public QuoteId QuoteId { get; private set; }
     public int Position { get; private set; }
     public QuoteItemKind Kind { get; private set; }
 
     /// <summary>Catalog product; null for a one-off PPE and a «Виріб з нуля», the source model of a changed one.</summary>
-    public int? ProductId { get; private set; }
+    public ProductId? ProductId { get; private set; }
 
     public string? Code { get; private set; }
     public string Name { get; private set; } = null!;
@@ -55,7 +59,7 @@ public sealed class QuoteItem
     public string? SupplierUrl { get; private set; }
 
     /// <summary>The saved «Ціна вишивки» calculation of an <see cref="QuoteItemKind.Embroidery"/> item; null otherwise.</summary>
-    public long? EmbroideryCalculationId { get; private set; }
+    public EmbroiderySavedCalculationId? EmbroideryCalculationId { get; private set; }
 
     public IReadOnlyList<QuoteItemOption> Options => _options;
 
@@ -69,9 +73,9 @@ public sealed class QuoteItem
         _lines.OrderBy(x => x.Position).Select(x => x.Copy())) { EmbroideryCalculationId = EmbroideryCalculationId };
 
     /// <summary>An embroidery item made from a saved calculation; it has one price row and no Catalog product.</summary>
-    public static QuoteItem Embroidery(int position, long calculationId, QuoteItemTexts texts, QuoteItemOption option)
+    public static QuoteItem Embroidery(int position, EmbroiderySavedCalculationId calculationId, QuoteItemTexts texts, QuoteItemOption option)
     {
-        if (calculationId <= 0) throw new ArgumentOutOfRangeException(nameof(calculationId));
+        if (calculationId.Value <= 0) throw new ArgumentOutOfRangeException(nameof(calculationId));
         return new QuoteItem(position, QuoteItemKind.Embroidery, null, texts, [option])
         {
             EmbroideryCalculationId = calculationId

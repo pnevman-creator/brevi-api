@@ -1,3 +1,5 @@
+using BuildingBlocks.Domain.Identifiers.People;
+using Warehouse.Domain.Stock.Movements.Identifiers;
 using BuildingBlocks.Domain.Entity;
 namespace Warehouse.Domain.Stock.Movements;
 
@@ -12,11 +14,11 @@ public sealed class StockOperation : IAggregateRoot
 
     private StockOperation() { }
 
-    private StockOperation(Guid id, string kind, string requestHash, int userId, string fabricCode, string colorKey,
+    private StockOperation(Guid id, string kind, string requestHash, UserId userId, string fabricCode, string colorKey,
         string color, decimal metersAfter, DateTimeOffset now)
     {
         if (id == Guid.Empty) throw new ArgumentException("Operation id is required.", nameof(id));
-        Id = id;
+        Id = new StockOperationId(id);
         Kind = kind;
         RequestHash = requestHash;
         UserId = userId;
@@ -27,17 +29,17 @@ public sealed class StockOperation : IAggregateRoot
         CreatedAt = now;
     }
 
-    public static StockOperation Create(Guid id, string kind, string requestHash, int userId, string fabricCode, string colorKey,
+    public static StockOperation Create(Guid id, string kind, string requestHash, UserId userId, string fabricCode, string colorKey,
         string color, decimal metersAfter, DateTimeOffset now) =>
         new(id, kind, requestHash, userId, fabricCode, colorKey, color, metersAfter, now);
 
-    public Guid Id { get; private set; }
+    public StockOperationId Id { get; private set; }
     public string Kind { get; private set; } = null!;
 
     /// <summary>SHA-256 of the person and the request without its version guard.</summary>
     public string RequestHash { get; private set; } = null!;
 
-    public int UserId { get; private set; }
+    public UserId UserId { get; private set; }
     public string FabricCode { get; private set; } = null!;
     public string ColorKey { get; private set; } = null!;
     public string Color { get; private set; } = null!;
